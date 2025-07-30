@@ -16,6 +16,7 @@ export default function TestDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     test: TestInfo,
     onChange: (test: TestInfo) => void,
@@ -26,6 +27,7 @@ export default function TestDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const isBuiltin = 'builtin' in test;
@@ -81,12 +83,14 @@ export default function TestDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <FormField label="Test Name">
                 <Input
                     value={test.name}
-                    onChange={(e) => updateName(e.target.value)}
+                    onChange={documentationMode ? undefined : (e) => updateName(e.target.value)}
                     placeholder="Enter test name"
+                    readOnly={documentationMode}
                 />
             </FormField>
 
@@ -104,10 +108,11 @@ export default function TestDirectiveComponent({
                 ) : (
                     <Textarea
                         value={(test as ScriptTest).script}
-                        onChange={(e) => updateScript(e.target.value)}
+                        onChange={documentationMode ? undefined : (e) => updateScript(e.target.value)}
                         placeholder="Enter test script commands..."
                         className="h-64"
                         monospace
+                        readOnly={documentationMode}
                     />
                 )}
             </FormField>

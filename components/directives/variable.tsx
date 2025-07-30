@@ -7,16 +7,17 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 import { cn, getHelpSection, useThemeStyles, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
-export function VariableComponent({ variable, onChange }: { variable: Variable, onChange?: (variable: Variable) => void }) {
+export function VariableComponent({ variable, onChange, documentationMode = false }: { variable: Variable, onChange?: (variable: Variable) => void, documentationMode?: boolean }) {
     const { isDark } = useTheme();
 
     if (typeof variable === 'string') {
         return (
             <Input
                 value={variable}
-                onChange={(e) => onChange && onChange(e.target.value)}
+                onChange={documentationMode ? undefined : (e) => onChange && onChange(e.target.value)}
                 monospace
                 placeholder="Enter string value"
+                readOnly={documentationMode}
             />
         );
     } else if (Array.isArray(variable)) {
@@ -37,17 +38,19 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
         return (
             <ListEditor
                 items={stringArray}
-                onChange={handleArrayChange}
+                onChange={documentationMode ? () => {} : handleArrayChange}
                 createNewItem={() => '""'}
                 addButtonText="Add Item"
                 emptyMessage="No array items"
                 allowReorder={true}
+                readOnly={documentationMode}
                 renderItem={(item, index, onChangeItem) => (
                     <Input
                         value={item}
-                        onChange={(e) => onChangeItem(e.target.value)}
+                        onChange={documentationMode ? undefined : (e) => onChangeItem(e.target.value)}
                         placeholder="JSON value"
                         monospace
+                        readOnly={documentationMode}
                     />
                 )}
             />
@@ -56,7 +59,7 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
         return (
             <Textarea
                 value={JSON.stringify(variable, null, 2)}
-                onChange={(e) => {
+                onChange={documentationMode ? undefined : (e) => {
                     if (onChange) {
                         try {
                             onChange(JSON.parse(e.target.value));
@@ -65,6 +68,7 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
                         }
                     }
                 }}
+                readOnly={documentationMode}
                 placeholder="Enter JSON object"
                 className={cn(
                     "w-full min-h-[80px] px-3 py-2",
@@ -90,6 +94,7 @@ export default function VariableDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     variables: { [key: string]: Variable },
     onChange: (variables: { [key: string]: Variable }) => void,
@@ -100,6 +105,7 @@ export default function VariableDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const styles = useThemeStyles(isDark);
@@ -162,6 +168,7 @@ export default function VariableDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             {Object.entries(variables).map(([key, value]) => (
                 <FormField
@@ -171,8 +178,9 @@ export default function VariableDirectiveComponent({
                             <span>{key}</span>
                             <button
                                 className={cn(styles.buttons.icon, "ml-2")}
-                                onClick={() => removeVariable(key)}
+                                onClick={documentationMode ? undefined : () => removeVariable(key)}
                                 title={`Remove variable ${key}`}
+                                disabled={documentationMode}
                             >
                                 <TrashIcon className={styles.icon("sm")} />
                             </button>
@@ -182,7 +190,8 @@ export default function VariableDirectiveComponent({
                 >
                     <VariableComponent
                         variable={value}
-                        onChange={(updated) => updateVariable(key, updated)}
+                        onChange={documentationMode ? undefined : (updated) => updateVariable(key, updated)}
+                        documentationMode={documentationMode}
                     />
                 </FormField>
             ))}
@@ -193,8 +202,9 @@ export default function VariableDirectiveComponent({
                         className="rounded-r-none"
                         placeholder="Variable name"
                         value={newVarKey}
-                        onChange={(e) => setNewVarKey(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addVariable()}
+                        onChange={documentationMode ? undefined : (e) => setNewVarKey(e.target.value)}
+                        onKeyDown={documentationMode ? undefined : (e) => e.key === 'Enter' && addVariable()}
+                        readOnly={documentationMode}
                     />
                     <button
                         className={cn(
@@ -202,8 +212,8 @@ export default function VariableDirectiveComponent({
                             "rounded-l-none rounded-r-md min-h-[44px] md:min-h-[auto]",
                             "disabled:opacity-50 disabled:cursor-not-allowed"
                         )}
-                        onClick={addVariable}
-                        disabled={!newVarKey.trim()}
+                        onClick={documentationMode ? undefined : addVariable}
+                        disabled={documentationMode || !newVarKey.trim()}
                     >
                         Add
                     </button>

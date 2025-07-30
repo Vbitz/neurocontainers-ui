@@ -41,11 +41,13 @@ export default function DirectiveComponent({
     baseImage,
     onChange,
     controllers,
+    documentationMode = false,
 }: {
     directive: Directive;
     baseImage: string;
     onChange: (directive: Directive) => void;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     // Get metadata for styling
     const metadata = getDirectiveMetadata(directive);
@@ -108,6 +110,7 @@ export default function DirectiveComponent({
                             }
                         }}
                         controllers={controllers}
+                        documentationMode={documentationMode}
                     />
                 );
             }
@@ -122,6 +125,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('environment' in directive) {
@@ -133,6 +137,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('install' in directive) {
@@ -145,6 +150,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('workdir' in directive) {
@@ -156,6 +162,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('run' in directive) {
@@ -167,6 +174,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('variables' in directive) {
@@ -178,6 +186,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('template' in directive) {
@@ -189,6 +198,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('deploy' in directive) {
@@ -200,6 +210,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('user' in directive) {
@@ -211,6 +222,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('copy' in directive) {
@@ -222,6 +234,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('file' in directive) {
@@ -233,6 +246,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('test' in directive) {
@@ -244,6 +258,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else if ('include' in directive) {
@@ -254,6 +269,7 @@ export default function DirectiveComponent({
             onConditionChange={conditionProps.onConditionChange}
             {...styleProps}
             {...controllerProps}
+            documentationMode={documentationMode}
         />;
     } else if ('boutique' in directive) {
         return (
@@ -264,6 +280,7 @@ export default function DirectiveComponent({
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
                 {...controllerProps}
+                documentationMode={documentationMode}
             />
         );
     } else {

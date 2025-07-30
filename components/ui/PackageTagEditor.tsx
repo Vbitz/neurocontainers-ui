@@ -23,6 +23,7 @@ interface PackageTagEditorProps {
     isLoadingDatabase: boolean;
     baseImage: string;
     className?: string;
+    readOnly?: boolean;
 }
 
 export default function PackageTagEditor({
@@ -33,6 +34,7 @@ export default function PackageTagEditor({
     isLoadingDatabase,
     baseImage,
     className = "",
+    readOnly = false,
 }: PackageTagEditorProps) {
     const { isDark } = useTheme();
     const [newPackage, setNewPackage] = useState("");
@@ -211,29 +213,45 @@ export default function PackageTagEditor({
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {packages.map((pkg, index) => (
-                            <button
-                                key={index}
-                                className={cn(
-                                    "flex items-center px-3 py-2 rounded-md border group transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1",
-                                    isDark
-                                        ? "bg-[#1f2e18] border-[#2d4222] hover:bg-[#2a3d20] focus:ring-[#7bb33a]"
-                                        : "bg-[#f0f7e7] border-[#e6f1d6] hover:bg-[#e8f4d9] focus:ring-[#6aa329]"
-                                )}
-                                onClick={() => removePackage(index)}
-                                onKeyDown={(e) => handlePackageKeyDown(e, index)}
-                                title={`Remove ${pkg} (Enter or Space)`}
-                            >
-                                <span className={cn(textStyles(isDark, { size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
-                                    {pkg}
-                                </span>
-                                <XMarkIcon className={cn(
-                                    iconStyles(isDark, 'sm'),
-                                    "opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0",
-                                    isDark
-                                        ? "text-[#91c84a] group-hover:text-[#7bb33a]"
-                                        : "text-[#4f7b38] group-hover:text-[#3a5c29]"
-                                )} />
-                            </button>
+                            readOnly ? (
+                                <div
+                                    key={index}
+                                    className={cn(
+                                        "flex items-center px-3 py-2 rounded-md border",
+                                        isDark
+                                            ? "bg-[#1f2e18] border-[#2d4222]"
+                                            : "bg-[#f0f7e7] border-[#e6f1d6]"
+                                    )}
+                                >
+                                    <span className={cn(textStyles(isDark, { size: 'sm', color: 'primary' }), "font-mono")}>
+                                        {pkg}
+                                    </span>
+                                </div>
+                            ) : (
+                                <button
+                                    key={index}
+                                    className={cn(
+                                        "flex items-center px-3 py-2 rounded-md border group transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1",
+                                        isDark
+                                            ? "bg-[#1f2e18] border-[#2d4222] hover:bg-[#2a3d20] focus:ring-[#7bb33a]"
+                                            : "bg-[#f0f7e7] border-[#e6f1d6] hover:bg-[#e8f4d9] focus:ring-[#6aa329]"
+                                    )}
+                                    onClick={() => removePackage(index)}
+                                    onKeyDown={(e) => handlePackageKeyDown(e, index)}
+                                    title={`Remove ${pkg} (Enter or Space)`}
+                                >
+                                    <span className={cn(textStyles(isDark, { size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
+                                        {pkg}
+                                    </span>
+                                    <XMarkIcon className={cn(
+                                        iconStyles(isDark, 'sm'),
+                                        "opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0",
+                                        isDark
+                                            ? "text-[#91c84a] group-hover:text-[#7bb33a]"
+                                            : "text-[#4f7b38] group-hover:text-[#3a5c29]"
+                                    )} />
+                                </button>
+                            )
                         ))}
                     </div>
                 </div>
@@ -260,16 +278,19 @@ export default function PackageTagEditor({
                         <input
                             ref={inputRef}
                             type="text"
-                            className={cn(getThemePresets(isDark).input, "font-mono pr-8")}
+                            className={cn(getThemePresets(isDark).input, "font-mono pr-8", readOnly && "cursor-not-allowed")}
                             placeholder={
-                                isLoadingDatabase
+                                readOnly
+                                    ? "Documentation mode - packages are read-only"
+                                    : isLoadingDatabase
                                     ? "Loading database..."
                                     : `Search ${databaseLoaded ? packageDatabase.length.toLocaleString() : '80,000+'} packages...`
                             }
                             value={newPackage}
-                            onChange={handleInputChange}
-                            onKeyDown={handleKeyDown}
-                            disabled={isLoadingDatabase}
+                            onChange={readOnly ? undefined : handleInputChange}
+                            onKeyDown={readOnly ? undefined : handleKeyDown}
+                            disabled={isLoadingDatabase || readOnly}
+                            readOnly={readOnly}
                         />
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                             {isLoadingDatabase ? (

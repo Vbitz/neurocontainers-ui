@@ -6,6 +6,7 @@ import { useTheme } from "@/lib/ThemeContext";
 interface DeployEnvEditorProps {
     data: { [key: string]: string };
     onChange: (data: { [key: string]: string }) => void;
+    readOnly?: boolean;
 }
 
 interface EnvVariable {
@@ -17,6 +18,7 @@ interface EnvVariable {
 export default function DeployEnvEditor({
     data,
     onChange,
+    readOnly = false,
 }: DeployEnvEditorProps) {
     const { isDark } = useTheme();
 
@@ -68,16 +70,18 @@ export default function DeployEnvEditor({
                         <p className={cn(textStyles(isDark, { size: 'sm', color: 'muted' }), "text-center mb-3")}>
                             No environment variables set.
                         </p>
-                        <button
-                            className={cn(
-                                buttonStyles(isDark, 'ghost', 'sm'),
-                                "flex items-center gap-1 px-0"
-                            )}
-                            onClick={addVariable}
-                        >
-                            <PlusIcon className={iconStyles(isDark, 'sm')} />
-                            Add Environment Variable
-                        </button>
+                        {!readOnly && (
+                            <button
+                                className={cn(
+                                    buttonStyles(isDark, 'ghost', 'sm'),
+                                    "flex items-center gap-1 px-0"
+                                )}
+                                onClick={addVariable}
+                            >
+                                <PlusIcon className={iconStyles(isDark, 'sm')} />
+                                Add Environment Variable
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div>
@@ -94,14 +98,17 @@ export default function DeployEnvEditor({
                                     <input
                                         type="checkbox"
                                         checked={variable.isDeploy}
-                                        onChange={(e) => updateVariable(index, { isDeploy: e.target.checked })}
+                                        onChange={readOnly ? undefined : (e) => updateVariable(index, { isDeploy: e.target.checked })}
                                         className={cn(
                                             "h-4 w-4 rounded",
+                                            readOnly && "cursor-not-allowed",
                                             isDark
                                                 ? "text-[#7bb33a] border-[#374151] focus:ring-[#7bb33a] bg-[#161a0e]"
                                                 : "text-[#6aa329] border-gray-300 focus:ring-[#6aa329]"
                                         )}
                                         title="Export as deploy environment variable"
+                                        readOnly={readOnly}
+                                        disabled={readOnly}
                                     />
                                 </div>
                                 <div className="col-span-5">
@@ -116,55 +123,62 @@ export default function DeployEnvEditor({
                                             <Input
                                                 className="flex-1 rounded-l-none"
                                                 value={variable.key}
-                                                onChange={(e) => updateVariable(index, { key: e.target.value })}
+                                                onChange={readOnly ? undefined : (e) => updateVariable(index, { key: e.target.value })}
                                                 placeholder="VARIABLE_NAME"
                                                 monospace
+                                                readOnly={readOnly}
                                             />
                                         </div>
                                     ) : (
                                         <Input
                                             value={variable.key}
-                                            onChange={(e) => updateVariable(index, { key: e.target.value })}
+                                            onChange={readOnly ? undefined : (e) => updateVariable(index, { key: e.target.value })}
                                             placeholder="VARIABLE_NAME"
                                             monospace
+                                            readOnly={readOnly}
                                         />
                                     )}
                                 </div>
                                 <div className="col-span-5">
                                     <Input
                                         value={variable.value}
-                                        onChange={(e) => updateVariable(index, { value: e.target.value })}
+                                        onChange={readOnly ? undefined : (e) => updateVariable(index, { value: e.target.value })}
                                         placeholder="value"
                                         monospace
+                                        readOnly={readOnly}
                                     />
                                 </div>
                                 <div className="col-span-1 flex justify-center">
-                                    <button
-                                        className={cn(
-                                            "w-8 h-8 flex justify-center items-center transition-colors rounded",
-                                            isDark
-                                                ? "text-[#9ca3af] hover:text-[#7bb33a] hover:bg-[#2d4222]"
-                                                : "text-gray-400 hover:text-[#6aa329] hover:bg-gray-50"
-                                        )}
-                                        onClick={() => removeVariable(index)}
-                                        title="Remove environment variable"
-                                    >
-                                        <TrashIcon className={iconStyles(isDark, 'sm')} />
-                                    </button>
+                                    {!readOnly && (
+                                        <button
+                                            className={cn(
+                                                "w-8 h-8 flex justify-center items-center transition-colors rounded",
+                                                isDark
+                                                    ? "text-[#9ca3af] hover:text-[#7bb33a] hover:bg-[#2d4222]"
+                                                    : "text-gray-400 hover:text-[#6aa329] hover:bg-gray-50"
+                                            )}
+                                            onClick={() => removeVariable(index)}
+                                            title="Remove environment variable"
+                                        >
+                                            <TrashIcon className={iconStyles(isDark, 'sm')} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
 
-                        <button
-                            className={cn(
-                                buttonStyles(isDark, 'ghost', 'sm'),
-                                "flex items-center gap-1 px-0 mt-3"
-                            )}
-                            onClick={addVariable}
-                        >
-                            <PlusIcon className={iconStyles(isDark, 'sm')} />
-                            Add Environment Variable
-                        </button>
+                        {!readOnly && (
+                            <button
+                                className={cn(
+                                    buttonStyles(isDark, 'ghost', 'sm'),
+                                    "flex items-center gap-1 px-0 mt-3"
+                                )}
+                                onClick={addVariable}
+                            >
+                                <PlusIcon className={iconStyles(isDark, 'sm')} />
+                                Add Environment Variable
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

@@ -15,6 +15,7 @@ export default function UserDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     user: string,
     onChange: (user: string) => void,
@@ -25,6 +26,7 @@ export default function UserDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const helpContent = (
@@ -76,12 +78,14 @@ export default function UserDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <Input
                 value={user}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={documentationMode ? undefined : (e) => onChange(e.target.value)}
                 placeholder="username or UID"
                 monospace
+                readOnly={documentationMode}
             />
         </DirectiveContainer>
     );

@@ -16,6 +16,7 @@ export default function DeployDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     deploy: DeployInfo;
     onChange: (deploy: DeployInfo) => void;
@@ -26,6 +27,7 @@ export default function DeployDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const updatePaths = (paths: string[]) => {
@@ -82,6 +84,7 @@ export default function DeployDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <FormField
                 label="Paths"
@@ -89,7 +92,7 @@ export default function DeployDirectiveComponent({
             >
                 <TagEditor
                     tags={deploy.path || []}
-                    onChange={updatePaths}
+                    onChange={documentationMode ? () => {} : updatePaths}
                     placeholder="Add a path..."
                     emptyMessage="No paths added yet"
                 />
@@ -101,7 +104,7 @@ export default function DeployDirectiveComponent({
             >
                 <TagEditor
                     tags={deploy.bins || []}
-                    onChange={updateBins}
+                    onChange={documentationMode ? () => {} : updateBins}
                     placeholder="Add a binary..."
                     emptyMessage="No binaries added yet"
                 />

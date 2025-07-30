@@ -14,6 +14,7 @@ interface ListEditorProps<T> {
     allowReorder?: boolean;
     className?: string;
     focusedIndex?: number | null;
+    readOnly?: boolean;
 }
 
 export default function ListEditor<T>({
@@ -26,6 +27,7 @@ export default function ListEditor<T>({
     allowReorder = false,
     className = "",
     focusedIndex = null,
+    readOnly = false,
 }: ListEditorProps<T>) {
     const { isDark } = useTheme();
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -136,16 +138,18 @@ export default function ListEditor<T>({
                         {emptyMessage}
                     </p>
                 </div>
-                <button
-                    className={cn(
-                        buttonStyles(isDark, 'ghost', 'sm'),
-                        "flex items-center gap-1 px-0"
-                    )}
-                    onClick={addItem}
-                >
-                    <PlusIcon className={iconStyles(isDark, 'sm')} />
-                    {addButtonText}
-                </button>
+                {!readOnly && (
+                    <button
+                        className={cn(
+                            buttonStyles(isDark, 'ghost', 'sm'),
+                            "flex items-center gap-1 px-0"
+                        )}
+                        onClick={addItem}
+                    >
+                        <PlusIcon className={iconStyles(isDark, 'sm')} />
+                        {addButtonText}
+                    </button>
+                )}
             </div>
         );
     }
@@ -187,7 +191,7 @@ export default function ListEditor<T>({
                                     onDragLeave={allowReorder ? handleDragLeave : undefined}
                                     onDrop={allowReorder ? handleDrop : undefined}
                                 >
-                                    {allowReorder && (
+                                    {allowReorder && !readOnly && (
                                         <div
                                             className={cn(
                                                 "flex items-start px-2 py-2 rounded-l-md cursor-grab active:cursor-grabbing touch-manipulation select-none transition-colors",
@@ -203,20 +207,22 @@ export default function ListEditor<T>({
                                             <Bars3Icon className={cn(iconStyles(isDark, 'sm', 'muted'))} />
                                         </div>
                                     )}
-                                    <div className={`flex-grow ${allowReorder ? "" : "rounded-l-md"}`} style={{ overflow: 'visible' }}>
-                                        {renderItem(item, index, (updatedItem) => updateItem(index, updatedItem))}
+                                    <div className={`flex-grow ${(allowReorder && !readOnly) ? "" : "rounded-l-md"} ${readOnly ? "rounded-r-md" : ""}`} style={{ overflow: 'visible' }}>
+                                        {renderItem(item, index, (updatedItem) => readOnly ? {} : updateItem(index, updatedItem))}
                                     </div>
-                                    <button
-                                        className={cn(
-                                            "px-2 py-2 rounded-r-md flex items-start transition-colors",
-                                            isDark
-                                                ? "bg-[#1f2e18] text-[#9ca3af] hover:text-[#7bb33a]"
-                                                : "bg-[#f0f8e8] text-gray-400 hover:text-[#4f7b38]"
-                                        )}
-                                        onClick={() => removeItem(index)}
-                                    >
-                                        <TrashIcon className={cn(iconStyles(isDark, 'sm'), "mt-0.5")} />
-                                    </button>
+                                    {!readOnly && (
+                                        <button
+                                            className={cn(
+                                                "px-2 py-2 rounded-r-md flex items-start transition-colors",
+                                                isDark
+                                                    ? "bg-[#1f2e18] text-[#9ca3af] hover:text-[#7bb33a]"
+                                                    : "bg-[#f0f8e8] text-gray-400 hover:text-[#4f7b38]"
+                                            )}
+                                            onClick={() => removeItem(index)}
+                                        >
+                                            <TrashIcon className={cn(iconStyles(isDark, 'sm'), "mt-0.5")} />
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Drop indicator after current item (only for last item) */}
@@ -234,16 +240,18 @@ export default function ListEditor<T>({
                 </div>
             )}
 
-            <button
-                className={cn(
-                    buttonStyles(isDark, 'ghost', 'sm'),
-                    "flex items-center gap-1 px-0"
-                )}
-                onClick={addItem}
-            >
-                <PlusIcon className={iconStyles(isDark, 'sm')} />
-                {addButtonText}
-            </button>
+            {!readOnly && (
+                <button
+                    className={cn(
+                        buttonStyles(isDark, 'ghost', 'sm'),
+                        "flex items-center gap-1 px-0"
+                    )}
+                    onClick={addItem}
+                >
+                    <PlusIcon className={iconStyles(isDark, 'sm')} />
+                    {addButtonText}
+                </button>
+            )}
         </div>
     );
 }

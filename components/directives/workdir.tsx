@@ -15,6 +15,7 @@ export default function WorkingDirectoryDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     workdir: string,
     onChange: (workdir: string) => void,
@@ -25,6 +26,7 @@ export default function WorkingDirectoryDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const helpContent = (
@@ -78,12 +80,14 @@ export default function WorkingDirectoryDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <Input
                 value={workdir}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={documentationMode ? undefined : (e) => onChange(e.target.value)}
                 placeholder="/path/to/directory"
                 monospace
+                readOnly={documentationMode}
             />
         </DirectiveContainer>
     );

@@ -16,6 +16,7 @@ export default function RunCommandDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     run: string[];
     onChange: (run: string[]) => void;
@@ -26,6 +27,7 @@ export default function RunCommandDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
@@ -140,15 +142,17 @@ dpkg -i package_{{ context.version }}.deb`}
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <ListEditor
                 items={Array.isArray(run) ? run : []}
-                onChange={onChange}
+                onChange={documentationMode ? () => {} : onChange}
                 createNewItem={() => ""}
                 addButtonText="Add Command"
                 emptyMessage="No commands to run."
                 allowReorder={true}
                 focusedIndex={focusedIndex}
+                readOnly={documentationMode}
                 renderItem={(command, index, onChangeCommand) => (
                     <Jinja2TemplateInput
                         ref={(el) => { (textareaRefs.current[index] = el) }}
@@ -160,12 +164,13 @@ dpkg -i package_{{ context.version }}.deb`}
                             "border-0 rounded-none focus:ring-0 focus:border-transparent resize-none leading-5"
                         )}
                         value={command}
-                        onChange={onChangeCommand}
-                        onKeyDown={(e) => handleKeyDown(e, index)}
-                        onFocus={() => setFocusedIndex(index)}
-                        onBlur={() => setFocusedIndex(null)}
+                        onChange={documentationMode ? () => {} : onChangeCommand}
+                        onKeyDown={documentationMode ? undefined : (e) => handleKeyDown(e, index)}
+                        onFocus={documentationMode ? undefined : () => setFocusedIndex(index)}
+                        onBlur={documentationMode ? undefined : () => setFocusedIndex(null)}
                         placeholder="Command to run with Jinja2 templates (e.g., wget {{ context.version }})"
                         rows={1}
+                        readOnly={documentationMode}
                     />
                 )}
             />

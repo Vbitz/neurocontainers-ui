@@ -57,6 +57,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         iconColor,
         icon,
         controllers,
+        documentationMode = false,
     }: {
         template: Template,
         onChange: (template: Template) => void,
@@ -67,6 +68,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         iconColor?: { light: string, dark: string };
         icon?: React.ComponentType<{ className?: string }>;
         controllers: DirectiveControllers;
+        documentationMode?: boolean;
     }) {
         const { isDark } = useTheme();
         const styles = useThemeStyles(isDark);
@@ -97,7 +99,8 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                         <FormField key={arg.name} label={arg.name} description={arg.description}>
                             <Select
                                 value={String(currentValue)}
-                                onChange={(e) => updateParam(arg.name, e.target.value)}
+                                onChange={documentationMode ? undefined : (e) => updateParam(arg.name, e.target.value)}
+                                disabled={documentationMode}
                             >
                                 {arg.options.map(option => (
                                     <option key={option} value={option}>{option}</option>
@@ -115,7 +118,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                                     { value: 'false', label: 'No' }
                                 ]}
                                 value={String(currentValue)}
-                                onChange={(value) => updateParam(arg.name, value === 'true')}
+                                onChange={documentationMode ? () => {} : (value) => updateParam(arg.name, value === 'true')}
                             />
                         </FormField>
                     );
@@ -128,7 +131,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                         <FormField key={arg.name} label={arg.name} description={arg.description}>
                             <TagEditor
                                 tags={Array.isArray(currentValue) ? currentValue : (typeof currentValue === 'string' ? currentValue.split(' ').filter(s => s.trim()) : [])}
-                                onChange={(tags) => updateParam(arg.name, tags.join(' '))}
+                                onChange={documentationMode ? () => {} : (tags) => updateParam(arg.name, tags.join(' '))}
                                 placeholder={`Add ${displayName.toLowerCase()}...`}
                                 emptyMessage={`No ${displayName.toLowerCase()} added yet`}
                             />
@@ -144,15 +147,17 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                                     className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent font-mono"
                                     rows={6}
                                     value={String(currentValue)}
-                                    onChange={(e) => updateParam(arg.name, e.target.value)}
+                                    onChange={documentationMode ? undefined : (e) => updateParam(arg.name, e.target.value)}
                                     placeholder={`Enter ${arg.name}`}
+                                    readOnly={documentationMode}
                                 />
                             ) : (
                                 <Input
                                     value={String(currentValue)}
-                                    onChange={(e) => updateParam(arg.name, e.target.value)}
+                                    onChange={documentationMode ? undefined : (e) => updateParam(arg.name, e.target.value)}
                                     placeholder={`Enter ${arg.name}`}
                                     monospace
+                                    readOnly={documentationMode}
                                 />
                             )}
                         </FormField>
@@ -244,6 +249,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                 iconColor={iconColor}
                 icon={icon}
                 controllers={controllers}
+                documentationMode={documentationMode}
             >
                 <div className="space-y-4">
                     {basicArgs.map(renderArgument)}
@@ -254,8 +260,9 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                         <div className="flex items-center justify-between">
                             <h4 className={textStyles(isDark, { size: 'sm', weight: 'medium', color: 'secondary' })}>Advanced Settings</h4>
                             <button
-                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                onClick={documentationMode ? undefined : () => setShowAdvanced(!showAdvanced)}
                                 className={cn(styles.buttons.secondary, "text-xs")}
+                                disabled={documentationMode}
                             >
                                 {showAdvanced ? 'Hide' : 'Show'} Advanced
                             </button>
@@ -296,6 +303,7 @@ export default function TemplateDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     template: Template,
     onChange: (template: Template) => void,
@@ -306,6 +314,7 @@ export default function TemplateDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const styles = useThemeStyles(isDark);
@@ -325,6 +334,7 @@ export default function TemplateDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         />;
     }
 
@@ -393,13 +403,15 @@ export default function TemplateDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <FormField label="Template Name">
                 <Input
                     value={template.name}
-                    onChange={(e) => updateName(e.target.value)}
+                    onChange={documentationMode ? undefined : (e) => updateName(e.target.value)}
                     placeholder="Enter template name"
                     monospace
+                    readOnly={documentationMode}
                 />
             </FormField>
 
@@ -413,8 +425,9 @@ export default function TemplateDirectiveComponent({
                                 <span>{key}</span>
                                 <button
                                     className={cn(styles.buttons.icon, "ml-2")}
-                                    onClick={() => removeParam(key)}
+                                    onClick={documentationMode ? undefined : () => removeParam(key)}
                                     title={`Remove parameter ${key}`}
+                                    disabled={documentationMode}
                                 >
                                     <TrashIcon className={iconStyles(isDark, 'md')} />
                                 </button>
@@ -424,7 +437,8 @@ export default function TemplateDirectiveComponent({
                     >
                         <VariableComponent
                             variable={value}
-                            onChange={(updated) => updateParam(key, updated)}
+                            onChange={documentationMode ? undefined : (updated) => updateParam(key, updated)}
+                            documentationMode={documentationMode}
                         />
                     </FormField>
                 );
@@ -436,13 +450,14 @@ export default function TemplateDirectiveComponent({
                         className="flex-grow rounded-r-none"
                         placeholder="Parameter name"
                         value={newParamKey}
-                        onChange={(e) => setNewParamKey(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addParam()}
+                        onChange={documentationMode ? undefined : (e) => setNewParamKey(e.target.value)}
+                        onKeyDown={documentationMode ? undefined : (e) => e.key === 'Enter' && addParam()}
+                        readOnly={documentationMode}
                     />
                     <button
                         className={cn(styles.buttons.primary, "rounded-r-md rounded-l-none")}
-                        onClick={addParam}
-                        disabled={!newParamKey.trim() || newParamKey === 'name'}
+                        onClick={documentationMode ? undefined : addParam}
+                        disabled={documentationMode || !newParamKey.trim() || newParamKey === 'name'}
                     >
                         Add Parameter
                     </button>

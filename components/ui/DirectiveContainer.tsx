@@ -41,6 +41,7 @@ interface DirectiveContainerProps {
     icon?: React.ComponentType<{ className?: string }>;
     // Unified drag controllers
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }
 
 export default function DirectiveContainer({
@@ -56,10 +57,11 @@ export default function DirectiveContainer({
     iconColor,
     icon: Icon,
     controllers,
+    documentationMode = false,
 }: DirectiveContainerProps) {
     const { isDark } = useTheme();
     const styles = useThemeStyles(isDark);
-    const [showHelp, setShowHelp] = useState(false);
+    const [showHelp, setShowHelp] = useState(documentationMode);
     const [showCondition, setShowCondition] = useState(false);
 
     return (
@@ -81,7 +83,7 @@ export default function DirectiveContainer({
                 isDark ? headerColor?.dark || "bg-[#1f2e18]" : headerColor?.light || "bg-[#f0f7e7]",
             )}>
                 {/* Left-aligned Controls */}
-                {controllers && (
+                {controllers && !documentationMode && (
                     <div className="flex items-center gap-0.5 mr-2 flex-shrink-0">
                         {/* Drag Handle */}
                         <button
@@ -162,7 +164,7 @@ export default function DirectiveContainer({
 
                 {/* Right-aligned Controls */}
                 <div className="flex items-center gap-1 flex-shrink-0 pr-1">
-                    {showConditionOption && onConditionChange && (
+                    {showConditionOption && onConditionChange && !documentationMode && (
                         <button
                             className={cn(
                                 "transition-all duration-200 flex items-center justify-center touch-manipulation rounded-md",
@@ -185,7 +187,7 @@ export default function DirectiveContainer({
                             <AdjustmentsHorizontalIcon className="h-5 w-5" />
                         </button>
                     )}
-                    {helpContent && (
+                    {helpContent && !documentationMode && (
                         <button
                             className={cn(
                                 "transition-all duration-200 flex items-center justify-center touch-manipulation rounded-md",
@@ -212,7 +214,7 @@ export default function DirectiveContainer({
             </div>
 
             <div className="border-t border-[#e6f1d6]">
-                {(showCondition || condition) && onConditionChange && (
+                {(showCondition || condition) && onConditionChange && !documentationMode && (
                     <div className={cn(
                         "px-4 py-3 border-b",
                         isDark ? "bg-[#1f2e18] border-[#374151]" : "bg-[#f8faf6] border-[#e6f1d6]",
@@ -235,12 +237,20 @@ export default function DirectiveContainer({
                         </div>
                     </div>
                 )}
-                {helpContent && showHelp && (
+                {helpContent && (showHelp || documentationMode) && (
                     <div className={cn(
                         "px-4 py-3 border-b",
                         isDark ? "bg-[#1a2113] border-[#2d4222]" : "bg-[#fafcf7] border-[#e6f1d6]"
                     )}>
-                        {helpContent}
+                        <div className={cn(
+                            documentationMode && "prose prose-sm max-w-none",
+                            documentationMode && (isDark
+                                ? "prose-invert prose-headings:text-[#e8f5d0] prose-p:text-[#c4e382] prose-p:leading-relaxed prose-strong:text-[#e8f5d0] prose-code:text-[#91c84a] prose-code:bg-[#161a0e] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-ul:text-[#c4e382] prose-li:text-[#c4e382] prose-li:mb-1"
+                                : "prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-strong:text-gray-900 prose-code:text-[#4f7b38] prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-ul:text-gray-700 prose-li:text-gray-700 prose-li:mb-1"
+                            )
+                        )}>
+                            {helpContent}
+                        </div>
                     </div>
                 )}
                 <div className="p-4">

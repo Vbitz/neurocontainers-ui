@@ -5,9 +5,9 @@ import { DocumentTextIcon, CodeBracketIcon, PencilIcon } from "@heroicons/react/
 import { registerDirective, DirectiveMetadata } from "./registry";
 import { getHelpSection, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
-import { 
-    BoutiquesDescriptor, 
-    BoutiquesInput, 
+import {
+    BoutiquesDescriptor,
+    BoutiquesInput,
     BoutiquesInputType,
     BoutiquesOutputFile
 } from "@/types/boutique";
@@ -24,6 +24,7 @@ interface BoutiquesEditorProps {
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }
 
 export default function BoutiqueDirectiveComponent({
@@ -36,6 +37,7 @@ export default function BoutiqueDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: BoutiquesEditorProps) {
     const { isDark } = useTheme();
     const [viewMode, setViewMode] = useState<ViewMode>("visual");
@@ -51,7 +53,7 @@ export default function BoutiqueDirectiveComponent({
     const handleJsonChange = (value: string) => {
         setJsonText(value);
         setJsonError(null);
-        
+
         try {
             const parsed = JSON.parse(value) as BoutiquesDescriptor;
             onChange(parsed);
@@ -92,8 +94,8 @@ export default function BoutiqueDirectiveComponent({
             description: "",
             optional: true
         };
-        updateBoutique({ 
-            "output-files": [...(boutique["output-files"] || []), newOutput] 
+        updateBoutique({
+            "output-files": [...(boutique["output-files"] || []), newOutput]
         });
     };
 
@@ -150,6 +152,7 @@ export default function BoutiqueDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             {/* View Mode Selector */}
             <div className="flex gap-2 mb-4">
@@ -293,14 +296,14 @@ export default function BoutiqueDirectiveComponent({
 }
 
 // Input Parameter Editor Component
-function InputEditor({ 
-    input, 
-    onChange, 
-    onRemove, 
-    isDark 
-}: { 
-    input: BoutiquesInput; 
-    onChange: (input: BoutiquesInput) => void; 
+function InputEditor({
+    input,
+    onChange,
+    onRemove,
+    isDark
+}: {
+    input: BoutiquesInput;
+    onChange: (input: BoutiquesInput) => void;
     onRemove: () => void;
     isDark: boolean;
 }) {
@@ -309,11 +312,10 @@ function InputEditor({
     };
 
     return (
-        <div className={`p-4 border rounded-lg ${
-            isDark 
-                ? "border-gray-600 bg-gray-800/30" 
-                : "border-gray-200 bg-gray-50"
-        }`}>
+        <div className={`p-4 border rounded-lg ${isDark
+            ? "border-gray-600 bg-gray-800/30"
+            : "border-gray-200 bg-gray-50"
+            }`}>
             <div className="flex items-center justify-between mb-3">
                 <h5 className="font-medium text-sm">Input Parameter</h5>
                 <button className={buttonStyles(isDark, 'danger', 'sm')} onClick={onRemove}>
@@ -389,14 +391,14 @@ function InputEditor({
 }
 
 // Output File Editor Component
-function OutputEditor({ 
-    output, 
-    onChange, 
-    onRemove, 
-    isDark 
-}: { 
-    output: BoutiquesOutputFile; 
-    onChange: (output: BoutiquesOutputFile) => void; 
+function OutputEditor({
+    output,
+    onChange,
+    onRemove,
+    isDark
+}: {
+    output: BoutiquesOutputFile;
+    onChange: (output: BoutiquesOutputFile) => void;
     onRemove: () => void;
     isDark: boolean;
 }) {
@@ -405,11 +407,10 @@ function OutputEditor({
     };
 
     return (
-        <div className={`p-4 border rounded-lg ${
-            isDark 
-                ? "border-gray-600 bg-gray-800/30" 
-                : "border-gray-200 bg-gray-50"
-        }`}>
+        <div className={`p-4 border rounded-lg ${isDark
+            ? "border-gray-600 bg-gray-800/30"
+            : "border-gray-200 bg-gray-50"
+            }`}>
             <div className="flex items-center justify-between mb-3">
                 <h5 className="font-medium text-sm">Output File</h5>
                 <button className={buttonStyles(isDark, 'danger', 'sm')} onClick={onRemove}>

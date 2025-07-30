@@ -16,6 +16,7 @@ export default function EnvironmentDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     environment: { [key: string]: string },
     onChange: (environment: { [key: string]: string }) => void
@@ -26,6 +27,7 @@ export default function EnvironmentDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const helpContent = (
@@ -79,10 +81,12 @@ export default function EnvironmentDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <DeployEnvEditor
                 data={environment}
-                onChange={onChange}
+                onChange={documentationMode ? () => {} : onChange}
+                readOnly={documentationMode}
             />
         </DirectiveContainer>
     );

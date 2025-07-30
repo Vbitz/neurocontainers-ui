@@ -15,6 +15,7 @@ export default function CopyDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     copy: string[] | string,
     onChange: (copy: string[]) => void,
@@ -25,6 +26,7 @@ export default function CopyDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const copyAsArray = Array.isArray(copy) ? copy : copy.split(" ");
@@ -61,6 +63,7 @@ export default function CopyDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <ListEditor
                 items={copyAsArray}

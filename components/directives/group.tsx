@@ -55,12 +55,14 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
         onChange: onGroupChange,
         customParams = {},
         controllers,
+        documentationMode = false,
     }: {
         group: Directive[];
         baseImage: string;
         onChange: (group: Directive[], params: Record<string, unknown>) => void;
         customParams?: Record<string, unknown>;
         controllers: DirectiveControllers;
+        documentationMode?: boolean;
     }) {
         const { isDark } = useTheme();
         const [showAdvanced, setShowAdvanced] = useState(false);
@@ -132,7 +134,8 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                             <select
                                 className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent"
                                 value={String(currentValue)}
-                                onChange={(e) => updateParameter(arg.name, e.target.value)}
+                                onChange={documentationMode ? undefined : (e) => updateParameter(arg.name, e.target.value)}
+                                disabled={documentationMode}
                             >
                                 {arg.options.map(option => (
                                     <option key={option} value={option}>{option}</option>
@@ -150,7 +153,7 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                                     { value: 'false', label: 'No' }
                                 ]}
                                 value={String(currentValue)}
-                                onChange={(value) => updateParameter(arg.name, value === 'true')}
+                                onChange={documentationMode ? () => {} : (value) => updateParameter(arg.name, value === 'true')}
                             />
                         </FormField>
                     );
@@ -163,7 +166,7 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                         <FormField key={arg.name} label={arg.name} description={arg.description}>
                             <TagEditor
                                 tags={Array.isArray(currentValue) ? currentValue : []}
-                                onChange={(tags) => updateParameter(arg.name, tags)}
+                                onChange={documentationMode ? () => {} : (tags) => updateParameter(arg.name, tags)}
                                 placeholder={`Add ${displayName.toLowerCase()}...`}
                                 emptyMessage={`No ${displayName.toLowerCase()} added yet`}
                             />
@@ -179,15 +182,17 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                                     className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent font-mono"
                                     rows={6}
                                     value={String(currentValue)}
-                                    onChange={(e) => updateParameter(arg.name, e.target.value)}
+                                    onChange={documentationMode ? undefined : (e) => updateParameter(arg.name, e.target.value)}
                                     placeholder={`Enter ${arg.name}`}
+                                    readOnly={documentationMode}
                                 />
                             ) : (
                                 <Input
                                     value={String(currentValue)}
-                                    onChange={(e) => updateParameter(arg.name, e.target.value)}
+                                    onChange={documentationMode ? undefined : (e) => updateParameter(arg.name, e.target.value)}
                                     placeholder={`Enter ${arg.name}`}
                                     monospace
+                                    readOnly={documentationMode}
                                 />
                             )}
                         </FormField>
@@ -203,6 +208,7 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                 title={editorInfo.metadata.label}
                 helpContent={editorInfo.helpContent(isDark)}
                 controllers={controllers}
+                documentationMode={documentationMode}
             >
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
@@ -210,12 +216,13 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                             {editorInfo.metadata.label} Configuration
                         </h4>
                         <button
-                            onClick={() => {
+                            onClick={documentationMode ? undefined : () => {
                                 // Remove custom properties and switch to advanced mode
                                 onChangeWrapper(group, {});
                             }}
                             className={cn(getButtons(isDark).secondary, "text-xs")}
                             title="Switch to advanced mode for full control (cannot be undone)"
+                            disabled={documentationMode}
                         >
                             Switch to Advanced Mode
                         </button>
@@ -230,8 +237,9 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                             <div className="flex items-center justify-between">
                                 <h4 className={textStyles(isDark, { size: 'sm', weight: 'medium', color: 'secondary' })}>Advanced Settings</h4>
                                 <button
-                                    onClick={() => setShowAdvanced(!showAdvanced)}
+                                    onClick={documentationMode ? undefined : () => setShowAdvanced(!showAdvanced)}
                                     className={cn(getButtons(isDark).secondary, "text-xs")}
+                                    disabled={documentationMode}
                                 >
                                     {showAdvanced ? 'Hide' : 'Show'} Advanced
                                 </button>
@@ -274,6 +282,7 @@ export default function GroupDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     group: Directive[];
     baseImage: string;
@@ -284,7 +293,8 @@ export default function GroupDirectiveComponent({
     borderColor?: { light: string, dark: string };
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
-    controllers: DirectiveControllers,
+    controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -411,12 +421,13 @@ export default function GroupDirectiveComponent({
                 iconColor={iconColor}
                 icon={icon}
                 controllers={controllers}
+                documentationMode={documentationMode}
             >
                 <div className="space-y-2">
                     {group.length === 0 ? (
                         <Suspense fallback={<div>Loading...</div>}>
                             <AddDirectiveButton
-                                onAddDirective={addDirective}
+                                onAddDirective={documentationMode ? () => {} : addDirective}
                                 variant="empty"
                                 index={0}
                                 emptyText={{
@@ -431,7 +442,7 @@ export default function GroupDirectiveComponent({
                             <div className="py-1">
                                 <Suspense fallback={<div>Loading...</div>}>
                                     <AddDirectiveButton
-                                        onAddDirective={addDirective}
+                                        onAddDirective={documentationMode ? () => {} : addDirective}
                                         variant="inline"
                                         index={0}
                                     />
@@ -460,26 +471,27 @@ export default function GroupDirectiveComponent({
                                             <DirectiveComponent
                                                 directive={directive}
                                                 baseImage={baseImage}
-                                                onChange={(updated) =>
+                                                onChange={documentationMode ? () => {} : (updated) =>
                                                     handleDirectiveChange(
                                                         index,
                                                         updated
                                                     )
                                                 }
                                                 controllers={{
-                                                    onMoveUp: () => moveDirective(index, "up"),
-                                                    onMoveDown: () => moveDirective(index, "down"),
-                                                    onDelete: () => handleDeleteClick(index),
-                                                    canMoveUp: index !== 0,
-                                                    canMoveDown: index !== group.length - 1,
+                                                    onMoveUp: documentationMode ? undefined : () => moveDirective(index, "up"),
+                                                    onMoveDown: documentationMode ? undefined : () => moveDirective(index, "down"),
+                                                    onDelete: documentationMode ? undefined : () => handleDeleteClick(index),
+                                                    canMoveUp: !documentationMode && index !== 0,
+                                                    canMoveDown: !documentationMode && index !== group.length - 1,
                                                     stepNumber: index + 1,
-                                                    draggable: true,
-                                                    onDragStart: (e) => handleDragStart(e, index),
-                                                    onDragOver: (e) => handleDragOver(e, index),
-                                                    onDragLeave: handleDragLeave,
-                                                    onDrop: (e) => handleDrop(e, index),
-                                                    onDragEnd: handleDragEnd,
+                                                    draggable: !documentationMode,
+                                                    onDragStart: documentationMode ? undefined : (e) => handleDragStart(e, index),
+                                                    onDragOver: documentationMode ? undefined : (e) => handleDragOver(e, index),
+                                                    onDragLeave: documentationMode ? undefined : handleDragLeave,
+                                                    onDrop: documentationMode ? undefined : (e) => handleDrop(e, index),
+                                                    onDragEnd: documentationMode ? undefined : handleDragEnd,
                                                 }}
+                                                documentationMode={documentationMode}
                                             />
                                         </div>
                                     </div>
@@ -488,7 +500,7 @@ export default function GroupDirectiveComponent({
                                     <div className="py-1">
                                         <Suspense fallback={<div>Loading...</div>}>
                                             <AddDirectiveButton
-                                                onAddDirective={addDirective}
+                                                onAddDirective={documentationMode ? () => {} : addDirective}
                                                 variant="inline"
                                                 index={index + 1}
                                             />
@@ -526,15 +538,17 @@ export default function GroupDirectiveComponent({
                             <div className="flex gap-3 justify-end">
                                 <button
                                     className={cn(getButtons(isDark).secondary, "text-sm")}
-                                    onClick={cancelDelete}
+                                    onClick={documentationMode ? undefined : cancelDelete}
+                                    disabled={documentationMode}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     className={cn("px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors")}
-                                    onClick={() =>
+                                    onClick={documentationMode ? undefined : () =>
                                         removeDirective(deleteConfirmIndex)
                                     }
+                                    disabled={documentationMode}
                                 >
                                     Delete
                                 </button>

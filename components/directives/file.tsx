@@ -17,6 +17,7 @@ export default function FileDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     file: FileInfo;
     onChange: (file: FileInfo) => void;
@@ -27,6 +28,7 @@ export default function FileDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const [fileContent, setFileContent] = useState(file.contents || "");
@@ -144,12 +146,14 @@ export default function FileDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <FormField label="Name">
                 <Input
                     value={file.name}
-                    onChange={(e) => updateName(e.target.value)}
+                    onChange={documentationMode ? undefined : (e) => updateName(e.target.value)}
                     placeholder="Enter file name"
+                    readOnly={documentationMode}
                 />
             </FormField>
 
@@ -161,7 +165,7 @@ export default function FileDirectiveComponent({
                         { value: "url", label: "Provide URL" }
                     ]}
                     value={inputType}
-                    onChange={(value) => toggleInputType(value as "content" | "filename" | "url")}
+                    onChange={documentationMode ? () => {} : (value) => toggleInputType(value as "content" | "filename" | "url")}
                 />
             </FormField>
 
@@ -169,10 +173,11 @@ export default function FileDirectiveComponent({
                 <FormField label="File Contents">
                     <Textarea
                         value={fileContent}
-                        onChange={(e) => updateContents(e.target.value)}
+                        onChange={documentationMode ? undefined : (e) => updateContents(e.target.value)}
                         placeholder="Enter file contents here..."
                         className="min-h-[200px] w-full"
                         monospace
+                        readOnly={documentationMode}
                     />
                 </FormField>
             ) : inputType === "filename" ? (
@@ -182,9 +187,10 @@ export default function FileDirectiveComponent({
                 >
                     <Input
                         value={file.filename || ""}
-                        onChange={(e) => updateFilename(e.target.value)}
+                        onChange={documentationMode ? undefined : (e) => updateFilename(e.target.value)}
                         placeholder="Path to the file"
                         monospace
+                        readOnly={documentationMode}
                     />
                 </FormField>
             ) : (
@@ -194,8 +200,9 @@ export default function FileDirectiveComponent({
                 >
                     <Input
                         value={file.url || ""}
-                        onChange={(e) => updateUrl(e.target.value)}
+                        onChange={documentationMode ? undefined : (e) => updateUrl(e.target.value)}
                         placeholder="https://example.com/file.txt"
+                        readOnly={documentationMode}
                     />
                 </FormField>
             )}

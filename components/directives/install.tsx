@@ -32,6 +32,7 @@ export default function InstallDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     install: string | string[];
     baseImage: string;
@@ -43,6 +44,7 @@ export default function InstallDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const [packages, setPackages] = useState<string[]>([]);
@@ -122,6 +124,7 @@ export default function InstallDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <FormField label="Package Manager">
                 <Select
@@ -140,11 +143,12 @@ export default function InstallDirectiveComponent({
 
             <PackageTagEditor
                 packages={packages}
-                onChange={updatePackages}
+                onChange={documentationMode ? () => {} : updatePackages}
                 packageDatabase={packageDatabase}
                 databaseLoaded={databaseLoaded}
                 isLoadingDatabase={isLoadingDatabase}
                 baseImage={baseImage}
+                readOnly={documentationMode}
             />
         </DirectiveContainer>
     );

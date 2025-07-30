@@ -16,6 +16,7 @@ export default function IncludeDirectiveComponent({
     iconColor,
     icon,
     controllers,
+    documentationMode = false,
 }: {
     include: IncludeMacro,
     onChange: (include: IncludeMacro) => void,
@@ -26,6 +27,7 @@ export default function IncludeDirectiveComponent({
     iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
+    documentationMode?: boolean;
 }) {
     const { isDark } = useTheme();
     const helpContent = (
@@ -65,6 +67,7 @@ export default function IncludeDirectiveComponent({
             iconColor={iconColor}
             icon={icon}
             controllers={controllers}
+            documentationMode={documentationMode}
         >
             <FormField
                 label="Macro"
@@ -72,8 +75,9 @@ export default function IncludeDirectiveComponent({
             >
                 <Select
                     value={include}
-                    onChange={(e) => onChange(e.target.value as IncludeMacro)}
+                    onChange={documentationMode ? undefined : (e) => onChange(e.target.value as IncludeMacro)}
                     className="font-mono"
+                    disabled={documentationMode}
                 >
                     {Object.entries(IncludeMacros).map(([key, value]) => (
                         <option key={key} value={value}>
