@@ -106,9 +106,8 @@ registerNeuroDockerTemplate({
                 name: "mamba",
                 type: "boolean",
                 required: false,
-                defaultValue: false,
-                description: "Use Mamba instead of Conda for faster package management",
-                advanced: true
+                defaultValue: true,
+                description: "Use Mamba instead of Conda for faster package management"
             }
         ]
     },
