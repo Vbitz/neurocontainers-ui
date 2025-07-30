@@ -104,7 +104,7 @@ dependencies:
             name: "mamba",
             type: "boolean",
             required: false,
-            defaultValue: false,
+            defaultValue: true,
             description: "Use Mamba instead of Conda for faster package resolution and installation.",
         },
         {
