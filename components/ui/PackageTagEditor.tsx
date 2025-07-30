@@ -296,7 +296,7 @@ export default function PackageTagEditor({
                             {isLoadingDatabase ? (
                                 <div className={cn(
                                     "animate-spin h-4 w-4 border-2 border-t-transparent rounded-full",
-                                    isDark ? "border-[#7bb33a]" : "border-[#6aa329]"
+                                    isDark ? "border-[#7bb33a]" : "border-[#15803d]"
                                 )} />
                             ) : (
                                 <MagnifyingGlassIcon className={cn(
