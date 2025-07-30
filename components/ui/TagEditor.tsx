@@ -253,7 +253,7 @@ export default function TagEditor({
                             inputValue.trim()
                                 ? (isDark
                                     ? "bg-[#1f2e18] border-[#2d4222] hover:bg-[#2a3d20] focus:ring-[#7bb33a] text-[#91c84a]"
-                                    : "bg-[#f0f7e7] border-[#e6f1d6] hover:bg-[#e8f4d9] focus:ring-[#6aa329] text-[#4f7b38]")
+                                    : "bg-[#f0f7e7] border-[#e6f1d6] hover:bg-[#e8f4d9] focus:ring-[#15803d] text-[#15803d]")
                                 : (isDark
                                     ? "bg-[#2d4222] border-[#374151] cursor-not-allowed text-[#6b7280]"
                                     : "bg-gray-100 border-gray-200 cursor-not-allowed text-gray-400")

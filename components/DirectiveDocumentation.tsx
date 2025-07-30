@@ -128,7 +128,7 @@ export default function DirectiveDocumentation({
                                             "w-full pl-10 pr-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-offset-1",
                                             isDark
                                                 ? "bg-[#0a0c08] border-[#2d4222] text-[#e8f5d0] placeholder-[#9ca3af] focus:ring-[#91c84a]"
-                                                : "bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:ring-[#4f7b38]"
+                                                : "bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:ring-[#15803d]"
                                         )}
                                     />
                                     <MagnifyingGlassIcon
@@ -222,7 +222,7 @@ export default function DirectiveDocumentation({
                                         "w-full pl-10 pr-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-offset-1",
                                         isDark
                                             ? "bg-[#0a0c08] border-[#2d4222] text-[#e8f5d0] placeholder-[#9ca3af] focus:ring-[#91c84a]"
-                                            : "bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:ring-[#4f7b38]"
+                                            : "bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:ring-[#15803d]"
                                     )}
                                 />
                                 <MagnifyingGlassIcon

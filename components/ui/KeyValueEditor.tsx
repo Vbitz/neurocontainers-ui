@@ -104,7 +104,7 @@ export default function KeyValueEditor({
                                     "w-8 h-8 flex justify-center items-center transition-colors rounded",
                                     isDark
                                         ? "text-[#9ca3af] hover:text-[#7bb33a] hover:bg-[#2d4222]"
-                                        : "text-gray-400 hover:text-[#6aa329] hover:bg-gray-50"
+                                        : "text-gray-400 hover:text-[#15803d] hover:bg-gray-50"
                                 )}
                                 onClick={() => removeItem(key)}
                                 title="Remove item"
