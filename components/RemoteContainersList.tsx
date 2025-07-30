@@ -6,7 +6,6 @@ import {
     CloudIcon,
     ComputerDesktopIcon,
     TrashIcon,
-    ArrowPathIcon,
     MagnifyingGlassIcon,
     ExclamationTriangleIcon,
     EyeIcon,
@@ -118,23 +117,17 @@ export function RemoteContainersList({
                     </div>
                     <div className="flex items-center space-x-2">
                         {filesystemMode === 'remote' && (
-                            <>
-                                <button
-                                    onClick={refetch}
-                                    disabled={loading}
-                                    className={cn(buttonStyles(isDark, 'ghost', 'sm'), "disabled:opacity-50")}
-                                    title="Refresh recipes"
-                                >
-                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'sm'), loading && 'animate-spin')} />
-                                </button>
-                                <button
-                                    onClick={clearCache}
-                                    className={cn(buttonStyles(isDark, 'ghost', 'sm'), "hover:text-red-600")}
-                                    title="Clear cache"
-                                >
-                                    <TrashIcon className={iconStyles(isDark, 'sm')} />
-                                </button>
-                            </>
+                            <button
+                                onClick={() => {
+                                    clearCache();
+                                    refetch();
+                                }}
+                                disabled={loading}
+                                className={cn(buttonStyles(isDark, 'ghost', 'sm'), "hover:text-red-600 disabled:opacity-50")}
+                                title="Clear cache and refresh"
+                            >
+                                <TrashIcon className={iconStyles(isDark, 'sm')} />
+                            </button>
                         )}
                     </div>
                 </div>
