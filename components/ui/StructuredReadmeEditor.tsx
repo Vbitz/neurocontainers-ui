@@ -1,7 +1,7 @@
 import { StructuredReadme, convertStructuredReadmeToText } from "@/components/common";
 import { FormField } from "./FormField";
 import { useState } from "react";
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { DocumentTextIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { getThemePresets, iconStyles, textStyles, textareaStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
@@ -111,13 +111,40 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                         label="Documentation URL *"
                         description="Link to official documentation or project website"
                     >
-                        <input
-                            type="url"
-                            value={value.documentation}
-                            onChange={(e) => updateField("documentation", e.target.value)}
-                            placeholder="https://..."
-                            className={getThemePresets(isDark).input}
-                        />
+                        <div className="flex">
+                            <input
+                                type="url"
+                                value={value.documentation}
+                                onChange={(e) => updateField("documentation", e.target.value)}
+                                placeholder="https://..."
+                                className={cn(
+                                    getThemePresets(isDark).input,
+                                    "rounded-r-none border-r-0"
+                                )}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (value.documentation.trim()) {
+                                        window.open(value.documentation.trim(), '_blank', 'noopener,noreferrer');
+                                    }
+                                }}
+                                disabled={!value.documentation.trim()}
+                                className={cn(
+                                    "px-3 py-2 border rounded-r-md transition-colors flex items-center justify-center",
+                                    !value.documentation.trim()
+                                        ? (isDark 
+                                            ? "border-[#374151] bg-[#1f2937] text-[#6b7280] cursor-not-allowed" 
+                                            : "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed")
+                                        : (isDark
+                                            ? "border-[#374151] bg-[#2d4222] text-[#91c84a] hover:bg-[#3a5c29] hover:text-[#7bb33a]"
+                                            : "border-gray-200 bg-[#f0f7e7] text-[#4f7b38] hover:bg-[#e5f0d5] hover:text-[#6aa329]")
+                                )}
+                                title={value.documentation.trim() ? "Open documentation in new tab" : "Enter a URL to open"}
+                            >
+                                <ArrowTopRightOnSquareIcon className={iconStyles(isDark, 'sm')} />
+                            </button>
+                        </div>
                     </FormField>
 
                     <FormField
