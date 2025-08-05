@@ -5,7 +5,7 @@ import { load as loadYAML } from "js-yaml";
 import {
     CloudIcon,
     ComputerDesktopIcon,
-    TrashIcon,
+    ArrowPathIcon,
     MagnifyingGlassIcon,
     ExclamationTriangleIcon,
     EyeIcon,
@@ -126,7 +126,7 @@ export function RemoteContainersList({
                                 className={cn(buttonStyles(isDark, 'ghost', 'sm'), "hover:text-red-600 disabled:opacity-50")}
                                 title="Clear cache and refresh"
                             >
-                                <TrashIcon className={iconStyles(isDark, 'sm')} />
+                                <ArrowPathIcon className={iconStyles(isDark, 'sm')} />
                             </button>
                         )}
                     </div>
