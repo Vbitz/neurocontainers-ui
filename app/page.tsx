@@ -2,12 +2,13 @@
 
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect, useCallback } from "react";
-import { ExclamationTriangleIcon, PlusIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon, PlusIcon, ArrowUpTrayIcon, DocumentPlusIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe, mergeAdditionalFilesIntoRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
 import GitHubModal from "@/components/githubExport";
+import YamlPasteModal from "@/components/yamlPasteModal";
 import { useGitHubFiles } from '@/lib/useGithub';
 import { cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
@@ -38,6 +39,7 @@ export default function Home() {
     const [containerError, setContainerError] = useState<string | null>(null);
     const [yamlText, setYamlText] = useState("");
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+    const [isYamlPasteModalOpen, setIsYamlPasteModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isEditingName] = useState<boolean>(false);
     const [isUpdatingUrl] = useState<boolean>(false);
@@ -504,6 +506,29 @@ export default function Home() {
                                             </div>
                                         </button>
 
+                                        <button
+                                            onClick={() => setIsYamlPasteModalOpen(true)}
+                                            className={cn(
+                                                "group flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                                isDark
+                                                    ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30"
+                                                    : "bg-gradient-to-r from-[#e6f1d6] to-[#d3e7b6] text-[#4f7b38] hover:from-[#d3e7b6] hover:to-[#c0d89f] border border-[#4f7b38]/20"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "p-2 rounded-lg transition-colors",
+                                                isDark
+                                                    ? "bg-[#91c84a]/20 group-hover:bg-[#91c84a]/30"
+                                                    : "bg-[#4f7b38]/20 group-hover:bg-[#4f7b38]/30"
+                                            )}>
+                                                <DocumentPlusIcon className="h-6 w-6" />
+                                            </div>
+                                            <div className="flex flex-col items-start">
+                                                <span className="text-xl">Paste YAML Recipe</span>
+                                                <span className="text-sm opacity-80 font-normal">Perfect for AI-generated recipes</span>
+                                            </div>
+                                        </button>
+
                                         <div 
                                             className="relative"
                                             onDragOver={handleDragOver}
@@ -634,6 +659,12 @@ export default function Home() {
                             yamlText={yamlText}
                         />
                     )}
+                    
+                    <YamlPasteModal
+                        isOpen={isYamlPasteModalOpen}
+                        onClose={() => setIsYamlPasteModalOpen(false)}
+                        onLoadContainer={loadContainer}
+                    />
                 </>
             )}
         </div>
