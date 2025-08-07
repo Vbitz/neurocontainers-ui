@@ -205,7 +205,7 @@ function wrapInRawBlock(text: string): string {
 export function convertStructuredReadmeToText(
     structured: StructuredReadme,
     name: string,
-    version: string
+    version: string // eslint-disable-line @typescript-eslint/no-unused-vars
 ): string {
     const citationText = structured.citation.trim();
     const needsRawBlock = hasJinja2Syntax(citationText);
@@ -213,7 +213,7 @@ export function convertStructuredReadmeToText(
 
     const lines = [
         "----------------------------------",
-        `## ${name}/${version} ##`,
+        `## ${name}/{{ context.version }} ##`,
         "",
         structured.description.trim(),
         "",
@@ -233,7 +233,7 @@ export function convertStructuredReadmeToText(
             "Note: Citation content is wrapped in Jinja2 raw blocks to prevent template processing conflicts with BibTeX syntax."
         ] : []),
         "",
-        `To run container outside of this environment: ml ${name}/${version}`,
+        `To run container outside of this environment: ml ${name}/{{ context.version }}`,
         "",
         "----------------------------------"
     ];
