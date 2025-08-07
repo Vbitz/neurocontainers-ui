@@ -2,12 +2,13 @@
 
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect, useCallback } from "react";
-import { ExclamationTriangleIcon, PlusIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon, PlusIcon, ArrowUpTrayIcon, BeakerIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe, mergeAdditionalFilesIntoRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
 import GitHubModal from "@/components/githubExport";
+import GuidedTour from "@/components/GuidedTour";
 import { useGitHubFiles } from '@/lib/useGithub';
 import { cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
@@ -38,6 +39,7 @@ export default function Home() {
     const [containerError, setContainerError] = useState<string | null>(null);
     const [yamlText, setYamlText] = useState("");
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+    const [isGuidedTourOpen, setIsGuidedTourOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isEditingName] = useState<boolean>(false);
     const [isUpdatingUrl] = useState<boolean>(false);
@@ -189,6 +191,12 @@ export default function Home() {
         autoSaveContainer(newData);
     }, [updateUrl, checkIfPublished, files, isPublishedContainer, checkIfModifiedFromGithub, setIsModifiedFromGithub, autoSaveContainer]);
 
+
+    // Handle guided tour completion
+    const handleGuidedTourComplete = useCallback((recipe: ContainerRecipe) => {
+        loadContainer(recipe);
+        setIsGuidedTourOpen(false);
+    }, [loadContainer]);
 
     // Handle new container
     const handleNewContainer = useCallback(() => {
@@ -484,7 +492,7 @@ export default function Home() {
                                     {/* Action Buttons */}
                                     <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
                                         <button
-                                            onClick={() => loadContainer(getNewContainerYAML())}
+                                            onClick={() => setIsGuidedTourOpen(true)}
                                             className={cn(
                                                 "group flex items-center space-x-3 px-8 py-4 rounded-xl text-white font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
                                                 isDark
@@ -496,11 +504,32 @@ export default function Home() {
                                                 "p-2 rounded-lg transition-colors",
                                                 isDark ? "bg-white/20 group-hover:bg-white/30" : "bg-white/20 group-hover:bg-white/30"
                                             )}>
+                                                <BeakerIcon className="h-6 w-6" />
+                                            </div>
+                                            <div className="flex flex-col items-start">
+                                                <span className="text-xl">Start Guided Tour</span>
+                                                <span className="text-sm opacity-90 font-normal">Use templates & forms</span>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            onClick={() => loadContainer(getNewContainerYAML())}
+                                            className={cn(
+                                                "group flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                                isDark
+                                                    ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30"
+                                                    : "bg-gradient-to-r from-[#e6f1d6] to-[#d3e7b6] text-[#4f7b38] hover:from-[#d3e7b6] hover:to-[#c0d89f] border border-[#4f7b38]/20"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "p-2 rounded-lg transition-colors",
+                                                isDark ? "bg-[#91c84a]/20 group-hover:bg-[#91c84a]/30" : "bg-[#4f7b38]/20 group-hover:bg-[#4f7b38]/30"
+                                            )}>
                                                 <PlusIcon className="h-6 w-6" />
                                             </div>
                                             <div className="flex flex-col items-start">
                                                 <span className="text-xl">Create New Container</span>
-                                                <span className="text-sm opacity-90 font-normal">Start from scratch</span>
+                                                <span className="text-sm opacity-80 font-normal">Start from scratch</span>
                                             </div>
                                         </button>
 
@@ -634,6 +663,12 @@ export default function Home() {
                             yamlText={yamlText}
                         />
                     )}
+                    
+                    <GuidedTour
+                        isOpen={isGuidedTourOpen}
+                        onClose={() => setIsGuidedTourOpen(false)}
+                        onComplete={handleGuidedTourComplete}
+                    />
                 </>
             )}
         </div>
