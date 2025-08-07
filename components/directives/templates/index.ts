@@ -19,6 +19,5 @@ export * from './ndfreeze';
 export * from './neurodebian';
 export * from './niftyreg';
 export * from './petpvc';
-export * from './pythonPackage';
 export * from './spm12';
 export * from './vnc';

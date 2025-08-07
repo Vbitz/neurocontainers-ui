@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon, BeakerIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { ContainerTemplate, TemplateField, GUIDED_TOUR_TEMPLATES } from '@/components/directives/templates/guidedTour';
-import { extractRepoName } from '@/components/directives/templates/pythonPackage';
+import { ContainerTemplate, TemplateField, GUIDED_TOUR_TEMPLATES } from '@/components/templates/guidedTour';
+import { extractRepoName } from '@/components/templates/pythonPackage';
 import { ContainerRecipe, CopyrightInfo } from '@/components/common';
 import { useTheme } from '@/lib/ThemeContext';
 import { cn } from '@/lib/styles';
