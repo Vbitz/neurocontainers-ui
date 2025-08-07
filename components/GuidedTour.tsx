@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon, BeakerIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { ContainerTemplate, TemplateField, GUIDED_TOUR_TEMPLATES } from '@/components/directives/templates/guidedTour';
 import { extractRepoName } from '@/components/directives/templates/pythonPackage';
-import { ContainerRecipe } from '@/components/common';
+import { ContainerRecipe, CopyrightInfo } from '@/components/common';
 import { useTheme } from '@/lib/ThemeContext';
 import { cn } from '@/lib/styles';
 import { LicenseSection } from '@/components/ui';
@@ -227,14 +227,14 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
 
                 {field.type === 'license' ? (
                     <LicenseSection
-                        licenses={value ? [value] : []}
+                        licenses={value && typeof value === 'object' && ('license' in value || 'name' in value) ? [value as CopyrightInfo] : []}
                         onChange={(licenses) => handleFieldChange(field.id, licenses[0] || null)}
                         showAddButton={false}
                         renderAddButton={() => null}
                     />
                 ) : field.type === 'packages' ? (
                     <PackageTagEditor
-                        packages={value || []}
+                        packages={Array.isArray(value) ? value : []}
                         onChange={(packages) => handleFieldChange(field.id, packages)}
                         packageDatabase={packageDatabase}
                         databaseLoaded={databaseLoaded}
@@ -243,7 +243,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
                     />
                 ) : field.type === 'select' ? (
                     <select
-                        value={value || ''}
+                        value={typeof value === 'string' ? value : ''}
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         className={fieldClass}
                     >
@@ -255,7 +255,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
                     </select>
                 ) : field.type === 'textarea' ? (
                     <textarea
-                        value={value || ''}
+                        value={typeof value === 'string' ? value : ''}
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         placeholder={field.placeholder}
                         rows={4}
@@ -264,7 +264,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
                 ) : (
                     <input
                         type={field.type === 'url' ? 'url' : 'text'}
-                        value={value || ''}
+                        value={typeof value === 'string' ? value : ''}
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         placeholder={field.placeholder}
                         className={fieldClass}
@@ -496,7 +496,18 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
                                         if (field.type === 'packages') {
                                             displayValue = Array.isArray(value) ? value.join(', ') : '';
                                         } else if (field.type === 'license') {
-                                            displayValue = value.license || value.name || 'Unknown license';
+                                            if (value && typeof value === 'object') {
+                                                const copyrightInfo = value as CopyrightInfo;
+                                                if ('license' in copyrightInfo) {
+                                                    displayValue = copyrightInfo.license || 'Unknown license';
+                                                } else if ('name' in copyrightInfo) {
+                                                    displayValue = copyrightInfo.name || 'Unknown license';
+                                                } else {
+                                                    displayValue = 'Unknown license';
+                                                }
+                                            } else {
+                                                displayValue = 'Unknown license';
+                                            }
                                         } else {
                                             displayValue = String(value);
                                         }
