@@ -1,25 +1,37 @@
-import React, { useState, useCallback } from 'react';
-import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon, BeakerIcon } from '@heroicons/react/24/outline';
-import { ContainerTemplate, TemplateField, TEMPLATES } from '@/lib/templates';
+import React, { useState, useCallback, useEffect } from 'react';
+import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon, BeakerIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ContainerTemplate, TemplateField, GUIDED_TOUR_TEMPLATES } from '@/components/directives/templates/guidedTour';
+import { extractRepoName } from '@/components/directives/templates/pythonPackage';
 import { ContainerRecipe } from '@/components/common';
 import { useTheme } from '@/lib/ThemeContext';
 import { cn } from '@/lib/styles';
+import { LicenseSection } from '@/components/ui';
+import PackageTagEditor from '@/components/ui/PackageTagEditor';
+import { loadPackageDatabase } from '@/lib/packages';
 
 interface GuidedTourProps {
     isOpen: boolean;
     onClose: () => void;
     onComplete: (recipe: ContainerRecipe) => void;
+    onPublish?: (recipe: ContainerRecipe) => void;
 }
 
 interface FormData {
-    [fieldId: string]: string;
+    [fieldId: string]: string | string[] | object | null;
 }
 
 interface ValidationErrors {
     [fieldId: string]: string;
 }
 
-const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) => {
+interface Package {
+    name: string;
+    description: string;
+    version?: string;
+    section?: string;
+}
+
+const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, onPublish }) => {
     const { isDark } = useTheme();
     
     const [currentStep, setCurrentStep] = useState(0);
@@ -27,12 +39,48 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
     const [formData, setFormData] = useState<FormData>({});
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
     const [isGenerating, setIsGenerating] = useState(false);
+    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+    const [packageDatabase, setPackageDatabase] = useState<Package[]>([]);
+    const [databaseLoaded, setDatabaseLoaded] = useState(false);
+    const [isLoadingDatabase, setIsLoadingDatabase] = useState(false);
 
     const steps = [
         'Choose Template',
-        'Configure Container',
+        'Configure Container', 
         'Review & Create'
     ];
+
+    // Load package database
+    useEffect(() => {
+        const loadDatabase = async () => {
+            setIsLoadingDatabase(true);
+            try {
+                const db = await loadPackageDatabase();
+                setPackageDatabase(db);
+                setDatabaseLoaded(true);
+            } catch (error) {
+                console.error("Failed to load package database:", error);
+            } finally {
+                setIsLoadingDatabase(false);
+            }
+        };
+
+        loadDatabase();
+    }, []);
+
+    // Auto-fill container name when GitHub URL changes
+    useEffect(() => {
+        if (formData.githubUrl && selectedTemplate) {
+            const repoName = extractRepoName(String(formData.githubUrl));
+            if (!formData.containerName || formData.containerName === extractRepoName(String(formData.oldGithubUrl || ''))) {
+                setFormData(prev => ({ 
+                    ...prev, 
+                    containerName: repoName,
+                    oldGithubUrl: formData.githubUrl 
+                }));
+            }
+        }
+    }, [formData.githubUrl, formData.containerName, formData.oldGithubUrl, selectedTemplate]);
 
     const resetTour = useCallback(() => {
         setCurrentStep(0);
@@ -40,6 +88,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
         setFormData({});
         setValidationErrors({});
         setIsGenerating(false);
+        setShowAdvancedOptions(false);
     }, []);
 
     const handleClose = useCallback(() => {
@@ -47,12 +96,18 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
         onClose();
     }, [resetTour, onClose]);
 
-    const validateField = useCallback((field: TemplateField, value: string): string | null => {
-        if (field.required && !value.trim()) {
-            return `${field.label} is required`;
+    const validateField = useCallback((field: TemplateField, value: string | string[] | object | null): string | null => {
+        if (field.required) {
+            if (field.type === 'packages' && (!value || (Array.isArray(value) && value.length === 0))) {
+                return `${field.label} is required`;
+            } else if (field.type === 'license' && !value) {
+                return `${field.label} is required`;
+            } else if ((field.type === 'text' || field.type === 'url' || field.type === 'textarea') && !String(value).trim()) {
+                return `${field.label} is required`;
+            }
         }
-        if (field.validation && value.trim()) {
-            return field.validation(value.trim());
+        if (field.validation && String(value).trim()) {
+            return field.validation(String(value).trim());
         }
         return null;
     }, []);
@@ -97,6 +152,10 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
         template.fields.forEach(field => {
             if (field.type === 'select' && field.options && field.options.length > 0) {
                 initialData[field.id] = field.options[0].value;
+            } else if (field.type === 'packages') {
+                initialData[field.id] = [];
+            } else if (field.type === 'license') {
+                initialData[field.id] = null;
             } else {
                 initialData[field.id] = '';
             }
@@ -105,7 +164,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
         setValidationErrors({});
     }, []);
 
-    const handleFieldChange = useCallback((fieldId: string, value: string) => {
+    const handleFieldChange = useCallback((fieldId: string, value: string | string[] | object | null) => {
         setFormData(prev => ({ ...prev, [fieldId]: value }));
         
         // Clear validation error for this field
@@ -118,13 +177,18 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
         }
     }, [validationErrors]);
 
-    const handleGenerate = useCallback(async () => {
+    const handleGenerate = useCallback(async (shouldPublish = false) => {
         if (!selectedTemplate || !validateCurrentStep()) return;
 
         setIsGenerating(true);
         try {
             const recipe = selectedTemplate.generateRecipe(formData);
-            onComplete(recipe);
+            
+            if (shouldPublish && onPublish) {
+                onPublish(recipe);
+            } else {
+                onComplete(recipe);
+            }
             handleClose();
         } catch (error) {
             console.error('Failed to generate recipe:', error);
@@ -132,10 +196,10 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
         } finally {
             setIsGenerating(false);
         }
-    }, [selectedTemplate, formData, validateCurrentStep, onComplete, handleClose]);
+    }, [selectedTemplate, formData, validateCurrentStep, onComplete, onPublish, handleClose]);
 
     const renderField = useCallback((field: TemplateField) => {
-        const value = formData[field.id] || '';
+        const value = formData[field.id];
         const error = validationErrors[field.id];
 
         const fieldClass = cn(
@@ -149,7 +213,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
         );
 
         return (
-            <div key={field.id} className="space-y-2">
+            <div key={field.id} className={cn("space-y-2", field.type === 'packages' || field.type === 'license' ? "col-span-2" : "")}>
                 <label className={cn("block text-sm font-medium", isDark ? "text-gray-200" : "text-gray-700")}>
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -161,9 +225,25 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                     </p>
                 )}
 
-                {field.type === 'select' ? (
+                {field.type === 'license' ? (
+                    <LicenseSection
+                        licenses={value ? [value] : []}
+                        onChange={(licenses) => handleFieldChange(field.id, licenses[0] || null)}
+                        showAddButton={false}
+                        renderAddButton={() => null}
+                    />
+                ) : field.type === 'packages' ? (
+                    <PackageTagEditor
+                        packages={value || []}
+                        onChange={(packages) => handleFieldChange(field.id, packages)}
+                        packageDatabase={packageDatabase}
+                        databaseLoaded={databaseLoaded}
+                        isLoadingDatabase={isLoadingDatabase}
+                        baseImage="ubuntu:24.04"
+                    />
+                ) : field.type === 'select' ? (
                     <select
-                        value={value}
+                        value={value || ''}
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         className={fieldClass}
                     >
@@ -175,7 +255,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                     </select>
                 ) : field.type === 'textarea' ? (
                     <textarea
-                        value={value}
+                        value={value || ''}
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         placeholder={field.placeholder}
                         rows={4}
@@ -184,7 +264,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                 ) : (
                     <input
                         type={field.type === 'url' ? 'url' : 'text'}
-                        value={value}
+                        value={value || ''}
                         onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         placeholder={field.placeholder}
                         className={fieldClass}
@@ -196,7 +276,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                 )}
             </div>
         );
-    }, [formData, validationErrors, isDark, handleFieldChange]);
+    }, [formData, validationErrors, isDark, handleFieldChange, packageDatabase, databaseLoaded, isLoadingDatabase]);
 
     if (!isOpen) return null;
 
@@ -273,7 +353,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {TEMPLATES.map(template => (
+                                {GUIDED_TOUR_TEMPLATES.map(template => (
                                     <button
                                         key={template.id}
                                         onClick={() => handleTemplateSelect(template)}
@@ -301,7 +381,73 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                                         </div>
                                     </button>
                                 ))}
+                                
+                                {/* Advanced option for starting from scratch */}
+                                {showAdvancedOptions && (
+                                    <button
+                                        onClick={() => {
+                                            // Create a minimal template for advanced users
+                                            onComplete({
+                                                name: '',
+                                                version: '1.0.0',
+                                                copyright: [],
+                                                architectures: ["x86_64"],
+                                                structured_readme: {
+                                                    description: '',
+                                                    example: '',
+                                                    documentation: '',
+                                                    citation: ''
+                                                },
+                                                build: {
+                                                    kind: "neurodocker",
+                                                    "base-image": "ubuntu:22.04",
+                                                    "pkg-manager": "apt",
+                                                    directives: []
+                                                },
+                                                categories: []
+                                            });
+                                            handleClose();
+                                        }}
+                                        className={cn(
+                                            "p-4 rounded-lg border-2 text-left transition-all hover:shadow-md border-dashed",
+                                            isDark
+                                                ? "border-gray-600 bg-gray-800 hover:border-gray-500"
+                                                : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                                        )}
+                                    >
+                                        <div className="text-2xl mb-2">⚙️</div>
+                                        <h4 className={cn("font-medium mb-1", isDark ? "text-white" : "text-gray-900")}>
+                                            Start from Scratch
+                                        </h4>
+                                        <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
+                                            Create a new container with full control over all settings
+                                        </p>
+                                        <div className={cn(
+                                            "mt-2 inline-block px-2 py-1 text-xs rounded",
+                                            isDark ? "bg-gray-600 text-gray-300" : "bg-gray-100 text-gray-700"
+                                        )}>
+                                            Advanced
+                                        </div>
+                                    </button>
+                                )}
                             </div>
+                            
+                            {!showAdvancedOptions && (
+                                <div className="mt-6 text-center">
+                                    <button
+                                        onClick={() => setShowAdvancedOptions(true)}
+                                        className={cn(
+                                            "inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-md transition-colors",
+                                            isDark
+                                                ? "text-gray-300 hover:text-white hover:bg-gray-700"
+                                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                        )}
+                                    >
+                                        <PlusIcon className="h-4 w-4" />
+                                        <span>Show Advanced Options</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -344,7 +490,19 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                                     </div>
                                     {selectedTemplate.fields.map(field => {
                                         const value = formData[field.id];
-                                        if (!value) return null;
+                                        if (!value || (Array.isArray(value) && value.length === 0)) return null;
+                                        
+                                        let displayValue: string;
+                                        if (field.type === 'packages') {
+                                            displayValue = Array.isArray(value) ? value.join(', ') : '';
+                                        } else if (field.type === 'license') {
+                                            displayValue = value.license || value.name || 'Unknown license';
+                                        } else {
+                                            displayValue = String(value);
+                                        }
+                                        
+                                        if (!displayValue) return null;
+                                        
                                         return (
                                             <div key={field.id}>
                                                 <dt className={cn("font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
@@ -352,9 +510,9 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                                                 </dt>
                                                 <dd className={cn("break-all", isDark ? "text-gray-400" : "text-gray-600")}>
                                                     {field.type === 'textarea' ? (
-                                                        <pre className="whitespace-pre-wrap text-xs">{value}</pre>
+                                                        <pre className="whitespace-pre-wrap text-xs">{displayValue}</pre>
                                                     ) : (
-                                                        value
+                                                        displayValue
                                                     )}
                                                 </dd>
                                             </div>
@@ -413,28 +571,55 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete }) 
                                     <ChevronRightIcon className="h-4 w-4" />
                                 </button>
                             ) : (
-                                <button
-                                    onClick={handleGenerate}
-                                    disabled={isGenerating}
-                                    className={cn(
-                                        "flex items-center space-x-2 px-6 py-2 rounded-md text-white transition-colors",
-                                        isGenerating
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-green-500 hover:bg-green-600"
+                                <div className="flex space-x-3">
+                                    <button
+                                        onClick={() => handleGenerate(false)}
+                                        disabled={isGenerating}
+                                        className={cn(
+                                            "flex items-center space-x-2 px-6 py-2 rounded-md text-white transition-colors",
+                                            isGenerating
+                                                ? "bg-gray-400 cursor-not-allowed"
+                                                : "bg-blue-500 hover:bg-blue-600"
+                                        )}
+                                    >
+                                        {isGenerating ? (
+                                            <>
+                                                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                                <span>Creating...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <BeakerIcon className="h-4 w-4" />
+                                                <span>Create Container</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    
+                                    {onPublish && (
+                                        <button
+                                            onClick={() => handleGenerate(true)}
+                                            disabled={isGenerating}
+                                            className={cn(
+                                                "flex items-center space-x-2 px-6 py-2 rounded-md text-white transition-colors",
+                                                isGenerating
+                                                    ? "bg-gray-400 cursor-not-allowed"
+                                                    : "bg-green-500 hover:bg-green-600"
+                                            )}
+                                        >
+                                            {isGenerating ? (
+                                                <>
+                                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                                    <span>Publishing...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <BeakerIcon className="h-4 w-4" />
+                                                    <span>Create & Publish</span>
+                                                </>
+                                            )}
+                                        </button>
                                     )}
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                                            <span>Generating...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <BeakerIcon className="h-4 w-4" />
-                                            <span>Create Container</span>
-                                        </>
-                                    )}
-                                </button>
+                                </div>
                             )}
                         </div>
                     </div>

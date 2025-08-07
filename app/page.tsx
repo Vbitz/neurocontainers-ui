@@ -2,7 +2,7 @@
 
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect, useCallback } from "react";
-import { ExclamationTriangleIcon, PlusIcon, ArrowUpTrayIcon, BeakerIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon, ArrowUpTrayIcon, BeakerIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe, mergeAdditionalFilesIntoRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
@@ -192,10 +192,19 @@ export default function Home() {
     }, [updateUrl, checkIfPublished, files, isPublishedContainer, checkIfModifiedFromGithub, setIsModifiedFromGithub, autoSaveContainer]);
 
 
-    // Handle guided tour completion
+    // Handle guided tour completion with optional publishing
     const handleGuidedTourComplete = useCallback((recipe: ContainerRecipe) => {
         loadContainer(recipe);
         setIsGuidedTourOpen(false);
+    }, [loadContainer]);
+
+    const handleGuidedTourPublish = useCallback((recipe: ContainerRecipe) => {
+        loadContainer(recipe);
+        setIsGuidedTourOpen(false);
+        // Auto-open GitHub export modal for publishing
+        setTimeout(() => {
+            setIsGitHubModalOpen(true);
+        }, 100);
     }, [loadContainer]);
 
     // Handle new container
@@ -512,27 +521,6 @@ export default function Home() {
                                             </div>
                                         </button>
 
-                                        <button
-                                            onClick={() => loadContainer(getNewContainerYAML())}
-                                            className={cn(
-                                                "group flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
-                                                isDark
-                                                    ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30"
-                                                    : "bg-gradient-to-r from-[#e6f1d6] to-[#d3e7b6] text-[#4f7b38] hover:from-[#d3e7b6] hover:to-[#c0d89f] border border-[#4f7b38]/20"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "p-2 rounded-lg transition-colors",
-                                                isDark ? "bg-[#91c84a]/20 group-hover:bg-[#91c84a]/30" : "bg-[#4f7b38]/20 group-hover:bg-[#4f7b38]/30"
-                                            )}>
-                                                <PlusIcon className="h-6 w-6" />
-                                            </div>
-                                            <div className="flex flex-col items-start">
-                                                <span className="text-xl">Create New Container</span>
-                                                <span className="text-sm opacity-80 font-normal">Start from scratch</span>
-                                            </div>
-                                        </button>
-
                                         <div 
                                             className="relative"
                                             onDragOver={handleDragOver}
@@ -668,6 +656,7 @@ export default function Home() {
                         isOpen={isGuidedTourOpen}
                         onClose={() => setIsGuidedTourOpen(false)}
                         onComplete={handleGuidedTourComplete}
+                        onPublish={handleGuidedTourPublish}
                     />
                 </>
             )}
