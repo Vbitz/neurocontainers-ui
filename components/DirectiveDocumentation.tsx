@@ -41,12 +41,13 @@ export default function DirectiveDocumentation({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-            {/* Overlay with glass effect */}
+            {/* Enhanced background with better blur integration */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 backdrop-blur-md"
                 style={{
-                    backgroundImage:
-                        "radial-gradient(circle at 20% 20%, rgba(123,179,58,0.12), transparent 40%), radial-gradient(circle at 80% 80%, rgba(145,200,74,0.12), transparent 40%)",
+                    background: isDark
+                        ? "radial-gradient(circle at 30% 20%, rgba(123,179,58,0.08), transparent 50%), radial-gradient(circle at 70% 80%, rgba(145,200,74,0.08), transparent 50%), linear-gradient(135deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.50) 100%)"
+                        : "radial-gradient(circle at 30% 20%, rgba(106,163,41,0.12), transparent 50%), radial-gradient(circle at 70% 80%, rgba(79,123,56,0.12), transparent 50%), linear-gradient(135deg, rgba(255,255,255,0.60) 0%, rgba(248,249,251,0.70) 100%)",
                 }}
             />
             <div
@@ -61,8 +62,10 @@ export default function DirectiveDocumentation({
             {/* Modal */}
             <div
                 className={cn(
-                    "relative w-full max-w-7xl h-full max-h-[95vh] sm:max-h-[90vh] rounded-lg shadow-2xl flex flex-col overflow-hidden border border-white/10",
-                    isDark ? "bg-white/10" : "bg-white/85"
+                    "relative w-full max-w-7xl h-full max-h-[95vh] sm:max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border backdrop-blur-sm",
+                    isDark 
+                        ? "bg-black/40 border-white/20 shadow-black/50" 
+                        : "bg-white/90 border-gray-200/50 shadow-black/20"
                 )}
             >
                 {/* Header */}
@@ -106,10 +109,10 @@ export default function DirectiveDocumentation({
                     {/* Sidebar */}
                     <div
                         className={cn(
-                            "w-80 border-r overflow-y-auto hidden lg:block",
+                            "w-80 border-r overflow-y-auto hidden lg:block backdrop-blur-md",
                             isDark
-                                ? "border-white/10 bg-white/5"
-                                : "border-gray-200 bg-gray-50/80"
+                                ? "border-white/10 bg-black/20"
+                                : "border-gray-200/50 bg-white/30"
                         )}
                     >
                         <div className="p-4">
@@ -203,10 +206,10 @@ export default function DirectiveDocumentation({
                         {/* Mobile Search */}
                         <div
                             className={cn(
-                                "lg:hidden p-4 border-b sticky top-0 z-10",
+                                "lg:hidden p-4 border-b sticky top-0 z-10 backdrop-blur-md",
                                 isDark
-                                    ? "bg-[#0a0c08] border-[#2d4222]"
-                                    : "bg-white border-gray-200"
+                                    ? "bg-black/30 border-white/10"
+                                    : "bg-white/80 border-gray-200/50"
                             )}
                         >
                             <div className="relative">
@@ -241,8 +244,8 @@ export default function DirectiveDocumentation({
                                     {/* Directive Card */}
                                     <div
                                         className={cn(
-                                            "p-5 rounded-lg shadow-md transition-all hover:shadow-lg",
-                                            isDark ? "bg-white/5" : "bg-white/90"
+                                            "p-5 rounded-lg shadow-md transition-all hover:shadow-lg backdrop-blur-md",
+                                            isDark ? "bg-black/20 border border-[#2d4222]/50" : "bg-white/30 border border-gray-200/50"
                                         )}
                                     >
                                         {/* Header */}
@@ -331,10 +334,10 @@ export default function DirectiveDocumentation({
                                             </h4>
                                             <div
                                                 className={cn(
-                                                    "p-4 rounded-lg text-sm font-mono overflow-x-auto",
+                                                    "p-4 rounded-lg text-sm font-mono overflow-x-auto backdrop-blur-md",
                                                     isDark
-                                                        ? "bg-[#161a0e] border border-[#2d4222] text-[#c4e382]"
-                                                        : "bg-gray-50 border border-gray-200 text-gray-700"
+                                                        ? "bg-black/30 border border-[#2d4222]/50 text-[#c4e382]"
+                                                        : "bg-white/50 border border-gray-200/50 text-gray-700"
                                                 )}
                                             >
                                                 <pre className="whitespace-pre-wrap">
@@ -357,10 +360,10 @@ export default function DirectiveDocumentation({
                                             </h4>
                                             <div
                                                 className={cn(
-                                                    "border-2 rounded-lg overflow-hidden",
+                                                    "border-2 rounded-lg overflow-hidden backdrop-blur-md",
                                                     isDark
-                                                        ? "border-[#2d4222]"
-                                                        : "border-gray-200"
+                                                        ? "border-[#2d4222]/50 bg-black/10"
+                                                        : "border-gray-200/50 bg-white/20"
                                                 )}
                                             >
                                                 <directive.component
