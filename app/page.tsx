@@ -7,6 +7,7 @@ import { ContainerRecipe, migrateLegacyRecipe, mergeAdditionalFilesIntoRecipe } 
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
+import DockerfileDisplay from "@/components/dockerfileDisplay";
 import GitHubModal from "@/components/githubExport";
 import YamlPasteModal from "@/components/yamlPasteModal";
 import GuidedTour from "@/components/GuidedTour";
@@ -29,6 +30,7 @@ import { getNewContainerYAML } from "@/lib/containerStorage";
 // Extracted hooks
 import { useContainerStorage } from "@/hooks/useContainerStorage";
 import { useContainerPublishing } from "@/hooks/useContainerPublishing";
+import { ValidationResult } from "@/types/validation";
 
 export default function Home() {
     const { isDark } = useTheme();
@@ -50,6 +52,7 @@ export default function Home() {
     const [hasMetadataErrors, setHasMetadataErrors] = useState<boolean>(false);
     const [isDragging, setIsDragging] = useState<boolean>(false);
     const [isValidationSuccessful, setIsValidationSuccessful] = useState<boolean>(false);
+    const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
 
     // Custom hooks
     const {
@@ -182,6 +185,11 @@ export default function Home() {
         setIsValidationSuccessful(isValid && hasResult);
     }, []);
 
+    // Handle validation result
+    const handleValidationResult = useCallback((result: ValidationResult | null) => {
+        setValidationResult(result);
+    }, []);
+
     // Handle data changes
     const handleDataChange = useCallback((newData: ContainerRecipe) => {
         setYamlData(newData);
@@ -200,6 +208,7 @@ export default function Home() {
 
         // Reset validation state when recipe changes
         setIsValidationSuccessful(false);
+        setValidationResult(null);
     }, [updateUrl, checkIfPublished, files, isPublishedContainer, checkIfModifiedFromGithub, setIsModifiedFromGithub, autoSaveContainer]);
 
 
@@ -690,6 +699,7 @@ export default function Home() {
                                     <ValidateRecipeComponent
                                         recipe={yamlData}
                                         onValidationChange={handleValidationChange}
+                                        onValidationResult={handleValidationResult}
                                     />
                                 </div>
 
@@ -738,6 +748,9 @@ export default function Home() {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Dockerfile Section - Only shown when validation is successful */}
+                                <DockerfileDisplay validationResult={validationResult} />
 
                                 <Footer />
                             </div>
