@@ -11,6 +11,7 @@ import {
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
+import DockerfileDisplay from "@/components/dockerfileDisplay";
 import GitHubModal from "@/components/githubExport";
 import YamlPasteModal from "@/components/yamlPasteModal";
 import GuidedTour from "@/components/GuidedTour";
@@ -33,6 +34,7 @@ import { getNewContainerYAML } from "@/lib/containerStorage";
 // Extracted hooks
 import { useContainerStorage } from "@/hooks/useContainerStorage";
 import { useContainerPublishing } from "@/hooks/useContainerPublishing";
+import { ValidationResult } from "@/types/validation";
 
 export default function Home() {
     const { isDark } = useTheme();
@@ -50,6 +52,7 @@ export default function Home() {
     const [isLocalFilesystemConnected] = useState<boolean>(false);
     const [hasMetadataErrors, setHasMetadataErrors] = useState<boolean>(false);
     const [isValidationSuccessful, setIsValidationSuccessful] = useState<boolean>(false);
+    const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
 
     // Hooks
     const {
@@ -126,6 +129,11 @@ export default function Home() {
         setIsValidationSuccessful(isValid && hasResult);
     }, []);
 
+    // Handle validation result
+    const handleValidationResult = useCallback((result: ValidationResult | null) => {
+        setValidationResult(result);
+    }, []);
+
     const autoSaveContainer = useCallback(
         (data: ContainerRecipe) => {
             if (shouldAutoSave(data)) {
@@ -198,7 +206,7 @@ export default function Home() {
         [findGithubFileByName, loadContainer, setOriginalYaml]
     );
 
-    // Handle data change (FIXED)
+    // Handle data change
     const handleDataChange = useCallback(
         (newData: ContainerRecipe) => {
             setYamlData(newData);
@@ -212,6 +220,7 @@ export default function Home() {
             autoSaveContainer(newData);
             // Reset validation state when recipe changes
             setIsValidationSuccessful(false);
+            setValidationResult(null);
         },
         [
             updateUrl,
@@ -223,6 +232,19 @@ export default function Home() {
             autoSaveContainer,
         ]
     );
+
+    // Handle new container
+    const handleNewContainer = useCallback(() => {
+        setYamlData(null);
+        setIsSidebarOpen(false);
+        resetPublishingState();
+        updateUrl(null);
+    }, [resetPublishingState, updateUrl]);
+
+    // Handle GitHub export
+    const handleOpenGitHub = useCallback(() => {
+        setIsGitHubModalOpen(true);
+    }, []);
 
     // File upload
     const processYamlFile = useCallback(
@@ -317,95 +339,78 @@ export default function Home() {
                 />
 
                 {!yamlData ? (
-                    <div className="max-w-6xl mx-auto p-6 pt-20">
-                        <h1
-                            className={cn(
-                                "text-4xl font-bold mb-4",
-                                isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]"
-                            )}
-                        >
-                            NeuroContainers Builder
-                        </h1>
-                        <p
-                            className={cn(
-                                "text-lg mb-12 max-w-2xl",
-                                isDark ? "text-[#91c84a]" : "text-[#4f7b38]"
-                            )}
-                        >
-                            Create, customize, and validate containerized neuroimaging tools
-                            with ease.
-                        </p>
+                    <div className="max-w-6xl mx-auto p-4 sm:p-6 pt-20 lg:pt-6">
+                        <div className="text-center mb-8">
+                            <h1 className={cn("text-3xl font-bold mb-4", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>
+                                NeuroContainers Builder
+                            </h1>
+                            <p className={cn("text-lg mb-8", isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>
+                                Create, customize, and validate containerized neuroimaging tools
+                            </p>
 
-                        {/* Horizontal CTA Cards */}
-                        <div className="grid md:grid-cols-3 gap-6 mb-12">
-                            {/* Create New Container (Guided Tour) */}
-                            <button
-                                onClick={() => setIsGuidedTourOpen(true)}
-                                className={cn(
-                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left transform hover:scale-[1.02] hover:shadow-xl backdrop-blur-md",
-                                    isDark
-                                        ? "bg-gradient-to-r from-[#7bb33a]/90 to-[#6aa329]/90 text-white hover:from-[#8ccf45]/95 hover:to-[#7bb33a]/95 border border-[#7bb33a]/30"
-                                        : "bg-gradient-to-r from-[#6aa329]/90 to-[#4f7b38]/90 text-white hover:from-[#7bb33a]/95 hover:to-[#6aa329]/95 border border-[#6aa329]/30"
-                                )}
-                            >
-                                <SparklesIcon className="h-10 w-10 flex-shrink-0 mr-4 transition-transform duration-300 group-hover:scale-110" />
-                                <div>
-                                    <h3 className="text-xl font-semibold">Create New Container</h3>
-                                    <p className="text-sm opacity-90">
-                                        Start from scratch with our new container wizard.
-                                    </p>
-                                </div>
-                            </button>
+                            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
+                                <button
+                                    onClick={() => setIsGuidedTourOpen(true)}
+                                    className={cn(
+                                        "group flex items-center space-x-3 px-8 py-4 rounded-xl text-white font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                        isDark
+                                            ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#6aa329] hover:to-[#5a8f23]"
+                                            : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] hover:from-[#5a8f23] hover:to-[#3a5c1b]"
+                                    )}
+                                >
+                                    <SparklesIcon className="h-6 w-6" />
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-xl">Start Guided Tour</span>
+                                        <span className="text-sm opacity-90 font-normal">Use templates & forms</span>
+                                    </div>
+                                </button>
 
-                            {/* Paste YAML Recipe */}
-                            <button
-                                onClick={() => setIsYamlPasteModalOpen(true)}
-                                className={cn(
-                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left transform hover:scale-[1.02] hover:shadow-xl backdrop-blur-md",
-                                    isDark
-                                        ? "bg-[#2d4222]/70 text-[#91c84a] hover:bg-[#3a5c29]/80 border border-[#2d4222]/40"
-                                        : "bg-[#e6f1d6]/70 text-[#4f7b38] hover:bg-[#d3e7b6]/80 border border-[#e6f1d6]/60"
-                                )}
-                            >
-                                <DocumentPlusIcon className="h-10 w-10 flex-shrink-0 mr-4 transition-transform duration-300 group-hover:scale-110" />
-                                <div>
-                                    <h3 className="text-xl font-semibold">Paste YAML Recipe</h3>
-                                    <p className="text-sm opacity-80">
-                                        Perfect for AI-generated or pre-written recipes.
-                                    </p>
-                                </div>
-                            </button>
+                                <button
+                                    onClick={() => setIsYamlPasteModalOpen(true)}
+                                    className={cn(
+                                        "group flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                        isDark
+                                            ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30"
+                                            : "bg-gradient-to-r from-[#e6f1d6] to-[#d3e7b6] text-[#4f7b38] hover:from-[#d3e7b6] hover:to-[#c0d89f] border border-[#4f7b38]/20"
+                                    )}
+                                >
+                                    <DocumentPlusIcon className="h-6 w-6" />
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-xl">Paste YAML Recipe</span>
+                                        <span className="text-sm opacity-80 font-normal">Perfect for AI-generated recipes</span>
+                                    </div>
+                                </button>
 
-                            {/* Upload YAML */}
-                            <label
-                                className={cn(
-                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left cursor-pointer transform hover:scale-[1.02] hover:shadow-xl backdrop-blur-md",
-                                    isDark
-                                        ? "bg-[#2d4222]/70 text-[#91c84a] hover:bg-[#3a5c29]/80 border border-[#2d4222]/40"
-                                        : "bg-[#e6f1d6]/70 text-[#4f7b38] hover:bg-[#d3e7b6]/80 border border-[#e6f1d6]/60"
-                                )}
-                            >
-                                <ArrowUpTrayIcon className="h-10 w-10 flex-shrink-0 mr-4 transition-transform duration-300 group-hover:scale-110" />
-                                <div>
-                                    <h3 className="text-xl font-semibold">Upload YAML</h3>
-                                    <p className="text-sm opacity-80">
-                                        Import an existing container recipe from your files.
-                                    </p>
-                                </div>
-                                <input
-                                    type="file"
-                                    accept=".yaml,.yml"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) processYamlFile(file);
-                                    }}
-                                    className="hidden"
-                                />
-                            </label>
+                                <label className="cursor-pointer">
+                                    <input
+                                        type="file"
+                                        accept=".yaml,.yml"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                processYamlFile(file);
+                                            }
+                                            e.target.value = '';
+                                        }}
+                                        className="hidden"
+                                    />
+                                    <div className={cn(
+                                        "group flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                        isDark
+                                            ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30"
+                                            : "bg-gradient-to-r from-[#e6f1d6] to-[#d3e7b6] text-[#4f7b38] hover:from-[#d3e7b6] hover:to-[#c0d89f] border border-[#4f7b38]/20"
+                                    )}>
+                                        <ArrowUpTrayIcon className="h-6 w-6" />
+                                        <div className="flex flex-col items-start">
+                                            <span className="text-xl">Upload Existing YAML</span>
+                                            <span className="text-sm opacity-80 font-normal">Click to upload</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
 
-                        {/* Lists - left aligned */}
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 text-left">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                             <LocalContainersList
                                 onLoadContainer={loadContainer}
                                 onDeleteContainer={deleteContainer}
@@ -418,7 +423,7 @@ export default function Home() {
                                         const recipe = loadYAML(content) as ContainerRecipe;
                                         loadContainer(migrateLegacyRecipe(recipe));
                                     } catch (error) {
-                                        console.error("Failed to load local recipe:", error);
+                                        console.error('Failed to load local recipe:', error);
                                     }
                                 }}
                                 filesystemMode={filesystemMode}
@@ -428,26 +433,49 @@ export default function Home() {
                         <Footer />
                     </div>
                 ) : (
+                    /* Container Builder View - All Steps */
                     <div className="max-w-6xl mx-auto p-4 sm:p-6 pt-20 lg:pt-6 space-y-8">
-                        <SectionHeader {...sections[0]} />
-                        <ContainerMetadata
-                            recipe={yamlData}
-                            onChange={handleDataChange}
-                            onValidationChange={setHasMetadataErrors}
-                        />
-                        <SectionHeader {...sections[1]} />
-                        <BuildRecipeComponent
-                            recipe={yamlData.build}
-                            onChange={(buildRecipe) =>
-                                handleDataChange({ ...yamlData, build: buildRecipe })
-                            }
-                        />
-                        <SectionHeader {...sections[2]} />
-                        <ValidateRecipeComponent 
-                            recipe={yamlData}
-                            onValidationChange={handleValidationChange}
-                        />
-                        
+                        {/* Step 1: Basic Info */}
+                        <div className="space-y-6">
+                            <SectionHeader
+                                icon={sections[0].icon}
+                                title={sections[0].title}
+                                description={sections[0].description}
+                            />
+                            <ContainerMetadata
+                                recipe={yamlData}
+                                onChange={handleDataChange}
+                                onValidationChange={setHasMetadataErrors}
+                            />
+                        </div>
+
+                        {/* Step 2: Build Recipe */}
+                        <div className="space-y-6">
+                            <SectionHeader
+                                icon={sections[1].icon}
+                                title={sections[1].title}
+                                description={sections[1].description}
+                            />
+                            <BuildRecipeComponent
+                                recipe={yamlData.build}
+                                onChange={(buildRecipe) => handleDataChange({ ...yamlData, build: buildRecipe })}
+                            />
+                        </div>
+
+                        {/* Step 3: Validate */}
+                        <div className="space-y-6">
+                            <SectionHeader
+                                icon={sections[2].icon}
+                                title={sections[2].title}
+                                description={sections[2].description}
+                            />
+                            <ValidateRecipeComponent
+                                recipe={yamlData}
+                                onValidationChange={handleValidationChange}
+                                onValidationResult={handleValidationResult}
+                            />
+                        </div>
+
                         {/* Publish Section - Only shown when validation is successful */}
                         {isValidationSuccessful && (
                             <div className="space-y-6">
@@ -479,19 +507,24 @@ export default function Home() {
                                         </p>
                                     </div>
                                     <button
-                                        onClick={() => setIsGitHubModalOpen(true)}
+                                        onClick={handleOpenGitHub}
                                         className={cn(
                                             "inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
                                             isDark
                                                 ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#6aa329] hover:to-[#5a8f23] text-white"
                                                 : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] hover:from-[#5a8f23] hover:to-[#3a5c1b] text-white"
-                                        )}>
+                                        )}
+                                    >
                                         <CloudArrowUpIcon className="h-6 w-6" />
                                         <span>Publish to GitHub</span>
                                     </button>
                                 </div>
                             </div>
                         )}
+
+                        {/* Dockerfile Section - Only shown when validation is successful */}
+                        <DockerfileDisplay validationResult={validationResult} />
+
                         <Footer />
                     </div>
                 )}
