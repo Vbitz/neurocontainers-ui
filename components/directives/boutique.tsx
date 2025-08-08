@@ -3,7 +3,9 @@ import { DirectiveContainer, FormField, Input, Textarea, Select } from "@/compon
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { DocumentTextIcon, CodeBracketIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { getHelpSection, buttonStyles } from "@/lib/styles";
+import { buttonStyles } from "@/lib/styles";
+import { HelpSection } from "@/components/ui/HelpSection";
+import boutiqueHelpMarkdown from "@/copy/help/directives/boutique-directive.md";
 import { useTheme } from "@/lib/ThemeContext";
 import {
     BoutiquesDescriptor,
@@ -111,34 +113,10 @@ export default function BoutiqueDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                BOUTIQUE Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    The BOUTIQUE directive embeds a Boutiques descriptor for tool integration.
-                    Boutiques is a framework for describing neuroimaging applications.
-                </p>
-                <div>
-                    <strong>Editor Modes:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><strong>Visual:</strong> Graphical form-based editor</li>
-                        <li><strong>JSON:</strong> Direct JSON editing and preview</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Key Components:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Tool metadata (name, version, description)</li>
-                        <li>Input parameters and their types</li>
-                        <li>Output file specifications</li>
-                        <li>Command-line template</li>
-                        <li>Container configuration</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={boutiqueHelpMarkdown} 
+            sourceFilePath="copy/help/directives/boutique-directive.md"
+        />
     );
 
     return (

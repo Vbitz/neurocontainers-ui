@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { PhotoIcon, XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
-import { cn, buttonStyles, textStyles, iconStyles, getHelpSection } from "@/lib/styles";
+import { cn, buttonStyles, textStyles, iconStyles } from "@/lib/styles";
+import { HelpSection } from "@/components/ui/HelpSection";
+import iconEditorHelpMarkdown from "@/copy/help/ui/icon-editor.md";
 import { useTheme } from "@/lib/ThemeContext";
 import { CATEGORIES } from "@/components/common";
 import Image from "next/image";
@@ -219,26 +221,6 @@ export default function IconEditor({ value, onChange, containerName, categories,
         fileInputRef.current?.click();
     }, []);
 
-    const helpContent = (
-        <>
-            <h4 className={getHelpSection(isDark).title}>Container Icon</h4>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>Upload a custom icon to help identify your container visually:</p>
-                <div>
-                    <strong>Features:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Upload any image format (PNG, JPG, GIF, etc.)</li>
-                        <li>Images are automatically cropped to square and resized to 24×24 pixels</li>
-                        <li>Default icons are generated from the first 1-2 letters of the container name</li>
-                        <li>Icons are embedded as base24 data in the YAML definition</li>
-                    </ul>
-                </div>
-                <p className={textStyles(isDark, { size: 'xs' })}>
-                    💡 <strong>Tip:</strong> Icons help users visually identify containers in lists and interfaces.
-                </p>
-            </div>
-        </>
-    );
 
     return (
         <div className="space-y-3">
@@ -269,9 +251,11 @@ export default function IconEditor({ value, onChange, containerName, categories,
             </div>
 
             {showHelp && (
-                <div className={cn(getHelpSection(isDark).container, "mb-2")}>
-                    {helpContent}
-                </div>
+                <HelpSection 
+                    markdownContent={iconEditorHelpMarkdown} 
+                    sourceFilePath="copy/help/ui/icon-editor.md"
+                    className="mb-2" 
+                />
             )}
 
             <div className="flex items-center gap-3">

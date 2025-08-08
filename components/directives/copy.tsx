@@ -1,9 +1,9 @@
 import { DirectiveContainer, ListEditor, Input } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { DocumentIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { getHelpSection } from "@/lib/styles";
-import { useTheme } from "@/lib/ThemeContext";
+import copyHelpMarkdown from "@/copy/help/directives/copy-directive.md";
 
 export default function CopyDirectiveComponent({
     copy,
@@ -28,28 +28,13 @@ export default function CopyDirectiveComponent({
     controllers: DirectiveControllers;
     documentationMode?: boolean;
 }) {
-    const { isDark } = useTheme();
     const copyAsArray = Array.isArray(copy) ? copy : copy.split(" ");
 
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                COPY Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    The COPY instruction copies new files or directories from the source and adds them to the filesystem of the container.
-                </p>
-                <div>
-                    <strong>Format:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><code className={getHelpSection(isDark).code}>source:destination</code> - Copy from source to destination</li>
-                        <li><code className={getHelpSection(isDark).code}>file.txt:/app/</code> - Copy file to directory</li>
-                        <li><code className={getHelpSection(isDark).code}>./src:/app/src</code> - Copy directory contents</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={copyHelpMarkdown} 
+            sourceFilePath="copy/help/directives/copy-directive.md"
+        />
     );
 
     return (

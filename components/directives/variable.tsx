@@ -1,11 +1,13 @@
 import { DirectiveContainer, FormField, Input, Textarea, ListEditor } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { Variable } from "@/components/common";
 import { TrashIcon, CubeTransparentIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { cn, getHelpSection, useThemeStyles, buttonStyles } from "@/lib/styles";
+import { cn, useThemeStyles, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import variableHelpMarkdown from "@/copy/help/directives/variable-directive.md";
 
 export function VariableComponent({ variable, onChange, documentationMode = false }: { variable: Variable, onChange?: (variable: Variable) => void, documentationMode?: boolean }) {
     const { isDark } = useTheme();
@@ -129,32 +131,10 @@ export default function VariableDirectiveComponent({
     };
 
     const helpContent = (
-        <>
-            <h3 className={getHelpSection(isDark).title}>
-                VARIABLE Directive
-            </h3>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>
-                    The VARIABLE directive defines variables that can be used throughout the container build.
-                </p>
-                <div>
-                    <strong>Variable Types:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><strong>String:</strong> Simple text values</li>
-                        <li><strong>Array:</strong> Lists of values (JSON format)</li>
-                        <li><strong>Object:</strong> Complex data structures (JSON format)</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Examples:</strong>
-                    <div className={getHelpSection(isDark).code}>
-                        <div><strong>String:</strong> &quot;myvalue&quot; or hello_world</div>
-                        <div><strong>Array:</strong> [&quot;item1&quot;, &quot;item2&quot;, &quot;item3&quot;]</div>
-                        <div><strong>Object:</strong> {"{"}&quot;key&quot;: &quot;value&quot;, &quot;number&quot;: 42{"}"}</div>
-                    </div>
-                </div>
-            </div>
-        </>
+        <HelpSection 
+            markdownContent={variableHelpMarkdown} 
+            sourceFilePath="copy/help/directives/variable-directive.md"
+        />
     );
 
     return (

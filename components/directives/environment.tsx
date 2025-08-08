@@ -1,10 +1,10 @@
 import { DirectiveContainer } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { CogIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { getHelpSection } from "@/lib/styles";
-import { useTheme } from "@/lib/ThemeContext";
 import DeployEnvEditor from "../ui/DeployEnvEditor";
+import environmentHelpMarkdown from "@/copy/help/directives/environment-directive.md";
 
 export default function EnvironmentDirectiveComponent({
     environment,
@@ -29,45 +29,11 @@ export default function EnvironmentDirectiveComponent({
     controllers: DirectiveControllers;
     documentationMode?: boolean;
 }) {
-    const { isDark } = useTheme();
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                ENVIRONMENT Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    The ENVIRONMENT directive sets environment variables that will be available in the container.
-                </p>
-                <div>
-                    <strong>Deploy Environment Variables (DEPLOY_ENV_):</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Variables with DEPLOY_ENV_ prefix are exported by neurocommand for module usage</li>
-                        <li>These variables become available to users when they load your module</li>
-                        <li>Perfect for paths, URLs, and configuration that modules need</li>
-                        <li>Example: DEPLOY_ENV_APP_PATH → available as APP_PATH in modules</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Standard Environment Variables:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Use UPPERCASE names for environment variables by convention</li>
-                        <li>Avoid spaces in variable names (use underscores instead)</li>
-                        <li>Values can contain spaces and special characters</li>
-                        <li>Variables persist throughout the container lifecycle</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Common Examples:</strong>
-                    <div className={getHelpSection(isDark).code}>
-                        <div><strong>DEPLOY_ENV_TOOL_PATH:</strong> /opt/tool/bin</div>
-                        <div><strong>DEPLOY_ENV_CONFIG_URL:</strong> https://example.com/config</div>
-                        <div><strong>PATH:</strong> /usr/local/bin:/usr/bin:/bin</div>
-                        <div><strong>APP_ENV:</strong> production</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={environmentHelpMarkdown} 
+            sourceFilePath="copy/help/directives/environment-directive.md"
+        />
     );
 
     return (

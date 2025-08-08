@@ -1,10 +1,10 @@
 import { DirectiveContainer, FormField, TagEditor } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { DeployInfo } from "@/components/common";
 import { RocketLaunchIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { getHelpSection } from "@/lib/styles";
-import { useTheme } from "@/lib/ThemeContext";
+import deployHelpMarkdown from "@/copy/help/directives/deploy-directive.md";
 
 export default function DeployDirectiveComponent({
     deploy,
@@ -29,7 +29,6 @@ export default function DeployDirectiveComponent({
     controllers: DirectiveControllers;
     documentationMode?: boolean;
 }) {
-    const { isDark } = useTheme();
     const updatePaths = (paths: string[]) => {
         onChange({
             ...deploy,
@@ -45,32 +44,10 @@ export default function DeployDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                DEPLOY Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    The DEPLOY directive configures deployment settings for the container, including paths and binaries.
-                </p>
-                <div>
-                    <strong>Paths:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Specify directories to include in deployment</li>
-                        <li>Use absolute paths for clarity</li>
-                        <li>Example: <code className={getHelpSection(isDark).code}>/app/bin</code>, <code className={getHelpSection(isDark).code}>/usr/local/bin</code></li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Binaries:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>List specific executable files to deploy</li>
-                        <li>Binary names or full paths</li>
-                        <li>Example: <code className={getHelpSection(isDark).code}>myapp</code>, <code className={getHelpSection(isDark).code}>processingTool</code></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={deployHelpMarkdown} 
+            sourceFilePath="copy/help/directives/deploy-directive.md"
+        />
     );
 
     return (

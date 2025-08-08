@@ -1,10 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DirectiveContainer, ListEditor, Jinja2TemplateInput } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { PlayIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { textareaStyles, cn, getHelpSection } from "@/lib/styles";
+import { textareaStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import runCommandHelpMarkdown from "@/copy/help/directives/run-command-directive.md";
 
 export default function RunCommandDirectiveComponent({
     run,
@@ -88,47 +90,10 @@ export default function RunCommandDirectiveComponent({
     }, [run]);
 
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                RUN Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    The RUN instruction executes commands in a new layer on top
-                    of the current image and commits the results. Supports Jinja2 templates for dynamic values.
-                </p>
-                <div>
-                    <strong>Usage:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>All lines are concatenated together as a single Docker layer</li>
-                        <li>Press Enter to add a new command</li>
-                        <li>Press Shift+Enter for a new line within a command</li>
-                        <li>Use Jinja2 syntax like {`{{ context.version }}`} for templating</li>
-                        <li>Autocomplete available inside {`{{ }}`} and {`{% %}`} tags</li>
-                        <li>Drag the handle to reorder commands</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Autocomplete Navigation:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
-                        <li>↑/↓ arrows: Navigate suggestions</li>
-                        <li>Tab/Enter: Accept selected suggestion</li>
-                        <li>Escape: Close suggestions</li>
-                        <li>Ctrl+Space: Trigger autocomplete</li>
-                        <li>PageUp/PageDown: Jump 5 suggestions</li>
-                        <li>Home/End: First/last suggestion</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Examples:</strong>
-                    <pre className={getHelpSection(isDark).code}>
-                        {`mkdir -p /app/data
-wget https://example.com/v{{ context.version }}/file.tar.gz
-dpkg -i package_{{ context.version }}.deb`}
-                    </pre>
-                </div>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={runCommandHelpMarkdown} 
+            sourceFilePath="copy/help/directives/run-command-directive.md"
+        />
     );
 
     return (

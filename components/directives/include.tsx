@@ -1,10 +1,10 @@
 import { DirectiveContainer, FormField, Select } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { IncludeMacro, IncludeMacros } from "@/components/common";
 import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { getHelpSection } from "@/lib/styles";
-import { useTheme } from "@/lib/ThemeContext";
+import includeHelpMarkdown from "@/copy/help/directives/include-directive.md";
 
 export default function IncludeDirectiveComponent({
     include,
@@ -29,31 +29,11 @@ export default function IncludeDirectiveComponent({
     controllers: DirectiveControllers;
     documentationMode?: boolean;
 }) {
-    const { isDark } = useTheme();
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                INCLUDE Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    The INCLUDE directive allows you to include predefined macros or templates in your container build.
-                </p>
-                <div>
-                    <strong>Available Macros:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        {Object.entries(IncludeMacros).map(([key, value]) => (
-                            <li key={key}>
-                                <code className={getHelpSection(isDark).code}>{value}</code>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                <p className="text-xs">
-                    Select a macro to include common configurations or setup procedures.
-                </p>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={includeHelpMarkdown} 
+            sourceFilePath="copy/help/directives/include-directive.md"
+        />
     );
 
     return (

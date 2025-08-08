@@ -352,7 +352,7 @@ export default function Home() {
                                 >
                                     <SparklesIcon className="h-6 w-6" />
                                     <div className="flex flex-col items-start">
-                                        <span className="text-xl">Start Guided Tour</span>
+                                        <span className="text-xl">Create New Container</span>
                                         <span className="text-sm opacity-90 font-normal">Use templates & forms</span>
                                     </div>
                                 </button>

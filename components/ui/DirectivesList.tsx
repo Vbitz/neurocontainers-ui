@@ -6,7 +6,9 @@ import {
 import { Directive } from "@/components/common";
 import DirectiveComponent from "@/components/directives/factory";
 import AddDirectiveButton from "@/components/add";
-import { iconStyles, textStyles, buttonStyles, cn, getHelpSection } from "@/lib/styles";
+import { iconStyles, textStyles, buttonStyles, cn } from "@/lib/styles";
+import { HelpSection } from "@/components/ui/HelpSection";
+import directivesListHelpMarkdown from "@/copy/help/ui/directives-list.md";
 import { useTheme } from "@/lib/ThemeContext";
 
 interface DirectivesListProps {
@@ -181,28 +183,6 @@ export default function DirectivesList({
         setDragOverIndex(null);
     };
 
-    const directivesHelpContent = (
-        <>
-            <h4 className={getHelpSection(isDark).title}>Directives</h4>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>
-                    Directives define the software and configurations to install in your container.
-                </p>
-                <div>
-                    <strong>Key Points:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Executed in order - dependencies should be placed before software that requires them</li>
-                        <li>Use drag and drop or arrow buttons to reorder directives</li>
-                        <li>Each directive represents a specific installation or configuration step</li>
-                        <li>Common directives: INSTALL (software), RUN (commands), ENV (environment variables)</li>
-                    </ul>
-                </div>
-                <p>
-                    <strong>💡 Tip:</strong> Start with system dependencies, then install your main software, and finish with configurations.
-                </p>
-            </div>
-        </>
-    );
 
     return (
         <div className="mb-6">
@@ -233,9 +213,11 @@ export default function DirectivesList({
             </div>
 
             {showDirectivesHelp && (
-                <div className={cn(getHelpSection(isDark).container, "mb-4")}>
-                    {directivesHelpContent}
-                </div>
+                <HelpSection 
+                    markdownContent={directivesListHelpMarkdown} 
+                    sourceFilePath="copy/help/ui/directives-list.md"
+                    className="mb-4" 
+                />
             )}
 
             <div className="space-y-2">

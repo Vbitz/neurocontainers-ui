@@ -1,7 +1,8 @@
 import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
-import { getHelpSection, textStyles, cn } from "@/lib/styles";
+import { HelpSection } from "@/components/ui/HelpSection";
+import minicondaYamlGroupHelpMarkdown from "@/copy/help/groups/miniconda-yaml-group.md";
 import type { Directive } from "@/components/common";
 
 registerGroupEditor("minicondaYaml", {
@@ -20,43 +21,11 @@ registerGroupEditor("minicondaYaml", {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
     },
-    helpContent(isDark: boolean) {
-        return (
-            <div className={getHelpSection(isDark).container}>
-                <h3 className={getHelpSection(isDark).title}>
-                    Miniconda Environment Group
-                </h3>
-                <div className={getHelpSection(isDark).text}>
-                    <p>
-                        Installs Miniconda and creates a conda environment from a YAML specification file.
-                        This group combines Miniconda installation with environment creation in a streamlined workflow.
-                    </p>
-                    <div>
-                        <strong>What this creates:</strong>
-                        <ul className="list-disc list-inside mt-1 space-y-1">
-                            <li>A file directive with your environment.yml content</li>
-                            <li>A template directive to install Miniconda</li>
-                            <li>A run directive to create the environment from YAML</li>
-                            <li>Environment configuration to activate the environment</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <strong>Use cases:</strong>
-                        <ul className="list-disc list-inside mt-1 space-y-1">
-                            <li>Complex scientific computing environments</li>
-                            <li>Reproducible data science workflows</li>
-                            <li>Multi-package neuroimaging toolkits</li>
-                            <li>Version-controlled environment specifications</li>
-                        </ul>
-                    </div>
-                    <div className={cn("border rounded-md p-2", isDark ? "bg-green-900 border-green-700" : "bg-green-50 border-green-200")}>
-                        <p className={cn(textStyles(isDark, { size: 'xs', weight: 'medium' }), "text-green-800")}>
-                            💡 Tip: Your YAML should follow conda environment format with name, dependencies, and optional pip sections
-                        </p>
-                    </div>
-                </div>
-            </div>
-        )
+    helpContent() {
+        return <HelpSection 
+            markdownContent={minicondaYamlGroupHelpMarkdown} 
+            sourceFilePath="copy/help/groups/miniconda-yaml-group.md"
+        />;
     },
     arguments: [
         {

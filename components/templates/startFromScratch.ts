@@ -1,11 +1,13 @@
 import { ContainerRecipe, Architecture } from "@/components/common";
 import type { ContainerTemplate } from './pythonPackage';
+import startFromScratchMarkdown from "@/copy/templates/start-from-scratch.md";
 
 // Start from Scratch Template - minimal template for custom containers
 export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
     id: 'start-from-scratch',
     name: 'Start from Scratch',
     description: 'Create a new container with full control over all settings',
+    detailedDescription: startFromScratchMarkdown,
     icon: '⚙️', // This will be replaced by getTemplateIcon
     category: 'Custom',
     fields: [

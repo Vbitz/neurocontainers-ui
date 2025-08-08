@@ -9,9 +9,15 @@ import {
     LicenseSection,
     ValidationSummary,
 } from "@/components/ui";
-import { iconStyles, textStyles, cn, cardStyles, buttonStyles, getHelpSection } from "@/lib/styles";
+import { HelpSection } from "@/components/ui/HelpSection";
+import { iconStyles, textStyles, cn, cardStyles, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 import IconEditor from "@/components/IconEditor";
+import basicInformationHelpMarkdown from "@/copy/help/metadata/basic-information.md";
+import targetArchitecturesHelpMarkdown from "@/copy/help/metadata/target-architectures.md";
+import documentationHelpMarkdown from "@/copy/help/metadata/documentation.md";
+import licenseInformationHelpMarkdown from "@/copy/help/metadata/license-information.md";
+import containerCategoriesHelpMarkdown from "@/copy/help/metadata/container-categories.md";
 
 // Validation functions
 function validateName(name: string): string | null {
@@ -219,104 +225,9 @@ export default function ContainerMetadata({
         setPendingInputType(null);
     };
 
-    const basicInfoHelpContent = (
-        <>
-            <h4 className={getHelpSection(isDark).title}>Basic Information</h4>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <div>
-                    <strong>Container Name:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Must be lowercase letters and numbers only</li>
-                        <li>Should be named for the primary tool in the container</li>
-                        <li>Will be used as the Docker image name</li>
-                        <li>Examples: fsl, ants, freesurfer, neurodebian</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Version:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Use semantic versioning (e.g., 1.0.0, 2.1.3)</li>
-                        <li>Or tool-specific versions (e.g., 6.0.5, latest)</li>
-                        <li>Helps users identify which version they&apos;re using</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Container Icon:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Upload any image format (automatically resized to 64×64 pixels)</li>
-                        <li>Default icons are generated from the first 1-2 letters of the container name</li>
-                        <li>Icons are embedded as base64 data in the YAML definition</li>
-                        <li>Helps users visually identify containers in lists and interfaces</li>
-                    </ul>
-                </div>
-            </div>
-        </>
-    );
 
-    const architectureHelpContent = (
-        <>
-            <h4 className={getHelpSection(isDark).title}>Target Architectures</h4>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>Choose the processor architectures your container should support:</p>
-                <div className="space-y-2">
-                    <div>
-                        <strong>x86_64 (Intel/AMD):</strong> Most common architecture
-                        <ul className={cn("list-disc list-inside ml-4 mt-1", textStyles(isDark, { size: 'xs' }))}>
-                            <li>Desktop computers, most laptops</li>
-                            <li>Most cloud instances (AWS EC2, Google Cloud, Azure)</li>
-                            <li>Traditional servers and workstations</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <strong>aarch64 (ARM 64-bit):</strong> Growing in popularity
-                        <ul className={cn("list-disc list-inside ml-4 mt-1", textStyles(isDark, { size: 'xs' }))}>
-                            <li>Apple Silicon Macs (M1, M2, M3)</li>
-                            <li>AWS Graviton instances</li>
-                            <li>Raspberry Pi 4+ and other ARM devices</li>
-                        </ul>
-                    </div>
-                </div>
-                <p className={textStyles(isDark, { size: 'xs' })}>
-                    💡 <strong>Tip:</strong> Select both for maximum compatibility, or just x86_64 if you&apos;re unsure.
-                </p>
-            </div>
-        </>
-    );
 
-    const documentationHelpContent = (
-        <>
-            <h4 className={getHelpSection(isDark).title}>Documentation</h4>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>Provide documentation for your container users:</p>
-                <div>
-                    <strong>Options:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><strong>Structured (Recommended):</strong> Fill out structured fields that automatically generate a standardized README following NeuroContainers conventions</li>
-                        <li><strong>Enter Content:</strong> Write documentation directly using Markdown syntax</li>
-                        <li><strong>Provide URL:</strong> Link to external documentation (e.g., GitHub README)</li>
-                    </ul>
-                </div>
-                <p>The structured option ensures consistency with existing NeuroContainers and includes all required sections (description, usage example, documentation link, and citation).</p>
-            </div>
-        </>
-    );
 
-    const licenseHelpContent = (
-        <>
-            <h4 className={getHelpSection(isDark).title}>License Information</h4>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>Specify licenses for your container and any included software:</p>
-                <div>
-                    <strong>Options:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><strong>SPDX Licenses:</strong> Choose from common standardized licenses</li>
-                        <li><strong>Custom License:</strong> Specify your own license name and URL</li>
-                    </ul>
-                </div>
-                <p>This is important for legal compliance and distribution.</p>
-            </div>
-        </>
-    );
 
 
     return (
@@ -356,8 +267,11 @@ export default function ContainerMetadata({
                         </div>
 
                         {showBasicInfoHelp && (
-                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
-                                {basicInfoHelpContent}
+                            <div className="mb-4">
+                                <HelpSection 
+                                    markdownContent={basicInformationHelpMarkdown} 
+                                    sourceFilePath="copy/help/metadata/basic-information.md"
+                                />
                             </div>
                         )}
 
@@ -400,8 +314,11 @@ export default function ContainerMetadata({
                         </div>
 
                         {showArchitectureHelp && (
-                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
-                                {architectureHelpContent}
+                            <div className="mb-4">
+                                <HelpSection 
+                                    markdownContent={targetArchitecturesHelpMarkdown} 
+                                    sourceFilePath="copy/help/metadata/target-architectures.md"
+                                />
                             </div>
                         )}
 
@@ -439,16 +356,11 @@ export default function ContainerMetadata({
                         </div>
 
                         {showCategoryHelp && (
-                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
-                                <h4 className={getHelpSection(isDark).title}>Container Categories</h4>
-                                <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                                    <p>Select one or more categories that best describe your container&apos;s functionality:</p>
-                                    <ul className="list-disc list-inside mt-1 space-y-1">
-                                        <li>Categories help users discover and understand your container</li>
-                                        <li>Choose all categories that apply to your tool</li>
-                                        <li>At least one category is required</li>
-                                    </ul>
-                                </div>
+                            <div className="mb-4">
+                                <HelpSection 
+                                    markdownContent={containerCategoriesHelpMarkdown} 
+                                    sourceFilePath="copy/help/metadata/container-categories.md"
+                                />
                             </div>
                         )}
 
@@ -495,8 +407,11 @@ export default function ContainerMetadata({
                         </div>
 
                         {showDocumentationHelp && (
-                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
-                                {documentationHelpContent}
+                            <div className="mb-4">
+                                <HelpSection 
+                                    markdownContent={documentationHelpMarkdown} 
+                                    sourceFilePath="copy/help/metadata/documentation.md"
+                                />
                             </div>
                         )}
 
@@ -538,8 +453,11 @@ export default function ContainerMetadata({
                         </div>
 
                         {showLicenseHelp && (
-                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
-                                {licenseHelpContent}
+                            <div className="mb-4">
+                                <HelpSection 
+                                    markdownContent={licenseInformationHelpMarkdown} 
+                                    sourceFilePath="copy/help/metadata/license-information.md"
+                                />
                             </div>
                         )}
 

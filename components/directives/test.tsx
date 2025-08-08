@@ -1,10 +1,12 @@
 import { DirectiveContainer, FormField, Input, Textarea } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { TestInfo, ScriptTest, BuiltinTest } from "@/components/common";
 import { BeakerIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { cn, getHelpSection } from "@/lib/styles";
+import { cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import testHelpMarkdown from "@/copy/help/directives/test-directive.md";
 
 export default function TestDirectiveComponent({
     test,
@@ -43,30 +45,10 @@ export default function TestDirectiveComponent({
     };
 
     const helpContent = (
-        <>
-            <h3 className={getHelpSection(isDark).title}>
-                TEST Directive
-            </h3>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>
-                    The TEST directive defines test scripts to validate the container functionality.
-                </p>
-                <div>
-                    <strong>Test Types:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><strong>Script Test:</strong> Custom test script that you write</li>
-                        <li><strong>Builtin Test:</strong> Predefined test from the system</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Examples:</strong>
-                    <div className={getHelpSection(isDark).code}>
-                        <div><strong>Script:</strong> echo &quot;Hello World&quot; && exit 0</div>
-                        <div><strong>Builtin:</strong> System-provided test scripts</div>
-                    </div>
-                </div>
-            </div>
-        </>
+        <HelpSection 
+            markdownContent={testHelpMarkdown} 
+            sourceFilePath="copy/help/directives/test-directive.md"
+        />
     );
 
     const testTypeLabel = isBuiltin ? 'Builtin' : 'Script';

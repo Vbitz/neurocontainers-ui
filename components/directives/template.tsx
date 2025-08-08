@@ -2,11 +2,13 @@ import { TrashIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect, useRef } from "react";
 import { DirectiveContainer, FormField, Input, Select, ToggleButtonGroup, TagEditor } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { Template } from "@/components/common";
 import { VariableComponent } from "@/components/directives/variable";
 import { registerDirective, DirectiveMetadata, getDirective } from "./registry";
 import { iconStyles, textStyles, cn, getHelpSection, useThemeStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import templateHelpMarkdown from "@/copy/help/directives/template-directive.md";
 
 interface BaseNeuroDockerArgument {
     name: string;
@@ -364,32 +366,10 @@ export default function TemplateDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                TEMPLATE Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    The TEMPLATE directive defines reusable templates with configurable parameters.
-                </p>
-                <div>
-                    <strong>Template Parameters:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Define dynamic values that can be customized when using the template</li>
-                        <li>Support strings, arrays, and objects (JSON format)</li>
-                        <li>Use meaningful parameter names for clarity</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Examples:</strong>
-                    <div className={getHelpSection(isDark).code}>
-                        <div><strong>version:</strong> &quot;1.0.0&quot;</div>
-                        <div><strong>ports:</strong> [8080, 3000]</div>
-                        <div><strong>config:</strong> {"{"}&quot;debug&quot;: true{"}"}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={templateHelpMarkdown} 
+            sourceFilePath="copy/help/directives/template-directive.md"
+        />
     );
 
     return (

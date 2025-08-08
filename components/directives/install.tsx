@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { loadPackageDatabase } from "@/lib/packages";
 import { DirectiveContainer, FormField, Select } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import PackageTagEditor from "@/components/ui/PackageTagEditor";
 import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { cn, getHelpSection } from "@/lib/styles";
+import { cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import installHelpMarkdown from "@/copy/help/directives/install-directive.md";
 
 type PackageManager = "system";
 
@@ -91,26 +93,10 @@ export default function InstallDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                INSTALL Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    Search from {databaseLoaded ? packageDatabase.length.toLocaleString() : '80,000+'} Ubuntu 24.04 packages.
-                </p>
-                <div>
-                    <strong>Keyboard Shortcuts:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
-                        <li><kbd className={getHelpSection(isDark).code}>Enter</kbd> - Add package</li>
-                        <li><kbd className={getHelpSection(isDark).code}>↑/↓</kbd> - Navigate suggestions</li>
-                        <li><kbd className={getHelpSection(isDark).code}>Tab</kbd> - Autocomplete</li>
-                        <li><kbd className={getHelpSection(isDark).code}>Backspace</kbd> - Remove last (when empty)</li>
-                        <li><kbd className={getHelpSection(isDark).code}>Esc</kbd> - Close suggestions</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={installHelpMarkdown} 
+            sourceFilePath="copy/help/directives/install-directive.md"
+        />
     );
 
     return (

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { DirectiveContainer, FormField, Input, Textarea, ToggleButtonGroup } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
+import { HelpSection } from "@/components/ui/HelpSection";
 import { FileInfo } from "@/components/common";
 import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { getHelpSection } from "@/lib/styles";
-import { useTheme } from "@/lib/ThemeContext";
+import fileHelpMarkdown from "@/copy/help/directives/file-directive.md";
 
 export default function FileDirectiveComponent({
     file,
@@ -30,7 +30,6 @@ export default function FileDirectiveComponent({
     controllers: DirectiveControllers;
     documentationMode?: boolean;
 }) {
-    const { isDark } = useTheme();
     const [fileContent, setFileContent] = useState(file.contents || "");
 
     // Determine input type based on file properties
@@ -107,32 +106,10 @@ export default function FileDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={getHelpSection(isDark).container}>
-            <h3 className={getHelpSection(isDark).title}>
-                FILE Directive
-            </h3>
-            <div className={getHelpSection(isDark).text}>
-                <p>
-                    The FILE directive allows you to include files in your container build process.
-                </p>
-                <div>
-                    <strong>File Source Options:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><strong>Enter Content:</strong> Directly input the file content inline</li>
-                        <li><strong>Provide Filename:</strong> Reference an existing file by path</li>
-                        <li><strong>Provide URL:</strong> Fetch content from a web address</li>
-                    </ul>
-                </div>
-                <div>
-                    <strong>Examples:</strong>
-                    <div className={getHelpSection(isDark).code}>
-                        <div><strong>Content:</strong> Direct text input</div>
-                        <div><strong>Filename:</strong> ./config/app.conf</div>
-                        <div><strong>URL:</strong> https://example.com/config.json</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <HelpSection 
+            markdownContent={fileHelpMarkdown} 
+            sourceFilePath="copy/help/directives/file-directive.md"
+        />
     );
 
     return (

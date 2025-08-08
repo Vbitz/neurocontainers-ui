@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { getThemePresets, getHelpSection, iconStyles, textStyles, cn } from "@/lib/styles";
+import { getThemePresets, iconStyles, textStyles, cn } from "@/lib/styles";
+import { HelpSection } from "@/components/ui/HelpSection";
+import baseImageSelectorHelpMarkdown from "@/copy/help/ui/base-image-selector.md";
+import packageManagerHelpMarkdown from "@/copy/help/ui/package-manager.md";
 import { useTheme } from "@/lib/ThemeContext";
 
 const UBUNTU_VERSIONS = [
@@ -84,37 +87,7 @@ export default function BaseImageSelector({
         onChange(value, pkgManager);
     };
 
-    const baseImageHelpContent = (
-        <>
-            <h4 className={getHelpSection(isDark).title}>Base Image</h4>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>The Docker base image that your container will be built upon.</p>
-                <div>
-                    <strong>Options:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><strong>Ubuntu LTS:</strong> Long-term support versions, recommended for stability</li>
-                        <li><strong>Other Distros:</strong> Debian, CentOS, and Fedora alternatives</li>
-                        <li><strong>Custom Image:</strong> Any Docker Hub image for specialized needs</li>
-                    </ul>
-                </div>
-                <p>This determines the operating system and initial software stack. Ubuntu LTS versions are recommended for stability and long-term support.</p>
-            </div>
-        </>
-    );
 
-    const pkgManagerHelpContent = (
-        <>
-            <h4 className={getHelpSection(isDark).title}>Package Manager</h4>
-            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
-                <p>The package management system used by your base image:</p>
-                <ul className="list-disc list-inside space-y-1">
-                    <li><strong>apt:</strong> Used by Debian/Ubuntu systems for installing packages</li>
-                    <li><strong>yum:</strong> Used by RHEL/CentOS/Fedora systems for package management</li>
-                </ul>
-                <p>For custom images, select the appropriate package manager based on the underlying distribution.</p>
-            </div>
-        </>
-    );
 
     return (
         <div className="w-full">
@@ -138,9 +111,11 @@ export default function BaseImageSelector({
             </div>
 
             {showBaseImageHelp && (
-                <div className={cn(getHelpSection(isDark).container, "mb-6")}>
-                    {baseImageHelpContent}
-                </div>
+                <HelpSection 
+                    markdownContent={baseImageSelectorHelpMarkdown} 
+                    sourceFilePath="copy/help/ui/base-image-selector.md"
+                    className="mb-6" 
+                />
             )}
 
             {/* Base Image Source Selection */}
@@ -375,9 +350,11 @@ export default function BaseImageSelector({
                             </div>
 
                             {showPkgManagerHelp && (
-                                <div className={cn(getHelpSection(isDark).container, "mb-4")}>
-                                    {pkgManagerHelpContent}
-                                </div>
+                                <HelpSection 
+                                    markdownContent={packageManagerHelpMarkdown} 
+                                    sourceFilePath="copy/help/ui/package-manager.md"
+                                    className="mb-4" 
+                                />
                             )}
 
                             <select

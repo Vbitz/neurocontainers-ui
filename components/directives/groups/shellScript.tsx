@@ -1,7 +1,8 @@
 import { FolderIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
-import { getHelpSection, textStyles, cn } from "@/lib/styles";
+import { HelpSection } from "@/components/ui/HelpSection";
+import shellScriptGroupHelpMarkdown from "@/copy/help/groups/shell-script-group.md";
 
 registerGroupEditor("shellScript", {
     metadata: {
@@ -19,44 +20,11 @@ registerGroupEditor("shellScript", {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
     },
-    helpContent(isDark: boolean) {
-        return (
-            <div className={getHelpSection(isDark).container}>
-                <h3 className={getHelpSection(isDark).title}>
-                    Shell Script Group
-                </h3>
-                <div className={getHelpSection(isDark).text}>
-                    <p>
-                        Creates an executable shell script and configures it for deployment.
-                        This group automatically handles script creation, permission setting,
-                        PATH configuration, and deployment binary registration.
-                    </p>
-                    <div>
-                        <strong>What this creates:</strong>
-                        <ul className="list-disc list-inside mt-1 space-y-1">
-                            <li>A file directive with your script content</li>
-                            <li>A run directive to copy and set permissions</li>
-                            <li>Optional environment directive to add to PATH</li>
-                            <li>Optional deploy directive for binary registration</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <strong>Use cases:</strong>
-                        <ul className="list-disc list-inside mt-1 space-y-1">
-                            <li>Custom wrapper scripts for neuroimaging tools</li>
-                            <li>Environment setup scripts</li>
-                            <li>Data processing pipelines</li>
-                            <li>Container initialization scripts</li>
-                        </ul>
-                    </div>
-                    <div className={cn("border rounded-md p-2", isDark ? "bg-blue-900/40 border-blue-700/50" : "bg-blue-50 border-blue-200")}>
-                        <p className={cn(textStyles(isDark, { size: 'xs', weight: 'medium' }), isDark ? "text-blue-200" : "text-blue-800")}>
-                            💡 Tip: Use the advanced mode to manually edit individual directives if needed
-                        </p>
-                    </div>
-                </div>
-            </div>
-        )
+    helpContent() {
+        return <HelpSection 
+            markdownContent={shellScriptGroupHelpMarkdown} 
+            sourceFilePath="copy/help/groups/shell-script-group.md"
+        />;
     },
     arguments: [
         {
