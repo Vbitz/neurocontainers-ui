@@ -2,7 +2,7 @@
 
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect, useCallback } from "react";
-import { ExclamationTriangleIcon, PlusIcon, ArrowUpTrayIcon, DocumentPlusIcon, BeakerIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon, PlusIcon, ArrowUpTrayIcon, DocumentPlusIcon, BeakerIcon, CloudArrowUpIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe, mergeAdditionalFilesIntoRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
@@ -49,6 +49,7 @@ export default function Home() {
     const [isLocalFilesystemConnected, setIsLocalFilesystemConnected] = useState<boolean>(false);
     const [hasMetadataErrors, setHasMetadataErrors] = useState<boolean>(false);
     const [isDragging, setIsDragging] = useState<boolean>(false);
+    const [isValidationSuccessful, setIsValidationSuccessful] = useState<boolean>(false);
 
     // Custom hooks
     const {
@@ -176,6 +177,11 @@ export default function Home() {
         }
     }, [findGithubFileByName, loadContainer, setOriginalYaml]);
 
+    // Handle validation change
+    const handleValidationChange = useCallback((isValid: boolean, hasResult: boolean) => {
+        setIsValidationSuccessful(isValid && hasResult);
+    }, []);
+
     // Handle data changes
     const handleDataChange = useCallback((newData: ContainerRecipe) => {
         setYamlData(newData);
@@ -191,6 +197,9 @@ export default function Home() {
         }
 
         autoSaveContainer(newData);
+
+        // Reset validation state when recipe changes
+        setIsValidationSuccessful(false);
     }, [updateUrl, checkIfPublished, files, isPublishedContainer, checkIfModifiedFromGithub, setIsModifiedFromGithub, autoSaveContainer]);
 
 
@@ -680,8 +689,55 @@ export default function Home() {
                                     />
                                     <ValidateRecipeComponent
                                         recipe={yamlData}
+                                        onValidationChange={handleValidationChange}
                                     />
                                 </div>
+
+                                {/* Publish Section - Only shown when validation is successful */}
+                                {isValidationSuccessful && (
+                                    <div className="space-y-6">
+                                        <div className={cn(
+                                            "rounded-lg border p-6 text-center",
+                                            isDark ? "bg-[#1a1f17] border-[#2d4222]" : "bg-[#fafff4] border-[#e6f1d6]"
+                                        )}>
+                                            <div className="mb-4">
+                                                <div className={cn(
+                                                    "inline-flex items-center justify-center w-12 h-12 rounded-full mb-3",
+                                                    isDark ? "bg-[#2d4222]" : "bg-[#e6f1d6]"
+                                                )}>
+                                                    <CloudArrowUpIcon className={cn(
+                                                        "h-6 w-6",
+                                                        isDark ? "text-[#91c84a]" : "text-[#4f7b38]"
+                                                    )} />
+                                                </div>
+                                                <h3 className={cn(
+                                                    "text-lg font-semibold mb-2",
+                                                    isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]"
+                                                )}>
+                                                    Ready to Publish!
+                                                </h3>
+                                                <p className={cn(
+                                                    "text-sm mb-6",
+                                                    isDark ? "text-[#91c84a]" : "text-[#4f7b38]"
+                                                )}>
+                                                    Your container has been validated successfully. You can now publish it to the NeuroContainers repository.
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={handleOpenGitHub}
+                                                className={cn(
+                                                    "inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                                    isDark
+                                                        ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#6aa329] hover:to-[#5a8f23] text-white"
+                                                        : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] hover:from-[#5a8f23] hover:to-[#3a5c1b] text-white"
+                                                )}
+                                            >
+                                                <CloudArrowUpIcon className="h-6 w-6" />
+                                                <span>Publish to GitHub</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <Footer />
                             </div>
