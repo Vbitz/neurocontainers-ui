@@ -194,10 +194,19 @@ export default function Home() {
     }, [updateUrl, checkIfPublished, files, isPublishedContainer, checkIfModifiedFromGithub, setIsModifiedFromGithub, autoSaveContainer]);
 
 
-    // Handle guided tour completion
+    // Handle guided tour completion with optional publishing
     const handleGuidedTourComplete = useCallback((recipe: ContainerRecipe) => {
         loadContainer(recipe);
         setIsGuidedTourOpen(false);
+    }, [loadContainer]);
+
+    const handleGuidedTourPublish = useCallback((recipe: ContainerRecipe) => {
+        loadContainer(recipe);
+        setIsGuidedTourOpen(false);
+        // Auto-open GitHub export modal for publishing
+        setTimeout(() => {
+            setIsGitHubModalOpen(true);
+        }, 100);
     }, [loadContainer]);
 
     // Handle new container
@@ -699,6 +708,7 @@ export default function Home() {
                         isOpen={isGuidedTourOpen}
                         onClose={() => setIsGuidedTourOpen(false)}
                         onComplete={handleGuidedTourComplete}
+                        onPublish={handleGuidedTourPublish}
                     />
                 </>
             )}
