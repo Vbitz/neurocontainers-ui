@@ -6,10 +6,10 @@ export function Footer() {
     const { isDark } = useTheme();
     return (
         <footer className={cn(
-            "border-t mt-12",
+            "border-t mt-12 backdrop-blur-md",
             isDark
-                ? "bg-[#161a0e] border-[#2d4222]"
-                : "bg-gray-50/50 border-[#e6f1d6]"
+                ? "bg-[#161a0e]/80 border-[#2d4222]/60"
+                : "bg-gray-50/70 border-[#e6f1d6]/60"
         )}>
             <div className="max-w-6xl mx-auto px-6 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">

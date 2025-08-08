@@ -24,7 +24,7 @@ interface SideNavigationProps {
     isOpen: boolean;
     onToggle: () => void;
     yamlData: ContainerRecipe | null;
-    onNewContainer: () => void;
+    onContainerLibrary?: () => void;
     onExportYAML: () => void;
     onOpenGitHub: () => void;
     saveStatus: SaveStatus;
@@ -41,7 +41,7 @@ export function SideNavigation({
     isOpen,
     onToggle,
     yamlData,
-    onNewContainer,
+    onContainerLibrary,
     onExportYAML,
     onOpenGitHub,
     saveStatus,
@@ -80,19 +80,19 @@ export function SideNavigation({
                     "fixed top-0 left-0 h-full lg:h-screen",
                     "w-full lg:w-64 border-r lg:border-r",
                     "transform transition-transform duration-300 ease-in-out z-50 lg:z-auto",
-                    "flex flex-col lg:flex-shrink-0",
+                    "flex flex-col lg:flex-shrink-0 backdrop-blur-md",
                     isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
                     isDark
-                        ? "bg-[#0a0c08] border-[#2d4222]"
-                        : "bg-white border-gray-200"
+                        ? "bg-[#0a0c08]/90 border-[#2d4222]/60"
+                        : "bg-white/90 border-gray-200/60"
                 )}
             >
                 {/* Header with Logo */}
                 <div className={cn(
-                    "p-4 border-b",
+                    "p-4 border-b backdrop-blur-sm",
                     isDark
-                        ? "border-[#2d4222] bg-[#161a0e]"
-                        : "border-gray-200 bg-gray-50"
+                        ? "border-[#2d4222]/60 bg-[#161a0e]/80"
+                        : "border-gray-200/60 bg-gray-50/80"
                 )}>
                     <div className="flex items-center justify-between">
                         <div>
@@ -127,13 +127,13 @@ export function SideNavigation({
 
                 {/* Action Buttons */}
                 <div className={cn(
-                    "flex-1 p-3",
-                    isDark ? "bg-[#0a0c08]" : "bg-white"
+                    "flex-1 p-3 backdrop-blur-sm",
+                    isDark ? "bg-[#0a0c08]/70" : "bg-white/70"
                 )}>
                     <div className="space-y-1">
                         <button
                             className={actionStyle}
-                            onClick={onNewContainer}
+                            onClick={onContainerLibrary || (() => window.location.hash = '')}
                         >
                             <RectangleStackIcon className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0" />
                             <span>Container Library</span>

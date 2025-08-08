@@ -1,10 +1,28 @@
 import { useState, useRef } from "react";
-import { ExclamationTriangleIcon, DocumentTextIcon, ClipboardDocumentIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import {
+    ExclamationTriangleIcon,
+    DocumentTextIcon,
+    ClipboardDocumentIcon,
+    CheckCircleIcon,
+} from "@heroicons/react/24/outline";
 import { load as loadYAML } from "js-yaml";
-import { ContainerRecipe, migrateLegacyRecipe } from "@/components/common";
-import { validateContainerRecipe, getValidationErrorSummary } from "@/lib/zodSchema";
-import { textStyles, cn, cardStyles } from "@/lib/styles";
+import {
+    ContainerRecipe,
+    migrateLegacyRecipe,
+} from "@/components/common";
+import {
+    validateContainerRecipe,
+    getValidationErrorSummary,
+} from "@/lib/zodSchema";
+import { textStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+
+// Syntax highlighting
+import Editor from "react-simple-code-editor";
+import Prism from "prismjs";
+import "prismjs/components/prism-yaml";
+import "prismjs/themes/prism-tomorrow.css"; // Dark theme for dark mode
+import "prismjs/themes/prism.css"; // Light theme
 
 interface YamlPasteModalProps {
     isOpen: boolean;
@@ -15,16 +33,19 @@ interface YamlPasteModalProps {
 export default function YamlPasteModal({
     isOpen,
     onClose,
-    onLoadContainer
+    onLoadContainer,
 }: YamlPasteModalProps) {
     const { isDark } = useTheme();
     const modalRef = useRef(null);
     const [yamlContent, setYamlContent] = useState("");
-    const [validationErrors, setValidationErrors] = useState<{ field: string; message: string }[]>([]);
+    const [validationErrors, setValidationErrors] = useState<
+        { field: string; message: string }[]
+    >([]);
     const [yamlParseError, setYamlParseError] = useState<string | null>(null);
     const [isValidating, setIsValidating] = useState(false);
     const [isValid, setIsValid] = useState(false);
-    const [validatedRecipe, setValidatedRecipe] = useState<ContainerRecipe | null>(null);
+    const [validatedRecipe, setValidatedRecipe] =
+        useState<ContainerRecipe | null>(null);
 
     const resetValidation = () => {
         setValidationErrors([]);
@@ -43,23 +64,25 @@ export default function YamlPasteModal({
         resetValidation();
 
         try {
-            // First, try to parse the YAML
             const parsedYaml = loadYAML(yamlContent);
-            
-            if (!parsedYaml || typeof parsedYaml !== 'object') {
+
+            if (!parsedYaml || typeof parsedYaml !== "object") {
                 setYamlParseError("Invalid YAML: Must be a valid YAML object");
                 return;
             }
 
-            // Then validate with Zod schema
             const validationResult = validateContainerRecipe(parsedYaml);
-            
+
             if (validationResult.success) {
-                const migratedRecipe = migrateLegacyRecipe(validationResult.data as ContainerRecipe);
+                const migratedRecipe = migrateLegacyRecipe(
+                    validationResult.data as ContainerRecipe
+                );
                 setValidatedRecipe(migratedRecipe);
                 setIsValid(true);
             } else {
-                const errorSummary = getValidationErrorSummary(validationResult.errors);
+                const errorSummary = getValidationErrorSummary(
+                    validationResult.errors
+                );
                 setValidationErrors(errorSummary);
             }
         } catch (error) {
@@ -73,28 +96,16 @@ export default function YamlPasteModal({
         }
     };
 
-    const handleContentChange = (content: string) => {
-        setYamlContent(content);
-        // Reset validation state when content changes
-        if (content !== yamlContent) {
-            resetValidation();
-        }
-    };
-
     const handleLoadContainer = () => {
         if (validatedRecipe) {
             const id = `pasted-${Date.now()}`;
             onLoadContainer(validatedRecipe, id);
-            onClose();
-            // Reset state for next use
-            setYamlContent("");
-            resetValidation();
+            handleClose();
         }
     };
 
     const handleClose = () => {
         onClose();
-        // Reset state when closing
         setYamlContent("");
         resetValidation();
     };
@@ -102,91 +113,121 @@ export default function YamlPasteModal({
     if (!isOpen) return null;
 
     return (
-        <div className={cn(
-            "fixed inset-0 flex items-center justify-center z-50 p-4",
-            isDark ? "bg-black/90" : "bg-black/80"
-        )}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Enhanced background with better blur integration */}
+            <div
+                className="absolute inset-0 backdrop-blur-md"
+                style={{
+                    background: isDark
+                        ? "radial-gradient(circle at 30% 20%, rgba(123,179,58,0.08), transparent 50%), radial-gradient(circle at 70% 80%, rgba(145,200,74,0.08), transparent 50%), linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.85) 100%)"
+                        : "radial-gradient(circle at 30% 20%, rgba(106,163,41,0.12), transparent 50%), radial-gradient(circle at 70% 80%, rgba(79,123,56,0.12), transparent 50%), linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(248,249,251,0.90) 100%)",
+                }}
+            />
+            <div
+                className="absolute inset-0 opacity-[0.03] animate-[movePattern_60s_linear_infinite]"
+                style={{
+                    backgroundImage:
+                        "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"80\" height=\"80\" viewBox=\"0 0 80 80\"><circle cx=\"40\" cy=\"40\" r=\"1.5\" fill=\"%23ffffff\"/></svg>')",
+                    backgroundSize: "80px 80px",
+                }}
+            />
+
+            {/* Modal */}
             <div
                 ref={modalRef}
-                className={cn(cardStyles(isDark, 'default', 'lg'), "max-w-4xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto")}
+                className={cn(
+                    "relative max-w-4xl w-full max-h-[88vh] overflow-y-auto rounded-xl shadow-2xl border backdrop-blur-sm p-6 sm:p-8",
+                    isDark 
+                        ? "bg-black/40 border-white/20 shadow-black/50" 
+                        : "bg-white/90 border-gray-200/50 shadow-black/20"
+                )}
             >
+                {/* Header */}
                 <div className="mb-6">
-                    <h3 className={cn(
-                        textStyles(isDark, { size: '2xl', weight: 'bold', color: 'primary' }),
-                        "mb-2"
-                    )}>
+                    <h3
+                        className={cn(
+                            textStyles(isDark, {
+                                size: "2xl",
+                                weight: "bold",
+                                color: "primary",
+                            }),
+                            "mb-2"
+                        )}
+                    >
                         Paste YAML Recipe
                     </h3>
-                    <p className={cn(textStyles(isDark, { size: 'sm', color: 'secondary' }))}>
-                        Paste your container recipe in YAML format. This is perfect for AI-generated recipes.
+                    <p
+                        className={cn(
+                            textStyles(isDark, { size: "sm", color: "secondary" })
+                        )}
+                    >
+                        Paste your container recipe in YAML format. Ideal for importing
+                        AI-generated or pre-written recipes.
                     </p>
                 </div>
 
-                {/* YAML Input */}
-                <div className="mb-6">
-                    <label className={cn(
-                        textStyles(isDark, { size: 'sm', weight: 'medium', color: 'primary' }),
-                        "block mb-2"
-                    )}>
-                        YAML Content
-                    </label>
-                    <div className="relative">
-                        <textarea
-                            value={yamlContent}
-                            onChange={(e) => handleContentChange(e.target.value)}
-                            placeholder="Paste your YAML recipe here..."
-                            className={cn(
-                                "w-full h-64 p-4 rounded-lg border font-mono text-sm resize-y min-h-[16rem] max-h-[32rem]",
-                                "focus:outline-none focus:ring-2 transition-colors",
-                                isDark
-                                    ? "bg-[#0a0c08] border-[#2d4222] text-gray-300 placeholder-gray-500 focus:ring-[#91c84a]/30 focus:border-[#91c84a]"
-                                    : "bg-white border-[#e6f1d6] text-gray-900 placeholder-gray-400 focus:ring-[#4f7b38]/30 focus:border-[#4f7b38]"
-                            )}
-                        />
-                        {yamlContent && (
-                            <button
-                                onClick={() => {
-                                    navigator.clipboard.writeText(yamlContent);
-                                }}
-                                className={cn(
-                                    "absolute top-2 right-2 p-2 rounded text-xs transition-colors",
-                                    isDark
-                                        ? "bg-[#2d4222] text-[#91c84a] hover:bg-[#3f5b2e]"
-                                        : "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]"
-                                )}
-                                title="Copy to clipboard"
-                            >
-                                <ClipboardDocumentIcon className="h-4 w-4" />
-                            </button>
+                {/* YAML Editor */}
+                <div className="mb-6 relative">
+                    <Editor
+                        value={yamlContent}
+                        onValueChange={(code) => {
+                            setYamlContent(code);
+                            resetValidation();
+                        }}
+                        highlight={(code) => Prism.highlight(code, Prism.languages.yaml, "yaml")}
+                        padding={12}
+                        className={cn(
+                            "rounded-lg border font-mono text-sm min-h-[16rem] max-h-[32rem] overflow-auto",
+                            isDark
+                                ? "bg-[#0a0c08]/80 border-[#2d4222] text-gray-300 focus-within:border-[#91c84a]"
+                                : "bg-white/90 border-[#e6f1d6] text-gray-900 focus-within:border-[#4f7b38]"
                         )}
-                    </div>
+                        style={{
+                            fontFamily: '"Fira Code", monospace',
+                            outline: "none",
+                        }}
+                    />
+                    {yamlContent && (
+                        <button
+                            onClick={() => navigator.clipboard.writeText(yamlContent)}
+                            className={cn(
+                                "absolute top-2 right-2 p-2 rounded transition-colors",
+                                isDark
+                                    ? "bg-[#2d4222] text-[#91c84a] hover:bg-[#3f5b2e]"
+                                    : "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]"
+                            )}
+                            title="Copy to clipboard"
+                        >
+                            <ClipboardDocumentIcon className="h-4 w-4" />
+                        </button>
+                    )}
                 </div>
 
-                {/* Validation Button */}
+                {/* Validate Button */}
                 <div className="mb-6">
                     <button
                         onClick={validateYaml}
                         disabled={!yamlContent.trim() || isValidating}
                         className={cn(
-                            "flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200",
+                            "flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 shadow hover:shadow-md",
                             yamlContent.trim() && !isValidating
-                                ? (isDark
-                                    ? "bg-[#5a8f23] text-white hover:bg-[#6aa329] border border-[#7bb33a]/30"
-                                    : "bg-[#4f7b38] text-white hover:bg-[#6aa329] border border-[#4f7b38]/30")
-                                : (isDark
-                                    ? "bg-[#2d4222] text-[#91c84a]/50 border border-[#4f7b38]/20 cursor-not-allowed"
-                                    : "bg-[#f0f7e7] text-[#4f7b38]/50 border border-[#e6f1d6] cursor-not-allowed")
+                                ? isDark
+                                    ? "bg-gradient-to-r from-[#5a8f23] to-[#7bb33a] text-white hover:from-[#7bb33a] hover:to-[#91c84a]"
+                                    : "bg-gradient-to-r from-[#4f7b38] to-[#6aa329] text-white hover:from-[#6aa329] hover:to-[#91c84a]"
+                                : isDark
+                                    ? "bg-[#2d4222] text-[#91c84a]/50 cursor-not-allowed"
+                                    : "bg-[#f0f7e7] text-[#4f7b38]/50 cursor-not-allowed"
                         )}
                     >
                         {isValidating ? (
                             <>
                                 <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                                Validating...
+                                Checking...
                             </>
                         ) : (
                             <>
                                 <DocumentTextIcon className="h-5 w-5" />
-                                Validate YAML
+                                Check Recipe
                             </>
                         )}
                     </button>
@@ -194,26 +235,36 @@ export default function YamlPasteModal({
 
                 {/* Validation Results */}
                 {yamlParseError && (
-                    <div className={cn(
-                        "mb-4 p-4 rounded-lg border flex items-start gap-3",
-                        isDark ? "bg-red-900/20 border-red-700/30" : "bg-red-50 border-red-200"
-                    )}>
-                        <ExclamationTriangleIcon className={cn(
-                            "h-5 w-5 flex-shrink-0 mt-0.5",
-                            isDark ? "text-red-400" : "text-red-600"
-                        )} />
+                    <div
+                        className={cn(
+                            "mb-4 p-4 rounded-lg border flex items-start gap-3",
+                            isDark
+                                ? "bg-red-900/20 border-red-700/30"
+                                : "bg-red-50 border-red-200"
+                        )}
+                    >
+                        <ExclamationTriangleIcon
+                            className={cn(
+                                "h-5 w-5 flex-shrink-0 mt-0.5",
+                                isDark ? "text-red-400" : "text-red-600"
+                            )}
+                        />
                         <div className="flex-1">
-                            <p className={cn(
-                                textStyles(isDark, { size: 'sm', weight: 'medium' }),
-                                isDark ? "text-red-400" : "text-red-700"
-                            )}>
+                            <p
+                                className={cn(
+                                    textStyles(isDark, { size: "sm", weight: "medium" }),
+                                    isDark ? "text-red-400" : "text-red-700"
+                                )}
+                            >
                                 YAML Parse Error
                             </p>
-                            <p className={cn(
-                                textStyles(isDark, { size: 'xs' }),
-                                isDark ? "text-red-400/80" : "text-red-600",
-                                "mt-1 font-mono"
-                            )}>
+                            <p
+                                className={cn(
+                                    textStyles(isDark, { size: "xs" }),
+                                    isDark ? "text-red-400/80" : "text-red-600",
+                                    "mt-1 font-mono"
+                                )}
+                            >
                                 {yamlParseError}
                             </p>
                         </div>
@@ -221,48 +272,67 @@ export default function YamlPasteModal({
                 )}
 
                 {validationErrors.length > 0 && (
-                    <div className={cn(
-                        "mb-4 p-4 rounded-lg border",
-                        isDark ? "bg-red-900/20 border-red-700/30" : "bg-red-50 border-red-200"
-                    )}>
+                    <div
+                        className={cn(
+                            "mb-4 p-4 rounded-lg border",
+                            isDark
+                                ? "bg-red-900/20 border-red-700/30"
+                                : "bg-red-50 border-red-200"
+                        )}
+                    >
                         <div className="flex items-start gap-3 mb-3">
-                            <ExclamationTriangleIcon className={cn(
-                                "h-5 w-5 flex-shrink-0 mt-0.5",
-                                isDark ? "text-red-400" : "text-red-600"
-                            )} />
+                            <ExclamationTriangleIcon
+                                className={cn(
+                                    "h-5 w-5 flex-shrink-0 mt-0.5",
+                                    isDark ? "text-red-400" : "text-red-600"
+                                )}
+                            />
                             <div className="flex-1">
-                                <p className={cn(
-                                    textStyles(isDark, { size: 'sm', weight: 'medium' }),
-                                    isDark ? "text-red-400" : "text-red-700"
-                                )}>
+                                <p
+                                    className={cn(
+                                        textStyles(isDark, { size: "sm", weight: "medium" }),
+                                        isDark ? "text-red-400" : "text-red-700"
+                                    )}
+                                >
                                     Validation Errors ({validationErrors.length})
                                 </p>
-                                <p className={cn(
-                                    textStyles(isDark, { size: 'xs' }),
-                                    isDark ? "text-red-400/80" : "text-red-600",
-                                    "mt-1"
-                                )}>
-                                    Please fix the following issues in your YAML:
+                                <p
+                                    className={cn(
+                                        textStyles(isDark, { size: "xs" }),
+                                        isDark ? "text-red-400/80" : "text-red-600",
+                                        "mt-1"
+                                    )}
+                                >
+                                    Please fix the following issues in your recipe:
                                 </p>
                             </div>
                         </div>
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                             {validationErrors.map((error, index) => (
-                                <div key={index} className={cn(
-                                    "p-3 rounded border",
-                                    isDark ? "bg-red-800/20 border-red-600/30" : "bg-red-100/50 border-red-300"
-                                )}>
-                                    <p className={cn(
-                                        textStyles(isDark, { size: 'xs', weight: 'medium' }),
-                                        isDark ? "text-red-300" : "text-red-800"
-                                    )}>
-                                        {error.field === 'root' ? 'General' : error.field}
+                                <div
+                                    key={index}
+                                    className={cn(
+                                        "p-3 rounded border",
+                                        isDark
+                                            ? "bg-red-800/20 border-red-600/30"
+                                            : "bg-red-100/50 border-red-300"
+                                    )}
+                                >
+                                    <p
+                                        className={cn(
+                                            textStyles(isDark, { size: "xs", weight: "medium" }),
+                                            isDark ? "text-red-300" : "text-red-800"
+                                        )}
+                                    >
+                                        {error.field === "root" ? "General" : error.field}
                                     </p>
-                                    <p className={cn(
-                                        textStyles(isDark, { size: 'xs' }),
-                                        isDark ? "text-red-400" : "text-red-700",
-                                        "mt-1"
-                                    )}>
+                                    <p
+                                        className={cn(
+                                            textStyles(isDark, { size: "xs" }),
+                                            isDark ? "text-red-400" : "text-red-700",
+                                            "mt-1"
+                                        )}
+                                    >
                                         {error.message}
                                     </p>
                                 </div>
@@ -272,37 +342,51 @@ export default function YamlPasteModal({
                 )}
 
                 {isValid && validatedRecipe && (
-                    <div className={cn(
-                        "mb-4 p-4 rounded-lg border",
-                        isDark ? "bg-green-900/20 border-green-700/30" : "bg-green-50 border-green-200"
-                    )}>
+                    <div
+                        className={cn(
+                            "mb-4 p-4 rounded-lg border",
+                            isDark
+                                ? "bg-green-900/20 border-green-700/30"
+                                : "bg-green-50 border-green-200"
+                        )}
+                    >
                         <div className="flex items-start gap-3">
-                            <CheckCircleIcon className={cn(
-                                "h-5 w-5 flex-shrink-0 mt-0.5",
-                                isDark ? "text-green-400" : "text-green-600"
-                            )} />
+                            <CheckCircleIcon
+                                className={cn(
+                                    "h-5 w-5 flex-shrink-0 mt-0.5",
+                                    isDark ? "text-green-400" : "text-green-600"
+                                )}
+                            />
                             <div className="flex-1">
-                                <p className={cn(
-                                    textStyles(isDark, { size: 'sm', weight: 'medium' }),
-                                    isDark ? "text-green-400" : "text-green-700"
-                                )}>
-                                    YAML is Valid!
+                                <p
+                                    className={cn(
+                                        textStyles(isDark, { size: "sm", weight: "medium" }),
+                                        isDark ? "text-green-400" : "text-green-700"
+                                    )}
+                                >
+                                    Recipe is Valid!
                                 </p>
-                                <div className={cn(
-                                    "mt-2 grid grid-cols-2 gap-4 text-xs",
-                                    isDark ? "text-green-400/80" : "text-green-600"
-                                )}>
+                                <div
+                                    className={cn(
+                                        "mt-2 grid grid-cols-2 gap-4 text-xs",
+                                        isDark ? "text-green-400/80" : "text-green-600"
+                                    )}
+                                >
                                     <div>
-                                        <span className="font-medium">Name:</span> {validatedRecipe.name}
+                                        <span className="font-medium">Name:</span>{" "}
+                                        {validatedRecipe.name}
                                     </div>
                                     <div>
-                                        <span className="font-medium">Version:</span> {validatedRecipe.version}
+                                        <span className="font-medium">Version:</span>{" "}
+                                        {validatedRecipe.version}
                                     </div>
                                     <div>
-                                        <span className="font-medium">Architectures:</span> {validatedRecipe.architectures.join(', ')}
+                                        <span className="font-medium">Architectures:</span>{" "}
+                                        {validatedRecipe.architectures.join(", ")}
                                     </div>
                                     <div>
-                                        <span className="font-medium">Directives:</span> {validatedRecipe.build.directives.length}
+                                        <span className="font-medium">Directives:</span>{" "}
+                                        {validatedRecipe.build.directives.length}
                                     </div>
                                 </div>
                             </div>
@@ -311,38 +395,40 @@ export default function YamlPasteModal({
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-4 pt-4 border-t">
+                <div className="flex gap-3 pt-4 border-t border-white/10">
                     {isValid && validatedRecipe ? (
                         <button
                             onClick={handleLoadContainer}
                             className={cn(
-                                "flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                "flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 shadow hover:shadow-md",
                                 isDark
-                                    ? "bg-gradient-to-r from-[#5a8f23] to-[#7bb33a] text-white hover:from-[#7bb33a] hover:to-[#91c84a] border border-[#91c84a]/30"
-                                    : "bg-gradient-to-r from-[#4f7b38] to-[#6aa329] text-white hover:from-[#6aa329] hover:to-[#91c84a] border border-[#6aa329]/30"
+                                    ? "bg-gradient-to-r from-[#5a8f23] to-[#7bb33a] text-white hover:from-[#7bb33a] hover:to-[#91c84a]"
+                                    : "bg-gradient-to-r from-[#4f7b38] to-[#6aa329] text-white hover:from-[#6aa329] hover:to-[#91c84a]"
                             )}
                         >
                             <CheckCircleIcon className="h-5 w-5" />
-                            Load Container
+                            Import Recipe
                         </button>
                     ) : (
-                        <div className={cn(
-                            "flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold opacity-50 cursor-not-allowed",
-                            isDark
-                                ? "bg-[#2d4222] text-[#91c84a] border border-[#4f7b38]/20"
-                                : "bg-[#f0f7e7] text-[#4f7b38] border border-[#e6f1d6]"
-                        )}>
+                        <div
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold opacity-50 cursor-not-allowed",
+                                isDark
+                                    ? "bg-[#2d4222] text-[#91c84a]"
+                                    : "bg-[#f0f7e7] text-[#4f7b38]"
+                            )}
+                        >
                             <CheckCircleIcon className="h-5 w-5" />
-                            Load Container
+                            Import Recipe
                         </div>
                     )}
-                    
+
                     <button
                         className={cn(
-                            "px-6 py-4 rounded-lg font-medium transition-colors",
+                            "px-5 py-2.5 rounded-lg font-medium transition-colors",
                             isDark
-                                ? "text-gray-400 hover:text-gray-300 hover:bg-[#1f2e18] border border-[#4f7b38]/20"
-                                : "text-gray-600 hover:text-gray-700 hover:bg-[#f0f7e7] border border-[#e6f1d6]"
+                                ? "text-gray-400 hover:text-gray-300 hover:bg-white/10 border border-white/10"
+                                : "text-gray-600 hover:text-gray-700 hover:bg-gray-100 border border-gray-200"
                         )}
                         onClick={handleClose}
                     >

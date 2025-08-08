@@ -1,13 +1,26 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon, BeakerIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { ContainerTemplate, TemplateField, GUIDED_TOUR_TEMPLATES } from '@/components/templates/guidedTour';
-import { extractRepoName } from '@/components/templates/pythonPackage';
-import { ContainerRecipe, CopyrightInfo } from '@/components/common';
-import { useTheme } from '@/lib/ThemeContext';
-import { cn } from '@/lib/styles';
-import { LicenseSection } from '@/components/ui';
-import PackageTagEditor from '@/components/ui/PackageTagEditor';
-import { loadPackageDatabase } from '@/lib/packages';
+import React, { useState, useCallback, useEffect } from "react";
+import {
+    XMarkIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    RocketLaunchIcon,
+    PlusCircleIcon,
+} from "@heroicons/react/24/outline";
+import {
+    ContainerTemplate,
+    TemplateField,
+    GUIDED_TOUR_TEMPLATES,
+    getTemplateIcon,
+} from "@/components/templates/guidedTour";
+import { extractRepoName } from "@/components/templates/pythonPackage";
+import { ContainerRecipe, CopyrightInfo } from "@/components/common";
+import { useTheme } from "@/lib/ThemeContext";
+import { cn } from "@/lib/styles";
+import { LicenseSection } from "@/components/ui";
+import PackageTagEditor from "@/components/ui/PackageTagEditor";
+import TagEditor from "@/components/ui/TagEditor";
+import { CategorySelector } from "@/components/ui/CategorySelector";
+import { loadPackageDatabase } from "@/lib/packages";
 
 interface GuidedTourProps {
     isOpen: boolean;
@@ -31,24 +44,26 @@ interface Package {
     section?: string;
 }
 
-const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, onPublish }) => {
+const GuidedTour: React.FC<GuidedTourProps> = ({
+    isOpen,
+    onClose,
+    onComplete,
+    onPublish,
+}) => {
     const { isDark } = useTheme();
-    
+
     const [currentStep, setCurrentStep] = useState(0);
-    const [selectedTemplate, setSelectedTemplate] = useState<ContainerTemplate | null>(null);
+    const [selectedTemplate, setSelectedTemplate] =
+        useState<ContainerTemplate | null>(null);
     const [formData, setFormData] = useState<FormData>({});
-    const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+    const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
+        {}
+    );
     const [isGenerating, setIsGenerating] = useState(false);
-    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
     const [packageDatabase, setPackageDatabase] = useState<Package[]>([]);
     const [databaseLoaded, setDatabaseLoaded] = useState(false);
     const [isLoadingDatabase, setIsLoadingDatabase] = useState(false);
 
-    const steps = [
-        'Choose Template',
-        'Configure Container', 
-        'Review & Create'
-    ];
 
     // Load package database
     useEffect(() => {
@@ -72,15 +87,24 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
     useEffect(() => {
         if (formData.githubUrl && selectedTemplate) {
             const repoName = extractRepoName(String(formData.githubUrl));
-            if (!formData.containerName || formData.containerName === extractRepoName(String(formData.oldGithubUrl || ''))) {
-                setFormData(prev => ({ 
-                    ...prev, 
+            if (
+                !formData.containerName ||
+                formData.containerName ===
+                extractRepoName(String(formData.oldGithubUrl || ""))
+            ) {
+                setFormData((prev) => ({
+                    ...prev,
                     containerName: repoName,
-                    oldGithubUrl: formData.githubUrl 
+                    oldGithubUrl: formData.githubUrl,
                 }));
             }
         }
-    }, [formData.githubUrl, formData.containerName, formData.oldGithubUrl, selectedTemplate]);
+    }, [
+        formData.githubUrl,
+        formData.containerName,
+        formData.oldGithubUrl,
+        selectedTemplate,
+    ]);
 
     const resetTour = useCallback(() => {
         setCurrentStep(0);
@@ -88,7 +112,6 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
         setFormData({});
         setValidationErrors({});
         setIsGenerating(false);
-        setShowAdvancedOptions(false);
     }, []);
 
     const handleClose = useCallback(() => {
@@ -96,21 +119,35 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
         onClose();
     }, [resetTour, onClose]);
 
-    const validateField = useCallback((field: TemplateField, value: string | string[] | object | null): string | null => {
-        if (field.required) {
-            if (field.type === 'packages' && (!value || (Array.isArray(value) && value.length === 0))) {
-                return `${field.label} is required`;
-            } else if (field.type === 'license' && !value) {
-                return `${field.label} is required`;
-            } else if ((field.type === 'text' || field.type === 'url' || field.type === 'textarea') && !String(value).trim()) {
-                return `${field.label} is required`;
+    const validateField = useCallback(
+        (
+            field: TemplateField,
+            value: string | string[] | object | null
+        ): string | null => {
+            if (field.required) {
+                if (
+                    (field.type === "packages" || field.type === "python-packages" || field.type === "categories") &&
+                    (!value || (Array.isArray(value) && value.length === 0))
+                ) {
+                    return `${field.label} is required`;
+                } else if (field.type === "license" && !value) {
+                    return `${field.label} is required`;
+                } else if (
+                    (field.type === "text" ||
+                        field.type === "url" ||
+                        field.type === "textarea") &&
+                    !String(value).trim()
+                ) {
+                    return `${field.label} is required`;
+                }
             }
-        }
-        if (field.validation && String(value).trim()) {
-            return field.validation(String(value).trim());
-        }
-        return null;
-    }, []);
+            if (field.validation && String(value).trim()) {
+                return field.validation(String(value).trim());
+            }
+            return null;
+        },
+        []
+    );
 
     const validateCurrentStep = useCallback((): boolean => {
         if (!selectedTemplate) return false;
@@ -118,8 +155,8 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
         const errors: ValidationErrors = {};
         let isValid = true;
 
-        selectedTemplate.fields.forEach(field => {
-            const value = formData[field.id] || '';
+        selectedTemplate.fields.forEach((field) => {
+            const value = formData[field.id] || "";
             const error = validateField(field, value);
             if (error) {
                 errors[field.id] = error;
@@ -146,493 +183,529 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose, onComplete, on
 
     const handleTemplateSelect = useCallback((template: ContainerTemplate) => {
         setSelectedTemplate(template);
-        
+
         // Initialize form data with default values
         const initialData: FormData = {};
-        template.fields.forEach(field => {
-            if (field.type === 'select' && field.options && field.options.length > 0) {
+        template.fields.forEach((field) => {
+            if (field.type === "select" && field.options && field.options.length > 0) {
                 initialData[field.id] = field.options[0].value;
-            } else if (field.type === 'packages') {
+            } else if (field.type === "packages" || field.type === "python-packages" || field.type === "categories") {
                 initialData[field.id] = [];
-            } else if (field.type === 'license') {
+            } else if (field.type === "license") {
                 initialData[field.id] = null;
             } else {
-                initialData[field.id] = '';
+                initialData[field.id] = "";
             }
         });
         setFormData(initialData);
         setValidationErrors({});
     }, []);
 
-    const handleFieldChange = useCallback((fieldId: string, value: string | string[] | object | null) => {
-        setFormData(prev => ({ ...prev, [fieldId]: value }));
-        
-        // Clear validation error for this field
-        if (validationErrors[fieldId]) {
-            setValidationErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[fieldId];
-                return newErrors;
-            });
-        }
-    }, [validationErrors]);
+    const handleFieldChange = useCallback(
+        (fieldId: string, value: string | string[] | object | null) => {
+            setFormData((prev) => ({ ...prev, [fieldId]: value }));
 
-    const handleGenerate = useCallback(async (shouldPublish = false) => {
-        if (!selectedTemplate || !validateCurrentStep()) return;
-
-        setIsGenerating(true);
-        try {
-            const recipe = selectedTemplate.generateRecipe(formData);
-            
-            if (shouldPublish && onPublish) {
-                onPublish(recipe);
-            } else {
-                onComplete(recipe);
+            // Clear validation error for this field
+            if (validationErrors[fieldId]) {
+                setValidationErrors((prev) => {
+                    const newErrors = { ...prev };
+                    delete newErrors[fieldId];
+                    return newErrors;
+                });
             }
-            handleClose();
-        } catch (error) {
-            console.error('Failed to generate recipe:', error);
-            alert('Failed to generate container recipe. Please check your inputs.');
-        } finally {
-            setIsGenerating(false);
-        }
-    }, [selectedTemplate, formData, validateCurrentStep, onComplete, onPublish, handleClose]);
+        },
+        [validationErrors]
+    );
 
-    const renderField = useCallback((field: TemplateField) => {
-        const value = formData[field.id];
-        const error = validationErrors[field.id];
+    const handleGenerate = useCallback(
+        async (shouldPublish = false) => {
+            if (!selectedTemplate || !validateCurrentStep()) return;
 
-        const fieldClass = cn(
-            "w-full px-3 py-2 border rounded-md text-sm transition-colors",
-            error
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
-            isDark
-                ? "bg-gray-700 text-white"
-                : "bg-white text-gray-900"
-        );
+            setIsGenerating(true);
+            try {
+                const recipe = selectedTemplate.generateRecipe(formData);
 
-        return (
-            <div key={field.id} className={cn("space-y-2", field.type === 'packages' || field.type === 'license' ? "col-span-2" : "")}>
-                <label className={cn("block text-sm font-medium", isDark ? "text-gray-200" : "text-gray-700")}>
-                    {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                
-                {field.description && (
-                    <p className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-600")}>
-                        {field.description}
-                    </p>
-                )}
+                if (shouldPublish && onPublish) {
+                    onPublish(recipe);
+                } else {
+                    onComplete(recipe);
+                }
+                handleClose();
+            } catch (error) {
+                console.error("Failed to generate recipe:", error);
+                alert(
+                    "Failed to generate container recipe. Please check your inputs."
+                );
+            } finally {
+                setIsGenerating(false);
+            }
+        },
+        [
+            selectedTemplate,
+            formData,
+            validateCurrentStep,
+            onComplete,
+            onPublish,
+            handleClose,
+        ]
+    );
 
-                {field.type === 'license' ? (
-                    <LicenseSection
-                        licenses={value && typeof value === 'object' && ('license' in value || 'name' in value) ? [value as CopyrightInfo] : []}
-                        onChange={(licenses) => handleFieldChange(field.id, licenses[0] || null)}
-                        showAddButton={false}
-                        renderAddButton={() => null}
-                    />
-                ) : field.type === 'packages' ? (
-                    <PackageTagEditor
-                        packages={Array.isArray(value) ? value : []}
-                        onChange={(packages) => handleFieldChange(field.id, packages)}
-                        packageDatabase={packageDatabase}
-                        databaseLoaded={databaseLoaded}
-                        isLoadingDatabase={isLoadingDatabase}
-                        baseImage="ubuntu:24.04"
-                    />
-                ) : field.type === 'select' ? (
-                    <select
-                        value={typeof value === 'string' ? value : ''}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                        className={fieldClass}
+    const renderField = useCallback(
+        (field: TemplateField) => {
+            const value = formData[field.id];
+            const error = validationErrors[field.id];
+
+            const fieldClass = cn(
+                "w-full px-3 py-2 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2",
+                error
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-green-500",
+                isDark ? "bg-white/5 text-white" : "bg-white text-gray-900"
+            );
+
+            return (
+                <div
+                    key={field.id}
+                    className={cn(
+                        "p-4 rounded-lg shadow-sm",
+                        isDark ? "bg-white/5" : "bg-white/90",
+                        field.id === "githubUrl" ? "col-span-2" : ""
+                    )}
+                >
+                    <label
+                        className={cn(
+                            "block text-sm font-medium mb-1",
+                            isDark ? "text-gray-200" : "text-gray-800"
+                        )}
                     >
-                        {field.options?.map(option => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-                ) : field.type === 'textarea' ? (
-                    <textarea
-                        value={typeof value === 'string' ? value : ''}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                        placeholder={field.placeholder}
-                        rows={4}
-                        className={fieldClass}
-                    />
-                ) : (
-                    <input
-                        type={field.type === 'url' ? 'url' : 'text'}
-                        value={typeof value === 'string' ? value : ''}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                        placeholder={field.placeholder}
-                        className={fieldClass}
-                    />
-                )}
-
-                {error && (
-                    <p className="text-red-500 text-xs">{error}</p>
-                )}
-            </div>
-        );
-    }, [formData, validationErrors, isDark, handleFieldChange, packageDatabase, databaseLoaded, isLoadingDatabase]);
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                    {field.description && (
+                        <p
+                            className={cn(
+                                "text-xs mb-2",
+                                isDark ? "text-gray-400" : "text-gray-600"
+                            )}
+                        >
+                            {field.description}
+                        </p>
+                    )}
+                    {field.type === "license" ? (
+                        <LicenseSection
+                            licenses={
+                                value &&
+                                    typeof value === "object" &&
+                                    ("license" in value || "name" in value)
+                                    ? [value as CopyrightInfo]
+                                    : []
+                            }
+                            onChange={(licenses) =>
+                                handleFieldChange(field.id, licenses[0] || null)
+                            }
+                            showAddButton={false}
+                            renderAddButton={() => null}
+                        />
+                    ) : field.type === "packages" ? (
+                        <PackageTagEditor
+                            packages={Array.isArray(value) ? value : []}
+                            onChange={(packages) => handleFieldChange(field.id, packages)}
+                            packageDatabase={packageDatabase}
+                            databaseLoaded={databaseLoaded}
+                            isLoadingDatabase={isLoadingDatabase}
+                            baseImage="ubuntu:24.04"
+                        />
+                    ) : field.type === "python-packages" ? (
+                        <TagEditor
+                            tags={Array.isArray(value) ? value : []}
+                            onChange={(tags) => handleFieldChange(field.id, tags)}
+                            placeholder={field.placeholder}
+                            emptyMessage={`No ${field.packageType === 'conda' ? 'conda' : 'Python'} packages added yet`}
+                            suggestions={field.packageType === 'python' ? 
+                                ['numpy', 'pandas', 'matplotlib', 'scipy', 'scikit-learn', 'jupyter', 'requests', 'flask', 'seaborn', 'plotly'] :
+                                field.packageType === 'conda' ? 
+                                ['numpy', 'pandas', 'matplotlib', 'scipy', 'scikit-learn', 'jupyter', 'nodejs', 'seaborn', 'plotly', 'opencv'] :
+                                []
+                            }
+                            onSuggestionClick={(suggestion) => {
+                                // This callback is fired after addTag() has already been called
+                                // We can add any additional behavior here if needed
+                                console.log(`Added suggested package: ${suggestion}`);
+                            }}
+                        />
+                    ) : field.type === "categories" ? (
+                        <CategorySelector
+                            selectedCategories={Array.isArray(value) ? value : []}
+                            onChange={(categories) => handleFieldChange(field.id, categories)}
+                            error={error}
+                            showValidation={!!error}
+                        />
+                    ) : field.type === "select" ? (
+                        <select
+                            value={typeof value === "string" ? value : ""}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                            className={fieldClass}
+                        >
+                            {field.options?.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    ) : field.type === "textarea" ? (
+                        <textarea
+                            value={typeof value === "string" ? value : ""}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                            placeholder={field.placeholder}
+                            rows={4}
+                            className={fieldClass}
+                        />
+                    ) : (
+                        <input
+                            type={field.type === "url" ? "url" : "text"}
+                            value={typeof value === "string" ? value : ""}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                            placeholder={field.placeholder}
+                            className={fieldClass}
+                        />
+                    )}
+                    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+                </div>
+            );
+        },
+        [
+            formData,
+            validationErrors,
+            isDark,
+            handleFieldChange,
+            packageDatabase,
+            databaseLoaded,
+            isLoadingDatabase,
+        ]
+    );
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div 
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Enhanced background with better blur integration */}
+            <div
+                className="absolute inset-0 backdrop-blur-md"
+                style={{
+                    background: isDark
+                        ? "radial-gradient(circle at 30% 20%, rgba(123,179,58,0.08), transparent 50%), radial-gradient(circle at 70% 80%, rgba(145,200,74,0.08), transparent 50%), linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.85) 100%)"
+                        : "radial-gradient(circle at 30% 20%, rgba(106,163,41,0.12), transparent 50%), radial-gradient(circle at 70% 80%, rgba(79,123,56,0.12), transparent 50%), linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(248,249,251,0.90) 100%)",
+                }}
+            />
+            <div
+                className="absolute inset-0 opacity-[0.03] animate-[movePattern_60s_linear_infinite]"
+                style={{
+                    backgroundImage:
+                        "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"80\" height=\"80\" viewBox=\"0 0 80 80\"><circle cx=\"40\" cy=\"40\" r=\"1.5\" fill=\"%23ffffff\"/></svg>')",
+                    backgroundSize: "80px 80px",
+                }}
+            />
+
+            {/* Modal content */}
+            <div
                 className={cn(
-                    "max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl",
-                    isDark ? "bg-gray-800" : "bg-white"
+                    "relative max-w-5xl w-full max-h-[88vh] overflow-y-auto rounded-xl shadow-2xl border backdrop-blur-sm",
+                    isDark 
+                        ? "bg-black/40 border-white/20 shadow-black/50" 
+                        : "bg-white/90 border-gray-200/50 shadow-black/20"
                 )}
             >
                 {/* Header */}
-                <div className={cn("px-6 py-4 border-b", isDark ? "border-gray-700" : "border-gray-200")}>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <BeakerIcon className="h-6 w-6 text-blue-500" />
-                            <h2 className={cn("text-xl font-semibold", isDark ? "text-white" : "text-gray-900")}>
-                                Guided Container Creation
-                            </h2>
-                        </div>
-                        <button
-                            onClick={handleClose}
+                <div
+                    className={cn(
+                        "px-5 py-3 border-b flex items-center justify-between",
+                        isDark ? "border-white/10" : "border-gray-200/50"
+                    )}
+                >
+                    <div className="flex items-center space-x-3">
+                        <RocketLaunchIcon className={cn(
+                            "h-6 w-6",
+                            isDark ? "text-[#91c84a]" : "text-[#6aa329]"
+                        )} />
+                        <h2
                             className={cn(
-                                "p-2 rounded-md hover:bg-gray-100 transition-colors",
-                                isDark ? "hover:bg-gray-700 text-gray-400" : "text-gray-500"
+                                "text-lg font-semibold",
+                                isDark ? "text-white" : "text-gray-900"
                             )}
                         >
-                            <XMarkIcon className="h-5 w-5" />
-                        </button>
+                            Guided Container Creation
+                        </h2>
                     </div>
-
-                    {/* Progress indicator */}
-                    <div className="mt-4">
-                        <div className="flex items-center space-x-2">
-                            {steps.map((step, index) => (
-                                <React.Fragment key={step}>
-                                    <div className={cn(
-                                        "flex items-center space-x-2 px-3 py-1 rounded-full text-sm",
-                                        index <= currentStep
-                                            ? "bg-blue-100 text-blue-800"
-                                            : isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"
-                                    )}>
-                                        <span className={cn(
-                                            "w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold",
-                                            index <= currentStep ? "bg-blue-500 text-white" : "bg-gray-400 text-white"
-                                        )}>
-                                            {index + 1}
-                                        </span>
-                                        <span>{step}</span>
-                                    </div>
-                                    {index < steps.length - 1 && (
-                                        <div className={cn(
-                                            "h-px w-8",
-                                            index < currentStep ? "bg-blue-500" : "bg-gray-300"
-                                        )} />
-                                    )}
-                                </React.Fragment>
-                            ))}
-                        </div>
-                    </div>
+                    <button
+                        onClick={handleClose}
+                        className={cn(
+                            "p-2 rounded-md transition-colors",
+                            isDark
+                                ? "hover:bg-white/10 text-gray-300"
+                                : "hover:bg-gray-200/50 text-gray-600"
+                        )}
+                    >
+                        <XMarkIcon className="h-5 w-5" />
+                    </button>
                 </div>
 
                 {/* Content */}
-                <div className="px-6 py-6">
+                <div className="px-5 py-5 space-y-5">
                     {currentStep === 0 && (
-                        <div className="space-y-6">
-                            <div>
-                                <h3 className={cn("text-lg font-medium mb-2", isDark ? "text-white" : "text-gray-900")}>
-                                    Choose a Template
-                                </h3>
-                                <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
-                                    Select a template that best matches what you want to create.
-                                </p>
-                            </div>
-
+                        <div className="space-y-5">
+                            <h3
+                                className={cn(
+                                    "text-lg font-medium",
+                                    isDark ? "text-white" : "text-gray-900"
+                                )}
+                            >
+                                Choose a Template
+                            </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {GUIDED_TOUR_TEMPLATES.map(template => (
+                                {GUIDED_TOUR_TEMPLATES.map((template) => (
                                     <button
                                         key={template.id}
                                         onClick={() => handleTemplateSelect(template)}
                                         className={cn(
-                                            "p-4 rounded-lg border-2 text-left transition-all hover:shadow-md",
+                                            "group flex flex-col p-4 rounded-lg shadow-md transition-all hover:scale-[1.02] hover:shadow-lg text-left",
                                             selectedTemplate?.id === template.id
-                                                ? "border-blue-500 bg-blue-50"
+                                                ? isDark
+                                                    ? "bg-gradient-to-br from-[#7bb33a]/40 via-[#6aa329]/35 to-[#5a8f23]/30 backdrop-blur-md text-white shadow-lg ring-2 ring-[#91c84a]/50 border border-[#7bb33a]/40"
+                                                    : "bg-gradient-to-br from-[#6aa329]/40 via-[#5a8f23]/35 to-[#4f7b38]/30 backdrop-blur-md text-white shadow-lg ring-2 ring-[#6aa329]/50 border border-[#6aa329]/40"
                                                 : isDark
-                                                    ? "border-gray-600 bg-gray-700 hover:border-gray-500"
-                                                    : "border-gray-200 bg-white hover:border-gray-300"
+                                                    ? "bg-[#1f2e18]/25 backdrop-blur-sm border border-[#2d4222]/40 text-[#c4e382] hover:bg-[#1f2e18]/35 hover:border-[#2d4222]/60 hover:text-[#e8f5d0]"
+                                                    : "bg-white/20 backdrop-blur-sm border border-[#e6f1d6]/40 text-gray-800 hover:bg-white/30 hover:border-[#e6f1d6]/60"
                                         )}
                                     >
-                                        <div className="text-2xl mb-2">{template.icon}</div>
-                                        <h4 className={cn("font-medium mb-1", isDark ? "text-white" : "text-gray-900")}>
-                                            {template.name}
-                                        </h4>
-                                        <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
-                                            {template.description}
-                                        </p>
-                                        <div className={cn(
-                                            "mt-2 inline-block px-2 py-1 text-xs rounded",
-                                            isDark ? "bg-gray-600 text-gray-300" : "bg-gray-100 text-gray-700"
-                                        )}>
-                                            {template.category}
-                                        </div>
+                                        <div className="mb-2">{getTemplateIcon(template.id, cn(
+                                            "h-8 w-8 transition-opacity",
+                                            selectedTemplate?.id === template.id ? "opacity-90" : "opacity-60"
+                                        ))}</div>
+                                        <h4 className="font-medium mb-1">{template.name}</h4>
+                                        <p className="text-sm opacity-80">{template.description}</p>
                                     </button>
                                 ))}
-                                
-                                {/* Advanced option for starting from scratch */}
-                                {showAdvancedOptions && (
-                                    <button
-                                        onClick={() => {
-                                            // Create a minimal template for advanced users
-                                            onComplete({
-                                                name: '',
-                                                version: '1.0.0',
-                                                copyright: [],
-                                                architectures: ["x86_64"],
-                                                structured_readme: {
-                                                    description: '',
-                                                    example: '',
-                                                    documentation: '',
-                                                    citation: ''
-                                                },
-                                                build: {
-                                                    kind: "neurodocker",
-                                                    "base-image": "ubuntu:22.04",
-                                                    "pkg-manager": "apt",
-                                                    directives: []
-                                                },
-                                                categories: []
-                                            });
-                                            handleClose();
-                                        }}
-                                        className={cn(
-                                            "p-4 rounded-lg border-2 text-left transition-all hover:shadow-md border-dashed",
-                                            isDark
-                                                ? "border-gray-600 bg-gray-800 hover:border-gray-500"
-                                                : "border-gray-300 bg-gray-50 hover:border-gray-400"
-                                        )}
-                                    >
-                                        <div className="text-2xl mb-2">⚙️</div>
-                                        <h4 className={cn("font-medium mb-1", isDark ? "text-white" : "text-gray-900")}>
-                                            Start from Scratch
-                                        </h4>
-                                        <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
-                                            Create a new container with full control over all settings
-                                        </p>
-                                        <div className={cn(
-                                            "mt-2 inline-block px-2 py-1 text-xs rounded",
-                                            isDark ? "bg-gray-600 text-gray-300" : "bg-gray-100 text-gray-700"
-                                        )}>
-                                            Advanced
-                                        </div>
-                                    </button>
-                                )}
                             </div>
-                            
-                            {!showAdvancedOptions && (
-                                <div className="mt-6 text-center">
-                                    <button
-                                        onClick={() => setShowAdvancedOptions(true)}
-                                        className={cn(
-                                            "inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-md transition-colors",
-                                            isDark
-                                                ? "text-gray-300 hover:text-white hover:bg-gray-700"
-                                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                                        )}
-                                    >
-                                        <PlusIcon className="h-4 w-4" />
-                                        <span>Show Advanced Options</span>
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     )}
 
                     {currentStep === 1 && selectedTemplate && (
-                        <div className="space-y-6">
-                            <div>
-                                <h3 className={cn("text-lg font-medium mb-2", isDark ? "text-white" : "text-gray-900")}>
-                                    Configure Your Container
-                                </h3>
-                                <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
-                                    Fill in the details for your {selectedTemplate.name.toLowerCase()}.
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {selectedTemplate.fields.map(renderField)}
+                        <div className="space-y-5">
+                            <h3
+                                className={cn(
+                                    "text-lg font-medium",
+                                    isDark ? "text-white" : "text-gray-900"
+                                )}
+                            >
+                                Configure Your Container
+                            </h3>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {selectedTemplate.fields.map((field) => {
+                                    // GitHub URL full width
+                                    if (field.id === "githubUrl") {
+                                        return (
+                                            <div key={field.id} className="col-span-2">
+                                                {renderField(field)}
+                                            </div>
+                                        );
+                                    }
+                                    // Name + Version on same row
+                                    if (field.id === "containerName" || field.id === "version") {
+                                        return renderField(field);
+                                    }
+                                    // All others full width
+                                    return (
+                                        <div key={field.id} className="col-span-2">
+                                            {renderField(field)}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
 
                     {currentStep === 2 && selectedTemplate && (
                         <div className="space-y-6">
-                            <div>
-                                <h3 className={cn("text-lg font-medium mb-2", isDark ? "text-white" : "text-gray-900")}>
-                                    Review & Create
-                                </h3>
-                                <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
-                                    Review your configuration and create the container.
-                                </p>
-                            </div>
-
-                            <div className={cn("p-4 rounded-lg", isDark ? "bg-gray-700" : "bg-gray-50")}>
-                                <h4 className={cn("font-medium mb-3", isDark ? "text-white" : "text-gray-900")}>
+                            <h3
+                                className={cn(
+                                    "text-lg font-medium",
+                                    isDark ? "text-white" : "text-gray-900"
+                                )}
+                            >
+                                Review & Create
+                            </h3>
+                            
+                            {/* Summary */}
+                            <div className={cn(
+                                "p-4 rounded-lg border",
+                                isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"
+                            )}>
+                                <h4 className={cn(
+                                    "font-medium mb-3",
+                                    isDark ? "text-white" : "text-gray-900"
+                                )}>
                                     Container Summary
                                 </h4>
-                                <dl className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                     <div>
-                                        <dt className={cn("font-medium", isDark ? "text-gray-300" : "text-gray-700")}>Template:</dt>
-                                        <dd className={cn(isDark ? "text-gray-400" : "text-gray-600")}>{selectedTemplate.name}</dd>
+                                        <span className={cn(
+                                            "font-medium",
+                                            isDark ? "text-gray-300" : "text-gray-700"
+                                        )}>Name:</span>{" "}
+                                        <span className={cn(
+                                            isDark ? "text-white" : "text-gray-900"
+                                        )}>{String(formData.containerName || formData.name || 'Unnamed')}</span>
                                     </div>
-                                    {selectedTemplate.fields.map(field => {
-                                        const value = formData[field.id];
-                                        if (!value || (Array.isArray(value) && value.length === 0)) return null;
-                                        
-                                        let displayValue: string;
-                                        if (field.type === 'packages') {
-                                            displayValue = Array.isArray(value) ? value.join(', ') : '';
-                                        } else if (field.type === 'license') {
-                                            if (value && typeof value === 'object') {
-                                                const copyrightInfo = value as CopyrightInfo;
-                                                if ('license' in copyrightInfo) {
-                                                    displayValue = copyrightInfo.license || 'Unknown license';
-                                                } else if ('name' in copyrightInfo) {
-                                                    displayValue = copyrightInfo.name || 'Unknown license';
-                                                } else {
-                                                    displayValue = 'Unknown license';
-                                                }
-                                            } else {
-                                                displayValue = 'Unknown license';
-                                            }
-                                        } else {
-                                            displayValue = String(value);
-                                        }
-                                        
-                                        if (!displayValue) return null;
-                                        
-                                        return (
-                                            <div key={field.id}>
-                                                <dt className={cn("font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
-                                                    {field.label}:
-                                                </dt>
-                                                <dd className={cn("break-all", isDark ? "text-gray-400" : "text-gray-600")}>
-                                                    {field.type === 'textarea' ? (
-                                                        <pre className="whitespace-pre-wrap text-xs">{displayValue}</pre>
-                                                    ) : (
-                                                        displayValue
-                                                    )}
-                                                </dd>
-                                            </div>
-                                        );
-                                    })}
-                                </dl>
+                                    <div>
+                                        <span className={cn(
+                                            "font-medium",
+                                            isDark ? "text-gray-300" : "text-gray-700"
+                                        )}>Version:</span>{" "}
+                                        <span className={cn(
+                                            isDark ? "text-white" : "text-gray-900"
+                                        )}>{String(formData.version || '1.0.0')}</span>
+                                    </div>
+                                    <div>
+                                        <span className={cn(
+                                            "font-medium",
+                                            isDark ? "text-gray-300" : "text-gray-700"
+                                        )}>Template:</span>{" "}
+                                        <span className={cn(
+                                            isDark ? "text-white" : "text-gray-900"
+                                        )}>{selectedTemplate.name}</span>
+                                    </div>
+                                    <div>
+                                        <span className={cn(
+                                            "font-medium",
+                                            isDark ? "text-gray-300" : "text-gray-700"
+                                        )}>Categories:</span>{" "}
+                                        <span className={cn(
+                                            isDark ? "text-white" : "text-gray-900"
+                                        )}>{Array.isArray(formData.categories) && formData.categories.length > 0 
+                                            ? formData.categories.join(', ') 
+                                            : 'Not set'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Next Steps */}
+                            <div className={cn(
+                                "p-4 rounded-lg border",
+                                isDark ? "bg-blue-900/20 border-blue-700/30" : "bg-blue-50 border-blue-200"
+                            )}>
+                                <h4 className={cn(
+                                    "font-medium mb-3 flex items-center gap-2",
+                                    isDark ? "text-blue-300" : "text-blue-800"
+                                )}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    What happens next?
+                                </h4>
+                                <div className={cn(
+                                    "space-y-2 text-sm",
+                                    isDark ? "text-blue-200" : "text-blue-700"
+                                )}>
+                                    <div className="flex items-start gap-2">
+                                        <span className="font-medium">1.</span>
+                                        <span>Your container recipe will be created and loaded into the builder</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="font-medium">2.</span>
+                                        <span>You can customize build directives, add software packages, and configure deployment settings</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="font-medium">3.</span>
+                                        <span>Test your container recipe and generate a Dockerfile</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="font-medium">4.</span>
+                                        <span>Publish your container to the NeuroContainers repository when ready</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
 
                 {/* Footer */}
-                <div className={cn("px-6 py-4 border-t", isDark ? "border-gray-700" : "border-gray-200")}>
-                    <div className="flex justify-between">
+                <div
+                    className={cn(
+                        "px-5 py-3 border-t flex justify-between",
+                        isDark ? "border-white/10" : "border-gray-200/50"
+                    )}
+                >
+                    <button
+                        onClick={handleBack}
+                        disabled={currentStep === 0}
+                        className={cn(
+                            "flex items-center space-x-2 px-4 py-2 rounded-md transition-colors",
+                            currentStep === 0
+                                ? "text-gray-400 cursor-not-allowed"
+                                : isDark
+                                    ? "text-gray-300 hover:bg-white/10"
+                                    : "text-gray-700 hover:bg-gray-200/50"
+                        )}
+                    >
+                        <ChevronLeftIcon className="h-4 w-4" />
+                        <span>Back</span>
+                    </button>
+
+                    <div className="flex space-x-3">
                         <button
-                            onClick={handleBack}
-                            disabled={currentStep === 0}
+                            onClick={handleClose}
                             className={cn(
-                                "flex items-center space-x-2 px-4 py-2 rounded-md transition-colors",
-                                currentStep === 0
-                                    ? "text-gray-400 cursor-not-allowed"
-                                    : isDark
-                                        ? "text-gray-300 hover:bg-gray-700"
-                                        : "text-gray-700 hover:bg-gray-100"
+                                "px-4 py-2 rounded-md transition-colors",
+                                isDark
+                                    ? "text-gray-300 hover:bg-white/10"
+                                    : "text-gray-700 hover:bg-gray-200/50"
                             )}
                         >
-                            <ChevronLeftIcon className="h-4 w-4" />
-                            <span>Back</span>
+                            Cancel
                         </button>
 
-                        <div className="flex space-x-3">
+                        {currentStep < 2 ? (
                             <button
-                                onClick={handleClose}
+                                onClick={handleNext}
+                                disabled={currentStep === 0 ? !selectedTemplate : false}
                                 className={cn(
-                                    "px-4 py-2 rounded-md transition-colors",
-                                    isDark
-                                        ? "text-gray-300 hover:bg-gray-700"
-                                        : "text-gray-700 hover:bg-gray-100"
+                                    "flex items-center space-x-2 px-4 py-2 rounded-md text-white transition-colors",
+                                    (currentStep === 0 ? !selectedTemplate : false)
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : isDark
+                                            ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#8ccf45] hover:to-[#7bb33a]"
+                                            : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] hover:from-[#7bb33a] hover:to-[#6aa329]"
                                 )}
                             >
-                                Cancel
+                                <span>Next</span>
+                                <ChevronRightIcon className="h-4 w-4" />
                             </button>
-
-                            {currentStep < 2 ? (
-                                <button
-                                    onClick={handleNext}
-                                    disabled={currentStep === 0 ? !selectedTemplate : false}
-                                    className={cn(
-                                        "flex items-center space-x-2 px-4 py-2 rounded-md text-white transition-colors",
-                                        (currentStep === 0 ? !selectedTemplate : false)
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-blue-500 hover:bg-blue-600"
-                                    )}
-                                >
-                                    <span>Next</span>
-                                    <ChevronRightIcon className="h-4 w-4" />
-                                </button>
-                            ) : (
-                                <div className="flex space-x-3">
-                                    <button
-                                        onClick={() => handleGenerate(false)}
-                                        disabled={isGenerating}
-                                        className={cn(
-                                            "flex items-center space-x-2 px-6 py-2 rounded-md text-white transition-colors",
-                                            isGenerating
-                                                ? "bg-gray-400 cursor-not-allowed"
-                                                : "bg-blue-500 hover:bg-blue-600"
-                                        )}
-                                    >
-                                        {isGenerating ? (
-                                            <>
-                                                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                                                <span>Creating...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <BeakerIcon className="h-4 w-4" />
-                                                <span>Create Container</span>
-                                            </>
-                                        )}
-                                    </button>
-                                    
-                                    {onPublish && (
-                                        <button
-                                            onClick={() => handleGenerate(true)}
-                                            disabled={isGenerating}
-                                            className={cn(
-                                                "flex items-center space-x-2 px-6 py-2 rounded-md text-white transition-colors",
-                                                isGenerating
-                                                    ? "bg-gray-400 cursor-not-allowed"
-                                                    : "bg-green-500 hover:bg-green-600"
-                                            )}
-                                        >
-                                            {isGenerating ? (
-                                                <>
-                                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                                                    <span>Publishing...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <BeakerIcon className="h-4 w-4" />
-                                                    <span>Create & Publish</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                        ) : (
+                            <button
+                                onClick={() => handleGenerate(false)}
+                                disabled={isGenerating}
+                                className={cn(
+                                    "flex items-center space-x-2 px-6 py-2 rounded-md text-white transition-colors",
+                                    isGenerating
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : isDark
+                                            ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#8ccf45] hover:to-[#7bb33a]"
+                                            : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] hover:from-[#7bb33a] hover:to-[#6aa329]"
+                                )}
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                        <span>Creating...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <PlusCircleIcon className="h-4 w-4" />
+                                        <span>Create Container</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

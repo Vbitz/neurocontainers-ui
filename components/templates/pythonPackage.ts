@@ -3,12 +3,13 @@ import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/commo
 export interface TemplateField {
     id: string;
     label: string;
-    type: 'text' | 'url' | 'select' | 'textarea' | 'checkbox' | 'packages' | 'license';
+    type: 'text' | 'url' | 'select' | 'textarea' | 'checkbox' | 'packages' | 'python-packages' | 'license' | 'categories';
     required?: boolean;
     placeholder?: string;
     description?: string;
     options?: { value: string; label: string }[];
     validation?: (value: string) => string | null;
+    packageType?: 'ubuntu' | 'python' | 'conda';
 }
 
 export interface ContainerTemplate {
@@ -111,23 +112,34 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
         {
             id: 'additionalPipPackages',
             label: 'Additional Python Packages (pip)',
-            type: 'packages',
+            type: 'python-packages',
             required: false,
+            placeholder: 'Add Python package name...',
             description: 'Additional Python packages to install via pip (optional)',
+            packageType: 'python',
         },
         {
             id: 'condaPackages',
             label: 'Conda Packages',
-            type: 'packages',
+            type: 'python-packages',
             required: false,
+            placeholder: 'Add conda package name...',
             description: 'Conda packages to install (python=3.9 is included by default)',
+            packageType: 'conda',
+        },
+        {
+            id: 'categories',
+            label: 'Categories',
+            type: 'categories',
+            required: true,
+            description: 'Select categories that best describe your container',
         },
     ],
     generateRecipe: (values: Record<string, string | string[] | object | null>): ContainerRecipe => {
         const githubUrl = String(values.githubUrl || '').trim();
         const repoName = extractRepoName(githubUrl);
         
-        // Parse packages
+        // Parse packages from arrays (TagEditor provides arrays)
         const additionalPipPackages = Array.isArray(values.additionalPipPackages) ? values.additionalPipPackages : [];
         const condaPackages = Array.isArray(values.condaPackages) ? values.condaPackages : [];
         
@@ -189,7 +201,7 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
                 "pkg-manager": "apt",
                 directives
             },
-            categories: ["programming"]
+            categories: Array.isArray(values.categories) ? values.categories : ['programming']
         };
     }
 };
