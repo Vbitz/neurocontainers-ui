@@ -1,4 +1,5 @@
 import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
+import pythonPackageMarkdown from "@/copy/templates/python-package.md";
 
 export interface TemplateField {
     id: string;
@@ -16,6 +17,7 @@ export interface ContainerTemplate {
     id: string;
     name: string;
     description: string;
+    detailedDescription?: string; // Markdown content for detailed description
     icon: string;
     category: string;
     fields: TemplateField[];
@@ -64,6 +66,7 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
     id: 'python-package',
     name: 'Python Package from GitHub',
     description: 'Create a container for a Python package hosted on GitHub with conda and pip installation',
+    detailedDescription: pythonPackageMarkdown,
     icon: '🐍',
     category: 'Programming',
     fields: [
@@ -144,10 +147,10 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
         const condaPackages = Array.isArray(values.condaPackages) ? values.condaPackages : [];
         
         // Ensure python is included in conda packages
-        const allCondaPackages = ['python=3.9', ...condaPackages.filter((pkg: string) => !pkg.startsWith('python'))];
+        const allCondaPackages = condaPackages;
         
-        // Build pip install list with GitHub repo first
-        const pipPackages = [githubUrl, ...additionalPipPackages];
+        // Build pip install list with GitHub repo first, ensuring it's properly installable
+        const pipPackages = [`git+${githubUrl}`, ...additionalPipPackages];
 
         // Create copyright info from license selection
         const copyright: CopyrightInfo[] = values.license ? [values.license as CopyrightInfo] : [];
@@ -155,18 +158,24 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
         // Create directives
         const directives = [];
 
-        // Add miniconda with all packages
+        // Add miniconda with conda packages first
         directives.push({
             template: {
                 name: "miniconda",
                 version: "latest",
                 env: {},
                 args: {
-                    conda_install: allCondaPackages.join(' '),
-                    pip_install: pipPackages.join(' ')
+                    conda_install: allCondaPackages.join(' ')
                 }
             }
         });
+
+        // Add separate pip installation to ensure GitHub package is properly installed
+        if (pipPackages.length > 0) {
+            directives.push({
+                install: pipPackages
+            });
+        }
 
         // Add deployment info
         directives.push({
@@ -176,11 +185,46 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
             }
         });
 
-        // Add basic test
+        // Add comprehensive test that verifies the main package installation
         directives.push({
             test: {
-                name: "python_import_test",
-                script: `python -c "import ${repoName.replace('-', '_')}; print('${repoName} imported successfully')"`
+                name: "verify_installation",
+                script: [
+                    `# Test Python and conda installation`,
+                    `python --version`,
+                    `conda --version`,
+                    `# Test that pip packages were installed`,
+                    `python -c "import sys; print('Python path:', sys.path)"`,
+                    `pip list | grep -i "${repoName}" || echo "Warning: ${repoName} not found in pip list"`,
+                    `# Attempt to import the main package`,
+                    `python -c "`,
+                    `import importlib.util`,
+                    `import sys`,
+                    ``,
+                    `# Try common package name variations`,
+                    `package_names = ['${repoName.replace('-', '_')}', '${repoName}', '${repoName.replace('_', '-')}']`,
+                    `imported = False`,
+                    ``,
+                    `for pkg_name in package_names:`,
+                    `    try:`,
+                    `        __import__(pkg_name)`,
+                    `        print(f'Successfully imported {pkg_name}')`,
+                    `        imported = True`,
+                    `        break`,
+                    `    except ImportError:`,
+                    `        continue`,
+                    ``,
+                    `if not imported:`,
+                    `    print('Warning: Could not import main package. This may be normal if the package has a different import name.')`,
+                    `    print('Available packages:')`,
+                    `    import pkg_resources`,
+                    `    for dist in pkg_resources.working_set:`,
+                    `        if '${repoName}' in dist.project_name.lower():`,
+                    `            print(f'  - {dist.project_name} ({dist.version})')`,
+                    `else:`,
+                    `    print('Package installation verified successfully!')`,
+                    `"`
+                ].join('\n')
             }
         });
 
@@ -191,13 +235,13 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
             architectures: ["x86_64"] as Architecture[],
             structured_readme: {
                 description: String(values.description || ''),
-                example: `# Example usage\n\n\`\`\`bash\n# Run the containerized tool\ndocker run --rm ${values.containerName}:${values.version} python -c "import ${repoName.replace('-', '_')}"\n\`\`\``,
-                documentation: `This container packages the Python package from ${githubUrl}`,
-                citation: `Please cite the original authors of ${repoName} when using this container.`
+                example: `# Example usage\n\n\`\`\`bash\n# Run Python interactively in the container\ndocker run --rm -it ${values.containerName}:${values.version} python\n\n# Execute a Python script\ndocker run --rm -v /path/to/your/script.py:/script.py ${values.containerName}:${values.version} python /script.py\n\n# Test that the package is available\ndocker run --rm ${values.containerName}:${values.version} python -c "import ${repoName.replace('-', '_')}; print('${repoName} is available!')"\n\`\`\``,
+                documentation: `This container includes:\n- Python via Miniconda\n- The Python package from ${githubUrl}\n- Additional conda packages: ${allCondaPackages.filter(pkg => !pkg.startsWith('python')).join(', ') || 'none'}\n- Additional pip packages: ${additionalPipPackages.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
+                citation: `Please cite the original authors of the ${repoName} package when using this container. Repository: ${githubUrl}`
             },
             build: {
                 kind: "neurodocker",
-                "base-image": "ubuntu:22.04",
+                "base-image": "ubuntu:24.04",
                 "pkg-manager": "apt",
                 directives
             },

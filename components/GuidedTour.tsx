@@ -20,6 +20,7 @@ import { LicenseSection } from "@/components/ui";
 import PackageTagEditor from "@/components/ui/PackageTagEditor";
 import TagEditor from "@/components/ui/TagEditor";
 import { CategorySelector } from "@/components/ui/CategorySelector";
+import { InlineTemplateDescription } from "@/components/ui/InlineTemplateDescription";
 import { loadPackageDatabase } from "@/lib/packages";
 
 interface GuidedTourProps {
@@ -486,6 +487,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                                     </button>
                                 ))}
                             </div>
+                            
                         </div>
                     )}
 
@@ -499,6 +501,14 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                             >
                                 Configure Your Container
                             </h3>
+                            
+                            {/* Show template details inline */}
+                            {selectedTemplate.detailedDescription && (
+                                <InlineTemplateDescription
+                                    markdownContent={selectedTemplate.detailedDescription}
+                                    className="mb-4"
+                                />
+                            )}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {selectedTemplate.fields.map((field) => {
                                     // GitHub URL full width
