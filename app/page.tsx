@@ -233,14 +233,6 @@ export default function Home() {
         ]
     );
 
-    // Handle new container
-    const handleNewContainer = useCallback(() => {
-        setYamlData(null);
-        setIsSidebarOpen(false);
-        resetPublishingState();
-        updateUrl(null);
-    }, [resetPublishingState, updateUrl]);
-
     // Handle GitHub export
     const handleOpenGitHub = useCallback(() => {
         setIsGitHubModalOpen(true);
