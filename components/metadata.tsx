@@ -321,7 +321,11 @@ export default function ContainerMetadata({
 
     return (
         <>
-            <div className={cn(cardStyles(isDark, 'elevated', 'sm'), "mb-6")}>
+            <div className={cn(
+                cardStyles(isDark, 'elevated', 'sm'), 
+                "mb-6 backdrop-blur-md",
+                isDark ? "bg-black/20 border-[#2d4222]/50" : "bg-white/30 border-gray-200/50"
+            )}>
                 <ValidationSummary
                     errors={[nameError, versionError, documentationError, architectureError, categoryError]}
                     show={showValidation && hasErrors}

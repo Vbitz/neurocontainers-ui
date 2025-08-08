@@ -83,16 +83,16 @@ export function SideNavigation({
                     "flex flex-col lg:flex-shrink-0 backdrop-blur-md",
                     isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
                     isDark
-                        ? "bg-[#0a0c08]/90 border-[#2d4222]/60"
-                        : "bg-white/90 border-gray-200/60"
+                        ? "bg-black/10 border-[#2d4222]/40"
+                        : "bg-white/5 border-gray-200/40"
                 )}
             >
                 {/* Header with Logo */}
                 <div className={cn(
                     "p-4 border-b backdrop-blur-sm",
                     isDark
-                        ? "border-[#2d4222]/60 bg-[#161a0e]/80"
-                        : "border-gray-200/60 bg-gray-50/80"
+                        ? "border-[#2d4222]/40 bg-black/8"
+                        : "border-gray-200/40 bg-white/3"
                 )}>
                     <div className="flex items-center justify-between">
                         <div>
@@ -128,7 +128,7 @@ export function SideNavigation({
                 {/* Action Buttons */}
                 <div className={cn(
                     "flex-1 p-3 backdrop-blur-sm",
-                    isDark ? "bg-[#0a0c08]/70" : "bg-white/70"
+                    isDark ? "bg-black/5" : "bg-white/2"
                 )}>
                     <div className="space-y-1">
                         <button

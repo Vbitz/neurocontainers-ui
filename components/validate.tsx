@@ -196,7 +196,11 @@ export default function ContainerValidator({
     }, [loadBuilderInstance]);
 
     return (
-        <div className={getCards(isDark).minimal}>
+        <div className={cn(
+            getCards(isDark).minimal,
+            "backdrop-blur-md",
+            isDark ? "bg-black/20 border-[#2d4222]/50" : "bg-white/30 border-gray-200/50"
+        )}>
             <div className="p-4 sm:p-6">
                 {/* Status Section */}
                 <div className="mb-6">

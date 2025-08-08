@@ -342,10 +342,10 @@ export default function Home() {
                             <button
                                 onClick={() => setIsGuidedTourOpen(true)}
                                 className={cn(
-                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left transform hover:scale-[1.02] hover:shadow-xl",
+                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left transform hover:scale-[1.02] hover:shadow-xl backdrop-blur-md",
                                     isDark
-                                        ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] text-white hover:from-[#8ccf45] hover:to-[#7bb33a]"
-                                        : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] text-white hover:from-[#7bb33a] hover:to-[#6aa329]"
+                                        ? "bg-gradient-to-r from-[#7bb33a]/90 to-[#6aa329]/90 text-white hover:from-[#8ccf45]/95 hover:to-[#7bb33a]/95 border border-[#7bb33a]/30"
+                                        : "bg-gradient-to-r from-[#6aa329]/90 to-[#4f7b38]/90 text-white hover:from-[#7bb33a]/95 hover:to-[#6aa329]/95 border border-[#6aa329]/30"
                                 )}
                             >
                                 <SparklesIcon className="h-10 w-10 flex-shrink-0 mr-4 transition-transform duration-300 group-hover:scale-110" />
@@ -361,10 +361,10 @@ export default function Home() {
                             <button
                                 onClick={() => setIsYamlPasteModalOpen(true)}
                                 className={cn(
-                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left transform hover:scale-[1.02] hover:shadow-xl",
+                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left transform hover:scale-[1.02] hover:shadow-xl backdrop-blur-md",
                                     isDark
-                                        ? "bg-[#2d4222] text-[#91c84a] hover:bg-[#3a5c29]"
-                                        : "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]"
+                                        ? "bg-[#2d4222]/70 text-[#91c84a] hover:bg-[#3a5c29]/80 border border-[#2d4222]/40"
+                                        : "bg-[#e6f1d6]/70 text-[#4f7b38] hover:bg-[#d3e7b6]/80 border border-[#e6f1d6]/60"
                                 )}
                             >
                                 <DocumentPlusIcon className="h-10 w-10 flex-shrink-0 mr-4 transition-transform duration-300 group-hover:scale-110" />
@@ -379,10 +379,10 @@ export default function Home() {
                             {/* Upload YAML */}
                             <label
                                 className={cn(
-                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left cursor-pointer transform hover:scale-[1.02] hover:shadow-xl",
+                                    "group flex items-center p-6 rounded-xl shadow-lg transition-all duration-300 text-left cursor-pointer transform hover:scale-[1.02] hover:shadow-xl backdrop-blur-md",
                                     isDark
-                                        ? "bg-[#2d4222] text-[#91c84a] hover:bg-[#3a5c29]"
-                                        : "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]"
+                                        ? "bg-[#2d4222]/70 text-[#91c84a] hover:bg-[#3a5c29]/80 border border-[#2d4222]/40"
+                                        : "bg-[#e6f1d6]/70 text-[#4f7b38] hover:bg-[#d3e7b6]/80 border border-[#e6f1d6]/60"
                                 )}
                             >
                                 <ArrowUpTrayIcon className="h-10 w-10 flex-shrink-0 mr-4 transition-transform duration-300 group-hover:scale-110" />
