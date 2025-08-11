@@ -119,6 +119,23 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
         onClose();
     }, [resetTour, onClose]);
 
+    // Handle escape key
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && isOpen) {
+                handleClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, handleClose]);
+
     const validateField = useCallback(
         (
             field: TemplateField,
@@ -467,6 +484,8 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
 
             {/* Modal content */}
             <div
+                role="dialog"
+                aria-labelledby="guided-tour-title"
                 className={cn(
                     "relative max-w-5xl w-full max-h-[88vh] overflow-y-auto rounded-xl shadow-2xl border backdrop-blur-sm",
                     isDark 
@@ -487,6 +506,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                             isDark ? "text-[#91c84a]" : "text-[#6aa329]"
                         )} />
                         <h2
+                            id="guided-tour-title"
                             className={cn(
                                 "text-lg font-semibold",
                                 isDark ? "text-white" : "text-gray-900"

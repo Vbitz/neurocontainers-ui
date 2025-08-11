@@ -541,7 +541,7 @@ Please paste the compressed YAML content from your clipboard below:
                                 <h1 className={cn("text-3xl font-bold transition-colors duration-200", 
                                     isDark ? "text-[#e8f5d0] group-hover:text-[#91c84a]" : "text-[#0c0e0a] group-hover:text-[#4f7b38]"
                                 )}>
-                                    Container Builder
+                                    NeuroContainers Builder
                                 </h1>
                             </div>
                             <p className={cn("text-lg mb-8", isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>

@@ -12,6 +12,7 @@ test.describe('NeuroContainers UI Homepage', () => {
 
     // Check main action buttons exist
     await expect(page.locator('text=Create New Container')).toBeVisible();
+    await expect(page.locator('text=Paste YAML Recipe')).toBeVisible();
     await expect(page.locator('text=Upload Existing YAML')).toBeVisible();
 
     // Check recent containers section
@@ -24,29 +25,39 @@ test.describe('NeuroContainers UI Homepage', () => {
     await expect(page.locator('text=neurodesk.org')).toBeVisible();
   });
 
-  test('should navigate to container builder when clicking Create New Container', async ({ page }) => {
+  test('should open guided tour when clicking Create New Container', async ({ page }) => {
     await page.goto('/');
 
     // Click Create New Container button
     await page.click('text=Create New Container');
 
-    // Should navigate to builder with hash URL
-    await expect(page).toHaveURL(/#\/untitled-/);
-
-    // Check builder interface elements are visible
-    await expect(page.locator('text=Basic Info')).toBeVisible();
-    await expect(page.locator('text=Build Recipe')).toBeVisible();
-    await expect(page.locator('text=Validate')).toBeVisible();
-
-    // Check status indicator
-    await expect(page.locator('text=Saved Locally')).toBeVisible();
+    // Should open the guided tour modal
+    await expect(page.locator('[role="dialog"]')).toBeVisible();
+    
+    // Should see template options
+    await expect(page.locator('text=Start from Scratch')).toBeVisible();
+    
+    // Close the modal
+    await page.keyboard.press('Escape');
+    await expect(page.locator('[role="dialog"]')).not.toBeVisible();
   });
 
-  test('should show upload modal when clicking Upload Existing YAML', async ({ page }) => {
+  test('should trigger file upload when clicking Upload Existing YAML', async ({ page }) => {
     await page.goto('/');
 
-    // Click Upload Existing YAML button
-    await page.click('text=Upload Existing YAML');
+    // The "Upload Existing YAML" button should be a file input trigger
+    const fileInput = page.locator('input[type="file"][accept=".yaml,.yml"]');
+    await expect(fileInput).toBeAttached();
+
+    // The button should be visible and clickable
+    await expect(page.locator('text=Upload Existing YAML')).toBeVisible();
+  });
+
+  test('should show paste modal when clicking Paste YAML Recipe', async ({ page }) => {
+    await page.goto('/');
+
+    // Click Paste YAML Recipe button
+    await page.click('text=Paste YAML Recipe');
 
     // Check modal is visible
     await expect(page.locator('[role="dialog"]')).toBeVisible();
