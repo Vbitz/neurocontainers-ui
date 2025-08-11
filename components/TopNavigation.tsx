@@ -17,6 +17,7 @@ interface TopNavigationProps {
     saveStatus: SaveStatus;
     filesystemMode?: 'local' | 'remote';
     hasMetadataErrors?: boolean;
+    onNavigateToLibrary?: () => void;
 }
 
 export function TopNavigation({
@@ -27,6 +28,7 @@ export function TopNavigation({
     saveStatus,
     filesystemMode,
     hasMetadataErrors,
+    onNavigateToLibrary,
 }: TopNavigationProps) {
     const { isDark } = useTheme();
     return (
@@ -50,11 +52,19 @@ export function TopNavigation({
                     >
                         <Bars3Icon className="h-5 w-5" />
                     </button>
-                    <div>
+                    <div 
+                        onClick={onNavigateToLibrary}
+                        className={cn(
+                            "cursor-pointer group transition-transform duration-200",
+                            onNavigateToLibrary ? "hover:scale-105" : ""
+                        )}
+                    >
                         <Logo className="h-5 w-auto" />
                         <p className={cn(
-                            "text-[10px] mt-0.5 font-medium",
-                            isDark ? "text-[#91c84a]" : "text-green-600"
+                            "text-[10px] mt-0.5 font-medium transition-colors duration-200",
+                            isDark 
+                                ? "text-[#91c84a] group-hover:text-[#c4e382]" 
+                                : "text-green-600 group-hover:text-green-500"
                         )}>
                             Container Builder
                         </p>

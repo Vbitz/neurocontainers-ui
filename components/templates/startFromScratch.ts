@@ -22,7 +22,7 @@ export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
                 if (!name.trim()) return "Container name is required";
                 if (name.length < 2) return "Container name must be at least 2 characters";
                 if (name.length > 63) return "Container name cannot exceed 63 characters";
-                
+
                 // Container name validation: lowercase letters and numbers only
                 const validNameRegex = /^[a-z0-9]+$/;
                 if (!validNameRegex.test(name)) {
@@ -79,7 +79,7 @@ export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
             readme: convertStructuredReadmeToText(structured_readme, containerName, version),
             build: {
                 kind: "neurodocker",
-                "base-image": "ubuntu:22.04",
+                "base-image": "ubuntu:24.04",
                 "pkg-manager": "apt",
                 directives: []
             },

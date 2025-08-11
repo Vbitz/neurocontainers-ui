@@ -95,11 +95,18 @@ export function SideNavigation({
                         : "border-gray-200/40 bg-white/3"
                 )}>
                     <div className="flex items-center justify-between">
-                        <div>
-                            <Logo className="h-6 w-auto" />
+                        <div 
+                            onClick={onContainerLibrary || (() => window.location.hash = '')}
+                            className="cursor-pointer group"
+                        >
+                            <div className="transition-transform duration-200 group-hover:scale-105">
+                                <Logo className="h-6 w-auto" />
+                            </div>
                             <p className={cn(
-                                "text-xs mt-1 font-medium",
-                                isDark ? "text-[#91c84a]" : "text-gray-600"
+                                "text-xs mt-1 font-medium transition-colors duration-200",
+                                isDark 
+                                    ? "text-[#91c84a] group-hover:text-[#c4e382]" 
+                                    : "text-gray-600 group-hover:text-green-600"
                             )}>
                                 Container Builder
                             </p>

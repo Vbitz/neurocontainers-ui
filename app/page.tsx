@@ -481,6 +481,7 @@ Please paste the compressed YAML content from your clipboard below:
                     saveStatus={saveStatus}
                     filesystemMode={filesystemMode}
                     hasMetadataErrors={hasMetadataErrors}
+                    onNavigateToLibrary={navigateToLibrary}
                 />
 
                 {!yamlData ? (

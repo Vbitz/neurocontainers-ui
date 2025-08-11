@@ -4,7 +4,7 @@ import pythonPackageMarkdown from "@/copy/templates/python-package.md";
 export interface TemplateField {
     id: string;
     label: string;
-    type: 'text' | 'url' | 'select' | 'textarea' | 'checkbox' | 'packages' | 'python-packages' | 'license' | 'categories';
+    type: 'text' | 'url' | 'select' | 'textarea' | 'checkbox' | 'packages' | 'python-packages' | 'license' | 'categories' | 'string-list';
     required?: boolean;
     placeholder?: string;
     description?: string;
@@ -38,7 +38,7 @@ export const validateContainerName = (name: string): string | null => {
     if (!name.trim()) return "Container name is required";
     if (name.length < 2) return "Container name must be at least 2 characters";
     if (name.length > 63) return "Container name cannot exceed 63 characters";
-    
+
     // Container name validation: lowercase letters and numbers only
     const validNameRegex = /^[a-z0-9]+$/;
     if (!validNameRegex.test(name)) {
@@ -131,6 +131,14 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
             packageType: 'conda',
         },
         {
+            id: 'deployBins',
+            label: 'Deploy Binaries',
+            type: 'string-list',
+            required: false,
+            placeholder: 'Add binary/script name...',
+            description: 'Binary commands or scripts that should be available to users (e.g., mypackage, run-analysis, process-data)',
+        },
+        {
             id: 'categories',
             label: 'Categories',
             type: 'categories',
@@ -141,14 +149,15 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
     generateRecipe: (values: Record<string, string | string[] | object | null>): ContainerRecipe => {
         const githubUrl = String(values.githubUrl || '').trim();
         const repoName = extractRepoName(githubUrl);
-        
+
         // Parse packages from arrays (TagEditor provides arrays)
         const additionalPipPackages = Array.isArray(values.additionalPipPackages) ? values.additionalPipPackages : [];
         const condaPackages = Array.isArray(values.condaPackages) ? values.condaPackages : [];
-        
+        const deployBins = Array.isArray(values.deployBins) ? values.deployBins : [];
+
         // Ensure python is included in conda packages
         const allCondaPackages = condaPackages;
-        
+
         // Build pip install list with GitHub repo first, ensuring it's properly installable
         const pipPackages = [`git+${githubUrl}`, ...additionalPipPackages];
 
@@ -165,23 +174,16 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
                 version: "latest",
                 env: {},
                 args: {
+                    pip_install: pipPackages.join(' '),
                     conda_install: allCondaPackages.join(' ')
                 }
             }
         });
 
-        // Add separate pip installation to ensure GitHub package is properly installed
-        if (pipPackages.length > 0) {
-            directives.push({
-                install: pipPackages
-            });
-        }
-
         // Add deployment info
         directives.push({
             deploy: {
-                path: ["/opt/miniconda/bin"],
-                bins: []
+                bins: deployBins
             }
         });
 
@@ -230,8 +232,8 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
 
         const structured_readme = {
             description: String(values.description || ''),
-            example: `# Example usage\n\n\`\`\`bash\n# Run Python interactively in the container\ndocker run --rm -it ${values.containerName}:${values.version} python\n\n# Execute a Python script\ndocker run --rm -v /path/to/your/script.py:/script.py ${values.containerName}:${values.version} python /script.py\n\n# Test that the package is available\ndocker run --rm ${values.containerName}:${values.version} python -c "import ${repoName.replace('-', '_')}; print('${repoName} is available!')"\n\`\`\``,
-            documentation: `This container includes:\n- Python via Miniconda\n- The Python package from ${githubUrl}\n- Additional conda packages: ${allCondaPackages.filter(pkg => !pkg.startsWith('python')).join(', ') || 'none'}\n- Additional pip packages: ${additionalPipPackages.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
+            example: `# Example usage\n\n\`\`\`bash\n# Run Python interactively in the container\ndocker run --rm -it ${values.containerName}:${values.version} python\n\n# Execute a Python script\ndocker run --rm -v /path/to/your/script.py:/script.py ${values.containerName}:${values.version} python /script.py\n\n# Test that the package is available\ndocker run --rm ${values.containerName}:${values.version} python -c "import ${repoName.replace('-', '_')}; print('${repoName} is available!')"\n${deployBins.length > 0 ? `\n# Use deployed binaries\n${deployBins.map(bin => `docker run --rm ${values.containerName}:${values.version} ${bin} --help`).join('\n')}` : ''}\n\`\`\``,
+            documentation: `This container includes:\n- Python via Miniconda\n- The Python package from ${githubUrl}\n- Additional conda packages: ${allCondaPackages.filter(pkg => !pkg.startsWith('python')).join(', ') || 'none'}\n- Additional pip packages: ${additionalPipPackages.join(', ') || 'none'}\n- Deployed binaries: ${deployBins.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
             citation: `Please cite the original authors of the ${repoName} package when using this container. Repository: ${githubUrl}`
         };
 

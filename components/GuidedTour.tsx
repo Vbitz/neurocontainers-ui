@@ -126,7 +126,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
         ): string | null => {
             if (field.required) {
                 if (
-                    (field.type === "packages" || field.type === "python-packages" || field.type === "categories") &&
+                    (field.type === "packages" || field.type === "python-packages" || field.type === "categories" || field.type === "string-list") &&
                     (!value || (Array.isArray(value) && value.length === 0))
                 ) {
                     return `${field.label} is required`;
@@ -189,7 +189,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
         template.fields.forEach((field) => {
             if (field.type === "select" && field.options && field.options.length > 0) {
                 initialData[field.id] = field.options[0].value;
-            } else if (field.type === "packages" || field.type === "python-packages" || field.type === "categories") {
+            } else if (field.type === "packages" || field.type === "python-packages" || field.type === "categories" || field.type === "string-list") {
                 initialData[field.id] = [];
             } else if (field.type === "license") {
                 initialData[field.id] = null;
@@ -390,6 +390,15 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                                 ))}
                             </div>
                         </div>
+                    ) : field.type === "string-list" ? (
+                        <TagEditor
+                            tags={Array.isArray(value) ? value : []}
+                            onChange={(tags) => handleFieldChange(field.id, tags)}
+                            placeholder={field.placeholder}
+                            emptyMessage="No items added yet"
+                            suggestions={[]}
+                            onSuggestionClick={() => {}}
+                        />
                     ) : field.type === "select" ? (
                         <select
                             value={typeof value === "string" ? value : ""}
