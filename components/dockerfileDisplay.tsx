@@ -96,22 +96,22 @@ export default function DockerfileDisplay({
 
                     {showDockerfile && (
                         <div className={cn(
-                            "rounded-lg overflow-hidden",
-                            isDark ? "bg-[#0f172a]" : "bg-gray-900"
+                            "rounded-lg overflow-hidden backdrop-blur-sm border",
+                            isDark ? "bg-black/30 border-white/10" : "bg-white/30 border-white/20"
                         )}>
                             <div className={cn(
-                                "px-4 py-2 flex items-center justify-between",
-                                isDark ? "bg-[#1e293b]" : "bg-gray-800"
+                                "px-4 py-2 flex items-center justify-between border-b",
+                                isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-white/10"
                             )}>
                                 <span className={cn(
                                     textStyles(isDark, { size: 'sm', weight: 'medium' }),
-                                    isDark ? "text-[#e2e8f0]" : "text-gray-300"
+                                    isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]"
                                 )}>
                                     Dockerfile
                                 </span>
                                 <span className={cn(
                                     textStyles(isDark, { size: 'xs' }),
-                                    isDark ? "text-[#94a3b8]" : "text-gray-400"
+                                    isDark ? "text-[#91c84a]" : "text-[#4f7b38]"
                                 )}>
                                     {validationResult.dockerfile.split('\n').length} lines
                                 </span>
@@ -122,7 +122,7 @@ export default function DockerfileDisplay({
                                     "p-3 sm:p-4 overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto",
                                     "break-words whitespace-pre-wrap text-xs sm:text-sm leading-relaxed",
                                     textStyles(isDark, { size: 'sm' }),
-                                    isDark ? "text-[#e2e8f0]" : "text-gray-100"
+                                    isDark ? "text-[#c4e382]" : "text-[#2d4222]"
                                 )}
                                 style={{ fontFamily: 'Monaco, "Courier New", monospace' }}
                             >
@@ -139,13 +139,13 @@ export default function DockerfileDisplay({
                             Build Information
                         </h3>
                         <div className={cn(
-                            "rounded-lg p-4",
-                            isDark ? "bg-[#2d4222]" : "bg-gray-50"
+                            "rounded-lg p-4 backdrop-blur-sm border",
+                            isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-white/10"
                         )}>
                             <pre className={cn(
                                 textStyles(isDark, { size: 'sm' }),
                                 "whitespace-pre-wrap break-words overflow-x-auto",
-                                isDark ? "text-[#d1d5db]" : "text-gray-700"
+                                isDark ? "text-[#c4e382]" : "text-[#2d4222]"
                             )}>
                                 {validationResult.readme}
                             </pre>

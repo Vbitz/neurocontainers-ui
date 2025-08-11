@@ -1,5 +1,69 @@
 @import "tailwindcss";
 
+@theme {
+  /* Override default Tailwind colors with our theme */
+  
+  /* Gray colors mapped to our neutral theme colors */
+  --color-gray-50: #f8fdf2;
+  --color-gray-100: #e8f5d0;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #c4e382;
+  --color-gray-400: #91c84a;
+  --color-gray-500: #4f7b38;
+  --color-gray-600: #2d4222;
+  --color-gray-700: #1f2e18;
+  --color-gray-800: #161a0e;
+  --color-gray-900: #0c0e0a;
+  
+  /* Blue colors mapped to our accent colors for info states */
+  --color-blue-50: #f0f7ff;
+  --color-blue-100: #e8f5d0;
+  --color-blue-200: #c4e382;
+  --color-blue-300: #91c84a;
+  --color-blue-400: #7bb33a;
+  --color-blue-500: #6aa329;
+  --color-blue-600: #4f7b38;
+  --color-blue-700: #3f5b2e;
+  --color-blue-800: #2d4222;
+  --color-blue-900: #1f2e18;
+  
+  /* Amber colors mapped to our warning-appropriate colors */
+  --color-amber-50: #fffef7;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fcd34d;
+  --color-amber-300: #f59e0b;
+  --color-amber-400: #d97706;
+  --color-amber-500: #b45309;
+  --color-amber-600: #92400e;
+  --color-amber-700: #78350f;
+  --color-amber-800: #451a03;
+  --color-amber-900: #1c0a00;
+  
+  /* Green colors using our primary theme colors */
+  --color-green-50: #f8fdf2;
+  --color-green-100: #e8f5d0;
+  --color-green-200: #c4e382;
+  --color-green-300: #91c84a;
+  --color-green-400: #7bb33a;
+  --color-green-500: #6aa329;
+  --color-green-600: #4f7b38;
+  --color-green-700: #3f5b2e;
+  --color-green-800: #2d4222;
+  --color-green-900: #1f2e18;
+  
+  /* Red colors for error states - keeping more traditional red but muted */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+}
+
 /* CSS Custom Properties for theme colors */
 :root {
   /* Light theme colors */

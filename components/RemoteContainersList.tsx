@@ -92,10 +92,15 @@ export function RemoteContainersList({
     };
 
     return (
-        <div className={cn(cardStyles(isDark, 'elevated'), "h-fit")}>
+        <div className={cn(
+            "h-fit rounded-xl border backdrop-blur-md transition-all duration-300 hover:backdrop-blur-lg",
+            isDark 
+                ? "bg-black/10 border-white/10 shadow-lg hover:bg-black/20 hover:shadow-xl" 
+                : "bg-white/20 border-white/20 shadow-lg hover:bg-white/30 hover:shadow-xl"
+        )}>
             {/* Header */}
             <div
-                className={cn("border-b p-4", isDark ? "border-[#2d4222]" : "border-[#f0f7e7]")}
+                className={cn("border-b p-4", isDark ? "border-white/5" : "border-white/10")}
             >
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
@@ -183,10 +188,7 @@ export function RemoteContainersList({
                 <>
                     {/* Search */}
                     <div
-                        className={cn("p-4 border-b", isDark
-                            ? "border-[#2d4222]"
-                            : "border-[#f0f7e7]"
-                        )}
+                        className={cn("p-4 border-b", isDark ? "border-white/5" : "border-white/10")}
                     >
                         <div className="relative">
                             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -239,13 +241,13 @@ export function RemoteContainersList({
                                 )}
                             </div>
                         ) : (
-                            <div className={cn("divide-y", isDark ? "divide-[#2d4222]" : "divide-[#f0f7e7]")}>
+                            <div className={cn("divide-y", isDark ? "divide-white/5" : "divide-white/10")}>
                                 {filteredFiles.map((file) => (
                                     <div
                                         key={file.path}
                                         className={cn(
-                                            "group p-4 transition-colors",
-                                            isDark ? "hover:bg-[#1f2616]" : "hover:bg-[#f0f7e7]"
+                                            "group p-4 transition-all duration-200",
+                                            isDark ? "hover:bg-white/5" : "hover:bg-white/10"
                                         )}
                                     >
                                         <div className="flex items-center justify-between">

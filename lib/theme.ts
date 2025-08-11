@@ -218,9 +218,10 @@ const components = {
 
   // Cards and containers - subtle styling
   card: {
-    base: `bg-white rounded-lg shadow-md border border-gray-200`,
-    elevated: `bg-white rounded-xl shadow-xl border border-gray-300`,
-    theme: `bg-gradient-to-br from-white to-green-50/30 border border-green-300/50 rounded-lg shadow-md`,
+    base: `bg-white/20 backdrop-blur-md rounded-xl shadow-lg border border-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl`,
+    elevated: `bg-white/30 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 transition-all duration-300 hover:bg-white/40 hover:shadow-2xl`,
+    theme: `bg-gradient-to-br from-white/20 to-green-50/40 border border-green-300/30 rounded-xl shadow-lg backdrop-blur-md transition-all duration-300 hover:from-white/30 hover:to-green-50/50`,
+    solid: `bg-white rounded-xl shadow-lg border border-gray-200 transition-all duration-300 hover:shadow-xl`,
 
     // Padding variants - mobile-first spacing
     padding: {
@@ -261,7 +262,7 @@ const components = {
   // States and interactions
   state: {
     hover: {
-      card: `hover:bg-green-50 hover:shadow-md`,
+      card: `hover:bg-white/5 hover:shadow-lg hover:backdrop-blur-lg`,
       icon: `hover:text-green-600`,
       text: `hover:text-green-600`,
     },
@@ -345,11 +346,12 @@ const componentsDark = {
     get ghostFull() { return `${this.base} ${this.ghost} ${this.disabled}` },
   },
 
-  // Cards and containers - dark mode
+  // Cards and containers - dark mode with glass effects
   card: {
-    base: `bg-[#161a0e] rounded-md shadow-sm border border-[#1f2e18]`,
-    elevated: `bg-[#1f2e18] rounded-lg shadow-md border border-[#2d4222]`,
-    theme: `bg-[#1f2e18] border border-[#2d4222] rounded-md`,
+    base: `bg-black/10 backdrop-blur-md rounded-xl shadow-lg border border-white/10 transition-all duration-300 hover:bg-black/20 hover:shadow-xl`,
+    elevated: `bg-black/20 backdrop-blur-lg rounded-xl shadow-xl border border-white/15 transition-all duration-300 hover:bg-black/30 hover:shadow-2xl`,
+    theme: `bg-gradient-to-br from-black/10 to-green-900/20 border border-green-700/30 rounded-xl shadow-lg backdrop-blur-md transition-all duration-300 hover:from-black/20 hover:to-green-900/30`,
+    solid: `bg-[#161a0e] rounded-xl shadow-lg border border-[#2d4222] transition-all duration-300 hover:shadow-xl`,
 
     // Padding variants (same as light mode)
     padding: {
@@ -390,7 +392,7 @@ const componentsDark = {
   // States and interactions - dark mode
   state: {
     hover: {
-      card: `hover:bg-[${colors.primaryDark[200]}] hover:shadow-md`,
+      card: `hover:bg-white/5 hover:shadow-lg hover:backdrop-blur-lg`,
       icon: `hover:text-[${colors.primaryDark[500]}]`,
       text: `hover:text-[${colors.primaryDark[500]}]`,
     },

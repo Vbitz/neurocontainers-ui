@@ -77,10 +77,7 @@ export default function NeuroDockerBuildRecipeComponent({
     };
 
     return (
-        <div className={cn(
-            cardStyles(isDark, 'elevated', 'sm'),
-            isDark ? "bg-black/20 border-[#2d4222]/50" : "bg-white/30 border-gray-200/50"
-        )}>
+        <div className={cardStyles(isDark, 'solid', 'sm')}>
             <div className="p-4 sm:p-6">
                 {/* Base Image Section */}
                 <div className="mb-8">

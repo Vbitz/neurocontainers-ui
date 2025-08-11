@@ -38,13 +38,22 @@ export function useContainerStorage() {
         }
     }, [currentContainerId]);
 
-    const exportYAML = useCallback((data: ContainerRecipe) => {
+    const generateYAMLString = useCallback((data: ContainerRecipe): string => {
         try {
-            const yamlContent = dumpYAML(data, {
+            return dumpYAML(data, {
                 indent: 2,
                 lineWidth: -1,
                 noRefs: true,
             });
+        } catch (error) {
+            console.error("Failed to generate YAML string:", error);
+            return "";
+        }
+    }, []);
+
+    const exportYAML = useCallback((data: ContainerRecipe) => {
+        try {
+            const yamlContent = generateYAMLString(data);
 
             const blob = new Blob([yamlContent], { type: "text/yaml" });
             const url = URL.createObjectURL(blob);
@@ -58,7 +67,7 @@ export function useContainerStorage() {
         } catch (error) {
             console.error("Failed to export YAML:", error);
         }
-    }, []);
+    }, [generateYAMLString]);
 
     const markAsUnsaved = useCallback(() => {
         setSaveStatus(SaveStatus.Unsaved);
@@ -78,6 +87,7 @@ export function useContainerStorage() {
         saveToStorage,
         deleteContainer,
         exportYAML,
+        generateYAMLString,
         markAsUnsaved,
         setCurrentContainerId,
     };

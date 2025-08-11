@@ -109,7 +109,7 @@ Please paste the compressed YAML content from your clipboard below:
     return (
         <div className={cn(
             "fixed inset-0 flex items-center justify-center z-50 p-4",
-            isDark ? "bg-black/90" : "bg-black/80"
+            isDark ? "bg-black/90" : "bg-black/30"
         )}>
             <div
                 ref={modalRef}
@@ -309,28 +309,40 @@ Please paste the compressed YAML content from your clipboard below:
                     {containerExists ? (
                         <button
                             className={cn(
-                                "w-full flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                "group relative w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 text-lg backdrop-blur-sm border transform hover:scale-[1.02] hover:backdrop-blur-md overflow-hidden",
                                 isDark
-                                    ? "bg-gradient-to-r from-[#5a8f23] to-[#7bb33a] text-white hover:from-[#7bb33a] hover:to-[#91c84a] border border-[#91c84a]/30"
-                                    : "bg-gradient-to-r from-[#4f7b38] to-[#6aa329] text-white hover:from-[#6aa329] hover:to-[#91c84a] border border-[#6aa329]/30"
+                                    ? "bg-black/40 text-green-300 hover:bg-black/50 border-green-400/30 hover:border-green-300/50 shadow-lg hover:shadow-xl"
+                                    : "bg-green-600/90 text-white hover:bg-green-600 border-green-500/50 hover:border-green-400/70 shadow-lg hover:shadow-xl"
                             )}
                             onClick={() => handleCreateIssue(true)}
                         >
-                            <PencilIcon className="h-5 w-5" />
-                            Update Existing Container
+                            {/* Glass effect overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            
+                            <PencilIcon className="h-6 w-6 relative z-10" />
+                            <span className="relative z-10">Update Existing Container</span>
+                            
+                            {/* Subtle shine effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
                         </button>
                     ) : (
                         <button
                             className={cn(
-                                "w-full flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                                "group relative w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 text-lg backdrop-blur-sm border transform hover:scale-[1.02] hover:backdrop-blur-md overflow-hidden",
                                 isDark
-                                    ? "bg-gradient-to-r from-[#5a8f23] to-[#7bb33a] text-white hover:from-[#7bb33a] hover:to-[#91c84a] border border-[#91c84a]/30"
-                                    : "bg-gradient-to-r from-[#4f7b38] to-[#6aa329] text-white hover:from-[#6aa329] hover:to-[#91c84a] border border-[#6aa329]/30"
+                                    ? "bg-black/40 text-green-300 hover:bg-black/50 border-green-400/30 hover:border-green-300/50 shadow-lg hover:shadow-xl"
+                                    : "bg-green-600/90 text-white hover:bg-green-600 border-green-500/50 hover:border-green-400/70 shadow-lg hover:shadow-xl"
                             )}
                             onClick={() => handleCreateIssue(false)}
                         >
-                            <PlusIcon className="h-5 w-5" />
-                            Publish New Container
+                            {/* Glass effect overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            
+                            <PlusIcon className="h-6 w-6 relative z-10" />
+                            <span className="relative z-10">Publish New Container</span>
+                            
+                            {/* Subtle shine effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
                         </button>
                     )}
                 </div>

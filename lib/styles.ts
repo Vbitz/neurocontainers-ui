@@ -96,7 +96,7 @@ export function textareaStyles(isDark: boolean, options?: {
  */
 export function cardStyles(
   isDark: boolean,
-  variant?: 'default' | 'elevated' | 'theme',
+  variant?: 'default' | 'elevated' | 'theme' | 'solid',
   padding?: 'zero' | 'sm' | 'md' | 'lg',
 ) {
   const themeComponents = getThemeComponents(isDark);
@@ -105,6 +105,7 @@ export function cardStyles(
     default: themeComponents.card.base,
     elevated: themeComponents.card.elevated,
     theme: themeComponents.card.theme,
+    solid: themeComponents.card.solid,
   };
 
   const paddingStyles = {
@@ -391,7 +392,7 @@ export function useThemeStyles(isDark: boolean) {
       inputStyles(isDark, variant, size),
     button: (variant?: 'primary' | 'secondary' | 'ghost' | 'danger', size?: 'sm' | 'md' | 'lg') =>
       buttonStyles(isDark, variant, size),
-    card: (variant?: 'default' | 'elevated' | 'theme', padding?: 'zero' | 'sm' | 'md' | 'lg') =>
+    card: (variant?: 'default' | 'elevated' | 'theme' | 'solid', padding?: 'zero' | 'sm' | 'md' | 'lg') =>
       cardStyles(isDark, variant, padding),
     icon: (size?: 'sm' | 'md' | 'lg', color?: 'primary' | 'secondary' | 'muted') =>
       iconStyles(isDark, size, color),

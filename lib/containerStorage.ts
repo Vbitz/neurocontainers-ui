@@ -16,28 +16,6 @@ export interface SavedContainer {
 
 const LOCAL_STORAGE_KEY = "neurocontainers-builder-saved";
 
-export function getNewContainerYAML(): ContainerRecipe {
-    return {
-        name: "",
-        version: "",
-        architectures: ["x86_64"],
-        structured_readme: {
-            description: "",
-            example: "",
-            documentation: "",
-            citation: "",
-        },
-        build: {
-            kind: "neurodocker",
-            "base-image": "ubuntu:24.04",
-            "pkg-manager": "apt",
-            directives: [
-                { deploy: {} },
-                { test: { name: "testScript", script: "#!/bin/bash\n# Write your test script here\nexit 1" } },
-            ],
-        },
-    };
-}
 
 export function getSavedContainers(): SavedContainer[] {
     try {
