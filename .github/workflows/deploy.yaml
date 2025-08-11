@@ -40,12 +40,11 @@ jobs:
       - name: Run linting
         run: bun run lint
 
-      # Note: E2E tests with Playwright require browser installation
-      # Uncomment the following steps when ready to run E2E tests in CI:
-      # - name: Install Playwright browsers
-      #   run: bunx playwright install --with-deps
-      # - name: Run E2E tests
-      #   run: bun run test:e2e
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps
+
+      - name: Run E2E tests
+        run: bun run test:e2e
 
   build:
     runs-on: ubuntu-latest
