@@ -135,7 +135,7 @@ export const typography = {
   color: {
     primary: 'text-[#052e16]',
     secondary: 'text-[#15803d]',
-    muted: 'text-gray-500',
+    muted: 'text-gray-600',
     disabled: 'text-gray-400',
     white: 'text-white',
     success: 'text-[#059669]',
@@ -179,7 +179,7 @@ const components = {
   // Form inputs - standardized
   input: {
     base: `w-full px-3 py-1.5 border border-gray-200 rounded-md text-gray-900 text-sm`,
-    focus: `focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500`,
+    focus: `focus:outline-none focus:ring-1 focus:ring-[#15803d] focus:border-[#15803d]`,
     disabled: `disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed`,
     error: `border-red-500 focus:ring-red-500 focus:border-red-500`,
     get full() { return `${this.base} ${this.focus} ${this.disabled}` }
@@ -188,7 +188,7 @@ const components = {
   // Textarea - standardized
   textarea: {
     base: `w-full px-3 py-1.5 border border-gray-200 rounded-md text-gray-900 text-sm resize-none`,
-    focus: `focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500`,
+    focus: `focus:outline-none focus:ring-1 focus:ring-[#15803d] focus:border-[#15803d]`,
     monospace: 'font-mono',
     get full() { return `${this.base} ${this.focus}` },
     get fullMono() { return `${this.base} ${this.focus} ${this.monospace}` }
@@ -198,9 +198,9 @@ const components = {
   button: {
     base: 'font-medium rounded-md transition-colors focus:outline-none focus:ring-1 touch-manipulation',
 
-    primary: `bg-green-600 text-white hover:bg-green-700 focus:ring-green-500`,
-    secondary: `bg-white border border-green-300 text-green-700 hover:bg-green-50 focus:ring-green-500`,
-    ghost: `text-green-700 hover:text-green-600 hover:bg-green-50`,
+    primary: `bg-[#15803d] text-white hover:bg-[#166534] focus:ring-[#15803d]`,
+    secondary: `bg-white border border-[#16a34a] text-[#15803d] hover:bg-green-50 focus:ring-[#15803d]`,
+    ghost: `text-[#15803d] hover:text-[#166534] hover:bg-green-50`,
     danger: `bg-red-600 text-white hover:bg-red-700 focus:ring-red-500`,
 
     // Size variants - mobile-first approach
@@ -253,7 +253,7 @@ const components = {
     md: 'h-5 w-5', // default
     lg: 'h-6 w-6',
     color: {
-      primary: `text-green-600`,
+      primary: `text-[#15803d]`,
       secondary: `text-gray-500`,
       muted: `text-gray-400`,
     }
@@ -268,8 +268,8 @@ const components = {
     },
 
     focus: {
-      ring: `focus:ring-1 focus:ring-green-500 focus:outline-none`,
-      ringThick: `focus:ring-2 focus:ring-green-500/20 focus:outline-none`,
+      ring: `focus:ring-1 focus:ring-[#15803d] focus:outline-none`,
+      ringThick: `focus:ring-2 focus:ring-[#15803d]/20 focus:outline-none`,
     },
 
     disabled: {

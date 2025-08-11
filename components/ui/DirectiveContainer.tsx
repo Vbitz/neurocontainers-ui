@@ -8,7 +8,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, ReactNode } from "react";
 import { getThemePresets, iconStyles, textStyles, cn, useThemeStyles } from "@/lib/styles";
-import { colors } from "@/lib/theme";
 import { useTheme } from "@/lib/ThemeContext";
 import { Input } from "./FormField";
 
@@ -90,7 +89,7 @@ export default function DirectiveContainer({
                             className={cn(
                                 "cursor-grab active:cursor-grabbing transition-colors flex items-center justify-center touch-manipulation",
                                 "p-1 md:p-1 min-h-[44px] min-w-[44px] md:min-h-[auto] md:min-w-[auto]",
-                                isDark ? "text-[#9ca3af] hover:text-[#91c84a]" : `text-gray-400 hover:text-[${colors.primary[600]}]`
+                                isDark ? "text-[#9ca3af] hover:text-[#91c84a]" : "text-gray-400 hover:text-[#15803d]"
                             )}
                             onMouseDown={(e) => e.stopPropagation()}
                             title="Drag to reorder"
@@ -115,7 +114,7 @@ export default function DirectiveContainer({
                                     "transition-colors flex items-center justify-center touch-manipulation",
                                     "p-2 md:p-0.5 min-h-[36px] min-w-[36px] md:min-h-[auto] md:min-w-[auto]",
                                     controllers.canMoveUp
-                                        ? (isDark ? "text-[#d1d5db] hover:text-[#91c84a]" : `text-gray-600 hover:text-[${colors.primary[600]}]`)
+                                        ? (isDark ? "text-[#d1d5db] hover:text-[#91c84a]" : "text-gray-600 hover:text-[#15803d]")
                                         : (isDark ? "text-[#6b7280] cursor-not-allowed" : "text-gray-300 cursor-not-allowed")
                                 )}
                                 onClick={controllers.onMoveUp}
@@ -129,7 +128,7 @@ export default function DirectiveContainer({
                                     "transition-colors flex items-center justify-center touch-manipulation",
                                     "p-2 md:p-0.5 min-h-[36px] min-w-[36px] md:min-h-[auto] md:min-w-[auto]",
                                     controllers.canMoveDown
-                                        ? (isDark ? "text-[#d1d5db] hover:text-[#91c84a]" : `text-gray-600 hover:text-[${colors.primary[600]}]`)
+                                        ? (isDark ? "text-[#d1d5db] hover:text-[#91c84a]" : "text-gray-600 hover:text-[#15803d]")
                                         : (isDark ? "text-[#6b7280] cursor-not-allowed" : "text-gray-300 cursor-not-allowed")
                                 )}
                                 onClick={controllers.onMoveDown}
@@ -143,7 +142,7 @@ export default function DirectiveContainer({
                             className={cn(
                                 "transition-colors flex items-center justify-center touch-manipulation",
                                 "p-2 md:p-1 min-h-[44px] min-w-[44px] md:min-h-[auto] md:min-w-[auto]",
-                                `text-[${colors.error}] hover:text-red-600`
+                                "text-red-500 hover:text-red-600"
                             )}
                             onClick={controllers.onDelete}
                             title="Delete directive"
@@ -213,7 +212,10 @@ export default function DirectiveContainer({
                 </div>
             </div>
 
-            <div className="border-t border-[#e6f1d6]">
+            <div className={cn(
+                "border-t",
+                isDark ? "border-[#2d4222]" : "border-[#e6f1d6]"
+            )}>
                 {(showCondition || condition) && onConditionChange && !documentationMode && (
                     <div className={cn(
                         "px-4 py-3 border-b",

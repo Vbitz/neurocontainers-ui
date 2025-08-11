@@ -46,7 +46,7 @@ export function ThemeToggle({
           "p-2 rounded-md transition-colors",
           isDark 
             ? "text-[#c4e382] hover:text-[#7bb33a] hover:bg-[#1f2e18]" 
-            : "text-gray-600 hover:text-[#4f7b38] hover:bg-gray-100",
+            : "text-gray-600 hover:text-[#15803d] hover:bg-gray-100",
           className
         )}
         title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
@@ -65,7 +65,7 @@ export function ThemeToggle({
             "flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm font-medium",
             isDark
               ? "text-[#c4e382] hover:text-[#7bb33a] hover:bg-[#1f2e18] border border-[#2d4222]"
-              : "text-gray-700 hover:text-[#4f7b38] hover:bg-gray-100 border border-gray-200",
+              : "text-gray-700 hover:text-[#15803d] hover:bg-gray-100 border border-gray-200",
             className
           )}
         >
@@ -145,7 +145,7 @@ export function ThemeToggle({
         "flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm font-medium",
         isDark
           ? "bg-[#1f2e18] text-[#c4e382] hover:bg-[#2d4222] hover:text-[#7bb33a] border border-[#2d4222]"
-          : "bg-white text-gray-700 hover:bg-gray-100 hover:text-[#4f7b38] border border-gray-200",
+          : "bg-white text-gray-700 hover:bg-gray-100 hover:text-[#15803d] border border-gray-200",
         className
       )}
       title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}

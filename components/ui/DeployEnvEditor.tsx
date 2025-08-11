@@ -104,7 +104,7 @@ export default function DeployEnvEditor({
                                             readOnly && "cursor-not-allowed",
                                             isDark
                                                 ? "text-[#7bb33a] border-[#374151] focus:ring-[#7bb33a] bg-[#161a0e]"
-                                                : "text-[#6aa329] border-gray-300 focus:ring-[#6aa329]"
+                                                : "text-[#15803d] border-gray-300 focus:ring-[#15803d]"
                                         )}
                                         title="Export as deploy environment variable"
                                         readOnly={readOnly}
@@ -115,7 +115,10 @@ export default function DeployEnvEditor({
                                     {variable.isDeploy ? (
                                         <div className="flex">
                                             <div className={cn(
-                                                "px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-r-0 rounded-l border-gray-300 dark:border-gray-600 flex items-center",
+                                                "px-3 py-2 border border-r-0 rounded-l flex items-center",
+                                                isDark 
+                                                    ? "bg-[#161a0e] border-[#2d4222]"
+                                                    : "bg-gray-100 border-gray-300",
                                                 textStyles(isDark, { size: 'sm', color: 'muted' })
                                             )}>
                                                 DEPLOY_ENV_
@@ -155,7 +158,7 @@ export default function DeployEnvEditor({
                                                 "w-8 h-8 flex justify-center items-center transition-colors rounded",
                                                 isDark
                                                     ? "text-[#9ca3af] hover:text-[#7bb33a] hover:bg-[#2d4222]"
-                                                    : "text-gray-400 hover:text-[#6aa329] hover:bg-gray-50"
+                                                    : "text-gray-400 hover:text-[#15803d] hover:bg-gray-50"
                                             )}
                                             onClick={() => removeVariable(index)}
                                             title="Remove environment variable"

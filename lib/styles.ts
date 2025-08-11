@@ -269,9 +269,9 @@ export function textStyles(isDark: boolean, options?: {
     size && `text-${size}`,
     weight && `font-${weight}`,
     color && {
-      primary: isDark ? "text-[#e8f5d0]" : 'text-[#0c0e0a]',
-      secondary: isDark ? "text-[#91c84a]" : 'text-[#4f7b38]',
-      muted: isDark ? "text-gray-500" : 'text-gray-500',
+      primary: isDark ? "text-[#e8f5d0]" : 'text-gray-900',
+      secondary: isDark ? "text-[#91c84a]" : 'text-[#15803d]',
+      muted: isDark ? "text-[#9ca3af]" : 'text-gray-600',
       disabled: isDark ? "text-gray-600" : 'text-gray-400',
       white: isDark ? "text-black" : 'text-white',
     }[color],
