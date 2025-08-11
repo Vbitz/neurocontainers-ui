@@ -1,6 +1,6 @@
 import { NeuroDockerBuildRecipe, Directive } from "@/components/common";
 import { BaseImageSelector, DirectivesList } from "@/components/ui";
-import { cardStyles, cn } from "@/lib/styles";
+import { cardStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 export default function NeuroDockerBuildRecipeComponent({

@@ -13,7 +13,7 @@ import {
 import { ContainerRecipe, migrateLegacyRecipe, mergeAdditionalFilesIntoRecipe } from "@/components/common";
 import LocalFilesystem from "@/components/localFilesystem";
 import { useGitHubFiles } from '@/lib/useGithub';
-import { iconStyles, textStyles, inputStyles, cn, cardStyles, buttonStyles } from "@/lib/styles";
+import { iconStyles, textStyles, inputStyles, cn, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 interface RemoteContainersListProps {

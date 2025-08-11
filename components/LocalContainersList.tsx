@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ContainerRecipe } from "@/components/common";
 import { SavedContainer, getSavedContainers, formatTimeAgo } from "@/lib/containerStorage";
-import { iconStyles, textStyles, inputStyles, cn, useThemeStyles, cardStyles, buttonStyles } from "@/lib/styles";
+import { iconStyles, textStyles, inputStyles, cn, useThemeStyles, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 interface LocalContainersListProps {

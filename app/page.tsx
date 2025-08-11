@@ -35,6 +35,7 @@ import { sections } from "@/lib/sections";
 // Extracted hooks
 import { useContainerStorage } from "@/hooks/useContainerStorage";
 import { useContainerPublishing } from "@/hooks/useContainerPublishing";
+import { SavedContainer } from "@/lib/containerStorage";
 import { ValidationResult } from "@/types/validation";
 import { NEUROCONTAINERS_REPO } from "@/components/common";
 
@@ -189,7 +190,7 @@ export default function Home() {
                 const savedContainers = localStorage.getItem("neurocontainers-builder-saved");
                 if (savedContainers) {
                     const containers = JSON.parse(savedContainers);
-                    const localContainer = containers.find((container: any) => {
+                    const localContainer = containers.find((container: SavedContainer) => {
                         const urlName = container.name.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
                         return urlName === containerName;
                     });
@@ -830,7 +831,7 @@ Please paste the compressed YAML content from your clipboard below:
                                                                 "text-xs mt-1",
                                                                 isDark ? "text-amber-400/80" : "text-amber-600"
                                                             )}>
-                                                                You'll need to be logged into GitHub to create an issue. The recipe will be compressed and included in the issue description.
+                                                                You&apos;ll need to be logged into GitHub to create an issue. The recipe will be compressed and included in the issue description.
                                                             </p>
                                                         </div>
                                                     </div>
@@ -855,7 +856,7 @@ Please paste the compressed YAML content from your clipboard below:
                                                                     "text-xs mt-1",
                                                                     isDark ? "text-blue-400/80" : "text-blue-600"
                                                                 )}>
-                                                                    A container named "{yamlData.name}" already exists. You can create an update request.
+                                                                    A container named &quot;{yamlData.name}&quot; already exists. You can create an update request.
                                                                 </p>
                                                             </div>
                                                         </div>
