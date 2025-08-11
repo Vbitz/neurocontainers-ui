@@ -1,4 +1,4 @@
-import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
+import { ContainerRecipe, Architecture, CopyrightInfo, convertStructuredReadmeToText } from "@/components/common";
 import pythonPackageMarkdown from "@/copy/templates/python-package.md";
 
 export interface TemplateField {
@@ -228,17 +228,23 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
             }
         });
 
+        const structured_readme = {
+            description: String(values.description || ''),
+            example: `# Example usage\n\n\`\`\`bash\n# Run Python interactively in the container\ndocker run --rm -it ${values.containerName}:${values.version} python\n\n# Execute a Python script\ndocker run --rm -v /path/to/your/script.py:/script.py ${values.containerName}:${values.version} python /script.py\n\n# Test that the package is available\ndocker run --rm ${values.containerName}:${values.version} python -c "import ${repoName.replace('-', '_')}; print('${repoName} is available!')"\n\`\`\``,
+            documentation: `This container includes:\n- Python via Miniconda\n- The Python package from ${githubUrl}\n- Additional conda packages: ${allCondaPackages.filter(pkg => !pkg.startsWith('python')).join(', ') || 'none'}\n- Additional pip packages: ${additionalPipPackages.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
+            citation: `Please cite the original authors of the ${repoName} package when using this container. Repository: ${githubUrl}`
+        };
+
+        const containerName = String(values.containerName || '');
+        const version = String(values.version || '');
+
         return {
-            name: String(values.containerName || ''),
-            version: String(values.version || ''),
+            name: containerName,
+            version,
             copyright,
             architectures: ["x86_64"] as Architecture[],
-            structured_readme: {
-                description: String(values.description || ''),
-                example: `# Example usage\n\n\`\`\`bash\n# Run Python interactively in the container\ndocker run --rm -it ${values.containerName}:${values.version} python\n\n# Execute a Python script\ndocker run --rm -v /path/to/your/script.py:/script.py ${values.containerName}:${values.version} python /script.py\n\n# Test that the package is available\ndocker run --rm ${values.containerName}:${values.version} python -c "import ${repoName.replace('-', '_')}; print('${repoName} is available!')"\n\`\`\``,
-                documentation: `This container includes:\n- Python via Miniconda\n- The Python package from ${githubUrl}\n- Additional conda packages: ${allCondaPackages.filter(pkg => !pkg.startsWith('python')).join(', ') || 'none'}\n- Additional pip packages: ${additionalPipPackages.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
-                citation: `Please cite the original authors of the ${repoName} package when using this container. Repository: ${githubUrl}`
-            },
+            structured_readme,
+            readme: convertStructuredReadmeToText(structured_readme, containerName, version),
             build: {
                 kind: "neurodocker",
                 "base-image": "ubuntu:24.04",

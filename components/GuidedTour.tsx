@@ -13,13 +13,12 @@ import {
     getTemplateIcon,
 } from "@/components/templates/guidedTour";
 import { extractRepoName } from "@/components/templates/pythonPackage";
-import { ContainerRecipe, CopyrightInfo } from "@/components/common";
+import { ContainerRecipe, CopyrightInfo, CATEGORIES } from "@/components/common";
 import { useTheme } from "@/lib/ThemeContext";
 import { cn } from "@/lib/styles";
 import { LicenseSection } from "@/components/ui";
 import PackageTagEditor from "@/components/ui/PackageTagEditor";
 import TagEditor from "@/components/ui/TagEditor";
-import { CategorySelector } from "@/components/ui/CategorySelector";
 import { InlineTemplateDescription } from "@/components/ui/InlineTemplateDescription";
 import { loadPackageDatabase } from "@/lib/packages";
 
@@ -335,12 +334,62 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                             }}
                         />
                     ) : field.type === "categories" ? (
-                        <CategorySelector
-                            selectedCategories={Array.isArray(value) ? value : []}
-                            onChange={(categories) => handleFieldChange(field.id, categories)}
-                            error={error}
-                            showValidation={!!error}
-                        />
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                                {Object.entries(CATEGORIES).map(([category, { description, color }]) => (
+                                    <label
+                                        key={category}
+                                        className={cn(
+                                            "flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all hover:scale-[1.02]",
+                                            Array.isArray(value) && value.includes(category)
+                                                ? isDark
+                                                    ? "bg-gradient-to-br from-[#7bb33a]/20 to-[#6aa329]/15 border-[#7bb33a]/40 shadow-md"
+                                                    : "bg-gradient-to-br from-[#6aa329]/20 to-[#4f7b38]/15 border-[#6aa329]/40 shadow-md"
+                                                : isDark
+                                                    ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                                                    : "bg-white/50 border-gray-200 hover:bg-white/80 hover:border-gray-300"
+                                        )}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={Array.isArray(value) && value.includes(category)}
+                                            onChange={() => {
+                                                const currentCategories = Array.isArray(value) ? value : [];
+                                                if (currentCategories.includes(category)) {
+                                                    handleFieldChange(field.id, currentCategories.filter(c => c !== category));
+                                                } else {
+                                                    handleFieldChange(field.id, [...currentCategories, category]);
+                                                }
+                                            }}
+                                            className={cn(
+                                                "h-4 w-4 rounded",
+                                                isDark
+                                                    ? "text-[#7bb33a] border-white/20 focus:ring-[#7bb33a] bg-white/5"
+                                                    : "text-[#6aa329] border-gray-300 focus:ring-[#6aa329]"
+                                            )}
+                                        />
+                                        <div 
+                                            className="w-3 h-3 rounded-full flex-shrink-0"
+                                            style={{ backgroundColor: color }}
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <div className={cn(
+                                                "text-sm font-medium truncate",
+                                                isDark ? "text-white" : "text-gray-900"
+                                            )}>
+                                                {category}
+                                            </div>
+                                            <div className={cn(
+                                                "text-xs truncate",
+                                                isDark ? "text-gray-400" : "text-gray-600"
+                                            )}>
+                                                {description}
+                                            </div>
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
                     ) : field.type === "select" ? (
                         <select
                             value={typeof value === "string" ? value : ""}
@@ -434,7 +483,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                                 isDark ? "text-white" : "text-gray-900"
                             )}
                         >
-                            Guided Container Creation
+                            Create New Container
                         </h2>
                     </div>
                     <button

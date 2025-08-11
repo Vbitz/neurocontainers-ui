@@ -1,4 +1,4 @@
-import { ContainerRecipe, Architecture } from "@/components/common";
+import { ContainerRecipe, Architecture, convertStructuredReadmeToText } from "@/components/common";
 import type { ContainerTemplate } from './pythonPackage';
 import startFromScratchMarkdown from "@/copy/templates/start-from-scratch.md";
 
@@ -16,7 +16,7 @@ export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
             label: 'Container Name',
             type: 'text',
             required: true,
-            placeholder: 'my-container',
+            placeholder: 'mycontainer',
             description: 'A unique name for your container (lowercase letters and numbers only)',
             validation: (name: string): string | null => {
                 if (!name.trim()) return "Container name is required";
@@ -60,17 +60,23 @@ export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
         },
     ],
     generateRecipe: (values: Record<string, string | string[] | object | null>): ContainerRecipe => {
+        const structured_readme = {
+            description: String(values.description || ''),
+            example: `# Example usage\n\n\`\`\`bash\n# Run the containerized tool\ndocker run --rm ${values.containerName}:${values.version}\n\`\`\``,
+            documentation: `This container was created from scratch.`,
+            citation: `Please cite appropriately when using this container.`
+        };
+
+        const containerName = String(values.containerName || '');
+        const version = String(values.version || '1.0.0');
+
         return {
-            name: String(values.containerName || ''),
-            version: String(values.version || '1.0.0'),
+            name: containerName,
+            version,
             copyright: [],
             architectures: ["x86_64"] as Architecture[],
-            structured_readme: {
-                description: String(values.description || ''),
-                example: `# Example usage\n\n\`\`\`bash\n# Run the containerized tool\ndocker run --rm ${values.containerName}:${values.version}\n\`\`\``,
-                documentation: `This container was created from scratch.`,
-                citation: `Please cite appropriately when using this container.`
-            },
+            structured_readme,
+            readme: convertStructuredReadmeToText(structured_readme, containerName, version),
             build: {
                 kind: "neurodocker",
                 "base-image": "ubuntu:22.04",
