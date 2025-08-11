@@ -22,8 +22,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        name: Setup Bun
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run unit tests
+        run: bun run test
+
+      - name: Run linting
+        run: bun run lint
+
+      # Note: E2E tests with Playwright require browser installation
+      # Uncomment the following steps when ready to run E2E tests in CI:
+      # - name: Install Playwright browsers
+      #   run: bunx playwright install --with-deps
+      # - name: Run E2E tests
+      #   run: bun run test:e2e
+
   build:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
