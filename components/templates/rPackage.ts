@@ -115,10 +115,11 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
         {
             id: 'systemPackages',
             label: 'System Dependencies',
-            type: 'string-list',
+            type: 'packages',
             required: false,
             placeholder: 'Add system package name...',
             description: 'System packages needed for compilation (e.g., libxml2-dev, libcurl4-openssl-dev)',
+            packageType: 'ubuntu',
         },
         {
             id: 'deployBins',
@@ -165,54 +166,31 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
             install: [`r-base=${rVersion}*`, 'r-base-dev']
         });
 
-        // Install additional CRAN packages
+        // Build consolidated R installation script
+        const rInstallCommands = [];
+
+        // Add CRAN packages installation if any
         if (cranPackages.length > 0) {
-            const rInstallScript = [
-                'R --slave -e "',
-                `  packages <- c(${cranPackages.map(pkg => `"${pkg}"`).join(', ')})`,
-                '  install.packages(packages, repos="https://cloud.r-project.org/", dependencies=TRUE)',
-                '  cat("Installed CRAN packages:\\n")',
-                '  cat(paste(packages, collapse=", "), "\\n")',
-                '"'
-            ].join('\\n');
-
-            directives.push({
-                run: [rInstallScript]
-            });
+            const cranScript = `R --slave -e "packages <- c(${cranPackages.map(pkg => `'${pkg}'`).join(', ')}); install.packages(packages, repos='https://cloud.r-project.org/', dependencies=TRUE); cat('Installed CRAN packages:\\n'); cat(paste(packages, collapse=', '), '\\n')"`;
+            rInstallCommands.push(cranScript);
         }
 
-        // Install Bioconductor packages
+        // Add Bioconductor packages installation if any
         if (biocPackages.length > 0) {
-            const biocInstallScript = [
-                'R --slave -e "',
-                '  if (!require(\\"BiocManager\\", quietly = TRUE))',
-                '    install.packages(\\"BiocManager\\", repos=\\"https://cloud.r-project.org/\\")',
-                `  packages <- c(${biocPackages.map(pkg => `"${pkg}"`).join(', ')})`,
-                '  BiocManager::install(packages)',
-                '  cat("Installed Bioconductor packages:\\n")',
-                '  cat(paste(packages, collapse=", "), "\\n")',
-                '"'
-            ].join('\\n');
-
-            directives.push({
-                run: [biocInstallScript]
-            });
+            const biocScript = `R --slave -e "if (!require('BiocManager', quietly = TRUE)) install.packages('BiocManager', repos='https://cloud.r-project.org/'); packages <- c(${biocPackages.map(pkg => `'${pkg}'`).join(', ')}); BiocManager::install(packages); cat('Installed Bioconductor packages:\\n'); cat(paste(packages, collapse=', '), '\\n')"`;
+            rInstallCommands.push(biocScript);
         }
 
-        // Install devtools and the main package from GitHub
-        const mainPackageInstall = [
-            'R --slave -e "',
-            '  if (!require(\\"devtools\\", quietly = TRUE))',
-            '    install.packages(\\"devtools\\", repos=\\"https://cloud.r-project.org/\\")',
-            `  devtools::install_github(\\"${githubUrl.replace('https://github.com/', '')}\\"`,
-            '    , dependencies=TRUE, upgrade=\\"never\\")',
-            `  cat("Installed ${rPackageName} from GitHub\\n")`,
-            '"'
-        ].join('\\n');
+        // Add main package installation from GitHub
+        const mainPackageScript = `R --slave -e "if (!require('devtools', quietly = TRUE)) install.packages('devtools', repos='https://cloud.r-project.org/'); devtools::install_github('${githubUrl.replace('https://github.com/', '')}', dependencies=TRUE, upgrade='never'); cat('Installed ${rPackageName} from GitHub\\n')"`;
+        rInstallCommands.push(mainPackageScript);
 
-        directives.push({
-            run: [mainPackageInstall]
-        });
+        // Add single consolidated run directive if there are any R commands
+        if (rInstallCommands.length > 0) {
+            directives.push({
+                run: rInstallCommands
+            });
+        }
 
         // Add deployment info if scripts are specified
         if (deployBins.length > 0) {
@@ -265,7 +243,7 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
                     `    }`,
                     `  }`,
                     `"`
-                ].join('\\n')
+                ].join('\n')
             }
         });
 
