@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+import { CollapsibleHelpSection } from "./CollapsibleHelpSection";
 import ReactMarkdown from "react-markdown";
 import { createCompactMarkdownComponents } from "@/lib/copyContent";
 import { getHelpSection } from "@/lib/styles";
@@ -14,7 +16,8 @@ interface HelpSectionProps {
 
 /**
  * Reusable help section component that renders markdown content
- * with consistent theme-aware styling and optional GitHub source link
+ * with consistent theme-aware styling and optional GitHub source link.
+ * Automatically detects horizontal rules (---) and makes content after them collapsible.
  */
 export function HelpSection({ 
   markdownContent,
@@ -27,6 +30,21 @@ export function HelpSection({
     return null;
   }
 
+  // Check if the content contains horizontal rules for collapsible sections
+  const hasHorizontalRule = /^---\s*$/m.test(markdownContent);
+
+  if (hasHorizontalRule) {
+    // Use the collapsible version
+    return (
+      <CollapsibleHelpSection
+        markdownContent={markdownContent}
+        className={className}
+        sourceFilePath={sourceFilePath}
+      />
+    );
+  }
+
+  // Use the original non-collapsible version for backwards compatibility
   const helpStyles = getHelpSection(isDark);
   const markdownComponents = createCompactMarkdownComponents(isDark);
 
