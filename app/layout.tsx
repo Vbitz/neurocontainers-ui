@@ -4,7 +4,7 @@ import { GeistMono, GeistSans } from "@/components/fonts";
 import { ThemeProvider } from "@/lib/ThemeContext";
 
 export const metadata: Metadata = {
-  title: "Neurocontainers Builder",
+  title: "NeuroContainers Builder",
   description: "Build neurocontainers with ease",
 };
 

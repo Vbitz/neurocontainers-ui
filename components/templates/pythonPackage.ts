@@ -98,6 +98,20 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
             validation: validateVersion,
         },
         {
+            id: 'pythonVersion',
+            label: 'Python Version',
+            type: 'select',
+            required: true,
+            description: 'Python version to use in the container',
+            options: [
+                { value: '3.13', label: 'Python 3.13.2 (Latest Stable - Feb 2025)' },
+                { value: '3.12', label: 'Python 3.12.9 (Security fixes only)' },
+                { value: '3.11', label: 'Python 3.11.13 (Security fixes only)' },
+                { value: '3.10', label: 'Python 3.10.17 (Legacy)' },
+                { value: '3.9', label: 'Python 3.9.22 (Legacy)' },
+            ],
+        },
+        {
             id: 'license',
             label: 'License',
             type: 'license',
@@ -155,8 +169,10 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
         const condaPackages = Array.isArray(values.condaPackages) ? values.condaPackages : [];
         const deployBins = Array.isArray(values.deployBins) ? values.deployBins : [];
 
-        // Ensure python is included in conda packages
-        const allCondaPackages = condaPackages;
+        // Ensure python is included in conda packages with selected version
+        const selectedPythonVersion = String(values.pythonVersion || '3.13'); // Default to 3.13 (latest stable)
+        const pythonVersion = `python=${selectedPythonVersion}`;
+        const allCondaPackages = [pythonVersion, ...condaPackages];
 
         // Build pip install list with GitHub repo first, ensuring it's properly installable
         const pipPackages = [`git+${githubUrl}`, ...additionalPipPackages];
@@ -168,17 +184,31 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
         const directives = [];
 
         // Add miniconda with conda packages first
-        directives.push({
+        const minicondaDirective: {
+            template: {
+                name: string;
+                version: string;
+                conda_install?: string;
+                pip_install?: string;
+            };
+        } = {
             template: {
                 name: "miniconda",
-                version: "latest",
-                env: {},
-                args: {
-                    pip_install: pipPackages.join(' '),
-                    conda_install: allCondaPackages.join(' ')
-                }
+                version: "latest"
             }
-        });
+        };
+        
+        // Add conda packages if any
+        if (allCondaPackages.length > 0) {
+            minicondaDirective.template.conda_install = allCondaPackages.join(' ');
+        }
+        
+        // Add pip packages if any
+        if (pipPackages.length > 0) {
+            minicondaDirective.template.pip_install = pipPackages.join(' ');
+        }
+        
+        directives.push(minicondaDirective);
 
         // Add deployment info
         directives.push({
@@ -233,7 +263,7 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
         const structured_readme = {
             description: String(values.description || ''),
             example: `# Example usage\n\n\`\`\`bash\n# Run Python interactively (assuming you are already inside the container)\npython\n\n# Execute a Python script\npython /path/to/your/script.py\n\n# Test that the package is available\npython -c "import ${repoName.replace('-', '_')}; print('${repoName} is available!')"\n${deployBins.length > 0 ? `\n# Use deployed binaries\n${deployBins.map(bin => `${bin} --help`).join('\n')}` : ''}\n\`\`\``,
-            documentation: `This container includes:\n- Python via Miniconda\n- The Python package from ${githubUrl}\n- Additional conda packages: ${allCondaPackages.filter(pkg => !pkg.startsWith('python')).join(', ') || 'none'}\n- Additional pip packages: ${additionalPipPackages.join(', ') || 'none'}\n- Deployed binaries: ${deployBins.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
+            documentation: `This container includes:\n- Python ${selectedPythonVersion} via Miniconda\n- The Python package from ${githubUrl}\n- Additional conda packages: ${allCondaPackages.filter(pkg => !pkg.startsWith('python')).join(', ') || 'none'}\n- Additional pip packages: ${additionalPipPackages.join(', ') || 'none'}\n- Deployed binaries: ${deployBins.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
             citation: `Please cite the original authors of the ${repoName} package when using this container. Repository: ${githubUrl}`
         };
 
