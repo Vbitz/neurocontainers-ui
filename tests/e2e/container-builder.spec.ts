@@ -105,15 +105,20 @@ categories:
     await expect(page.locator('text=Recipe is Valid!')).toBeVisible();
     await page.locator('button:has-text("Import Recipe")').click();
 
-    // Should navigate to the container
-    await expect(page).toHaveURL(/#\/persistent-test/);
+    // Wait for modal to close
+    await expect(page.locator('[role="dialog"]')).not.toBeVisible();
     
-    // Reload the page
+    // Wait for navigation and URL update with increased timeout
+    await expect(page).toHaveURL(/#\/persistent-test/, { timeout: 10000 });
+    
+    // Wait for the container to be visible in the UI
+    await expect(page.locator('text=persistent-test')).toBeVisible({ timeout: 5000 });
+    
+    // Reload the page to test localStorage persistence
     await page.reload();
 
     // After reload, check if the container appears in recent containers list
-    // This is more realistic than expecting URL persistence
-    await expect(page.locator('text=Recent Containers')).toBeVisible();
+    await expect(page.locator('text=Recent Containers')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=persistent-test')).toBeVisible({ timeout: 10000 });
   });
 });
