@@ -4,13 +4,23 @@ import {
     ExclamationTriangleIcon,
     CheckCircleIcon,
     ArrowPathIcon,
+    DocumentTextIcon,
+    PlusIcon,
+    PencilIcon,
+    ClipboardDocumentIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
+    CloudArrowUpIcon,
+    InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { usePyodide } from "@/lib/python";
 import { loadBuilder, Builder, type BuildOptions } from "@/lib/builder";
-import { ContainerRecipe } from "@/components/common";
-import { getCards, iconStyles, textStyles, inputStyles, buttonStyles, cn } from "@/lib/styles";
+import { ContainerRecipe, NEUROCONTAINERS_REPO } from "@/components/common";
+import { getCards, iconStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 import { ValidationResult } from "@/types/validation";
+import { useGitHubFiles } from '@/lib/useGithub';
+import pako from "pako";
 
 export default function ContainerValidator({
     recipe,
@@ -32,11 +42,19 @@ export default function ContainerValidator({
     const [builderError, setBuilderError] = useState<string | null>(null);
     const [validating, setValidating] = useState(false);
     const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-    const [buildOptions, setBuildOptions] = useState<BuildOptions>({
-        architecture: "x86_64",
-        ignoreArchitecture: false,
-        maxParallelJobs: 4,
-    });
+    const [showDockerfile, setShowDockerfile] = useState(false);
+    
+    // Publishing state
+    const [showYamlPreview, setShowYamlPreview] = useState(false);
+    const [copiedYaml, setCopiedYaml] = useState(false);
+    const [copiedDockerfile, setCopiedDockerfile] = useState(false);
+    
+    // GitHub integration
+    const { files } = useGitHubFiles('neurodesk', 'neurocontainers', 'main');
+    const containerExists = recipe ? files.some(file =>
+        file.path === `recipes/${recipe.name}/build.yaml`
+    ) : false;
+    
 
     const builderLoadAttempted = useRef(false);
     const isLoadingBuilder = useRef(false);
@@ -46,9 +64,6 @@ export default function ContainerValidator({
         return pyodide && builder && !builderLoading && !pyodideLoading;
     }, [pyodide, builder, builderLoading, pyodideLoading]);
 
-    const canValidate = useMemo(() => {
-        return isReady && !validating && !disabled;
-    }, [isReady, validating, disabled]);
 
     // Stable function to load builder - prevents infinite loops
     const loadBuilderInstance = useCallback(async () => {
@@ -109,6 +124,13 @@ export default function ContainerValidator({
 
             console.log("Container recipe:", recipe);
 
+            // Use default build options - no need to expose them to users
+            const buildOptions: BuildOptions = {
+                architecture: "x86_64",
+                ignoreArchitecture: false,
+                maxParallelJobs: 4,
+            };
+            
             // Generate the container
             const result = await builder.generateFromDescription(
                 recipe,
@@ -148,14 +170,153 @@ export default function ContainerValidator({
         } finally {
             setValidating(false);
         }
-    }, [builder, recipe, buildOptions, validating, onValidationChange]);
+    }, [builder, recipe, validating, onValidationChange]);
 
-    // Manual retry function for builder loading
-    const retryLoadBuilder = useCallback(() => {
-        builderLoadAttempted.current = false;
-        setBuilderError(null);
-        loadBuilderInstance();
-    }, [loadBuilderInstance]);
+    // Auto-load Pyodide and builder in sequence
+    const autoLoadAndValidate = useCallback(async () => {
+        try {
+            // Step 1: Load Pyodide if not loaded
+            if (!pyodide && !pyodideLoading) {
+                await loadPyodide();
+                return; // Let useEffect handle the next step
+            }
+            
+            // Step 2: Load builder if Pyodide is ready but builder isn't
+            if (pyodide && !builder && !builderLoading && !builderLoadAttempted.current) {
+                await loadBuilderInstance();
+                return; // Let user click validate again after builder loads
+            }
+            
+            // Step 3: Validate if everything is ready
+            if (isReady) {
+                await validateRecipe();
+            }
+        } catch (error) {
+            console.error("Auto-load error:", error);
+        }
+    }, [pyodide, pyodideLoading, loadPyodide, builder, builderLoading, loadBuilderInstance, isReady, validateRecipe]);
+
+
+    // Generate YAML string for publishing
+    const generateYAMLString = useCallback((data: ContainerRecipe): string => {
+        const cleanData = {
+            ...data,
+            build: {
+                ...data.build,
+                directives: data.build.directives.filter(directive => {
+                    // Check if the directive has content - different directives have different structures
+                    if ('name' in directive && directive.name) {
+                        return typeof directive.name === 'string' && directive.name.trim() !== "";
+                    }
+                    if ('type' in directive && directive.type) {
+                        return typeof directive.type === 'string' && directive.type.trim() !== "";
+                    }
+                    return true; // Keep other directive types
+                })
+            }
+        };
+        
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const yaml = require('js-yaml');
+        return yaml.dump(cleanData, {
+            indent: 2,
+            lineWidth: -1,
+            noRefs: true,
+            quotingType: '"'
+        });
+    }, []);
+    
+    // Compress YAML content to base64 deflate
+    const compressToBase64 = useCallback((text: string): string => {
+        const textEncoder = new TextEncoder();
+        const compressed = pako.deflate(textEncoder.encode(text));
+        return Buffer.from(compressed).toString('base64');
+    }, []);
+    
+    // Copy functions
+    const copyYamlToClipboard = useCallback(() => {
+        const yamlText = generateYAMLString(recipe);
+        navigator.clipboard.writeText(yamlText).then(() => {
+            setCopiedYaml(true);
+            setTimeout(() => setCopiedYaml(false), 2000);
+        });
+    }, [recipe, generateYAMLString]);
+    
+    const copyDockerfileToClipboard = useCallback(() => {
+        if (validationResult?.dockerfile) {
+            navigator.clipboard.writeText(validationResult.dockerfile).then(() => {
+                setCopiedDockerfile(true);
+                setTimeout(() => setCopiedDockerfile(false), 2000);
+            });
+        }
+    }, [validationResult?.dockerfile]);
+    
+    // Handle GitHub issue creation
+    const handleCreateIssue = useCallback((isUpdate: boolean = false) => {
+        if (!recipe) return;
+
+        const yamlText = generateYAMLString(recipe);
+        const compressedYaml = compressToBase64(yamlText);
+        
+        const action = isUpdate ? 'Update' : 'Add';
+        const issueTitle = `[CONTRIBUTION] ${action} ${recipe.name} container`;
+        
+        const issueBodyWithYaml = `### ${action} Container Request
+
+**Container Name:** ${recipe.name}
+**Version:** ${recipe.version || 'latest'}
+
+This is an automated contribution request to ${isUpdate ? 'update' : 'add'} the container recipe.
+
+\`\`\`base64
+${compressedYaml}
+\`\`\`
+
+---
+*This issue was generated automatically by the Neurocontainers Builder UI*`;
+
+        const isContentTooLarge = new Blob([issueBodyWithYaml]).size > 6 * 1024;
+        
+        let issueBody;
+        if (isContentTooLarge) {
+            issueBody = `### ${action} Container Request
+
+**Container Name:** ${recipe.name}
+**Version:** ${recipe.version || 'latest'}
+
+This is an automated contribution request to ${isUpdate ? 'update' : 'add'} the container recipe.
+
+Please paste the compressed YAML content from your clipboard below:
+
+\`\`\`base64
+# Paste base64 deflate compressed YAML content here
+\`\`\`
+
+---
+*This issue was generated automatically by the Neurocontainers Builder UI*`;
+        } else {
+            issueBody = issueBodyWithYaml;
+        }
+
+        const targetUrl = new URL(`${NEUROCONTAINERS_REPO}/issues/new`);
+        targetUrl.searchParams.append("title", issueTitle);
+        targetUrl.searchParams.append("body", issueBody);
+
+        window.open(targetUrl.toString(), "_blank", "noopener,noreferrer");
+    }, [recipe, generateYAMLString, compressToBase64]);
+    
+    // Determine button state and text
+    const getButtonState = () => {
+        if (disabled) return { text: "Cannot Validate", disabled: true, loading: false };
+        if (pyodideLoading) return { text: "Loading Python Runtime...", disabled: true, loading: true };
+        if (builderLoading) return { text: "Loading Container Builder...", disabled: true, loading: true };
+        if (validating) return { text: "Validating Recipe...", disabled: true, loading: true };
+        if (pyodideError || builderError) return { text: "Retry Validation", disabled: false, loading: false };
+        return { text: "Validate Recipe", disabled: false, loading: false };
+    };
+
+    const buttonState = getButtonState();
+    const isLoading = buttonState.loading;
 
     return (
         <div className={cn(
@@ -163,250 +324,82 @@ export default function ContainerValidator({
             "backdrop-blur-md",
             isDark ? "bg-black/20 border-[#2d4222]/50" : "bg-white/30 border-gray-200/50"
         )}>
-            <div className="p-4 sm:p-6">
-                {/* Status Section */}
-                <div className="mb-6">
-                    <h3 className={cn(textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' }), "mb-3")}>Status</h3>
-                    <div className="space-y-2">
-                        {/* Pyodide Status */}
-                        <div className={cn(
-                            "flex items-center gap-3 p-3 rounded-md",
-                            isDark ? "bg-[#2d4222]" : "bg-gray-50"
+            <div className="p-4 sm:p-6 space-y-6">
+                {/* Big Validate Button */}
+                <div className="text-center">
+                    <button
+                        onClick={autoLoadAndValidate}
+                        disabled={buttonState.disabled || isLoading}
+                        className={cn(
+                            "group relative w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 text-lg backdrop-blur-sm border transform hover:scale-[1.02] hover:backdrop-blur-md overflow-hidden",
+                            buttonState.disabled || isLoading
+                                ? "opacity-50 cursor-not-allowed"
+                                : "active:scale-[0.98]",
+                            isDark
+                                ? "bg-black/40 text-green-300 hover:bg-black/50 border-green-400/30 hover:border-green-300/50 shadow-lg hover:shadow-xl"
+                                : "bg-white/40 text-green-700 hover:bg-white/50 border-green-400/30 hover:border-green-300/50 shadow-lg hover:shadow-xl"
+                        )}
+                    >
+                        {/* Glass effect overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        
+                        {buttonState.loading ? (
+                            <ArrowPathIcon className="h-6 w-6 animate-spin relative z-10" />
+                        ) : (
+                            <PlayIcon className="h-6 w-6 relative z-10" />
+                        )}
+                        <span className="relative z-10">{buttonState.text}</span>
+                        
+                        {/* Subtle shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                    </button>
+                    
+                    {disabled && disabledReason && (
+                        <p className={cn(
+                            "mt-2 text-sm",
+                            isDark ? "text-red-400" : "text-red-600"
                         )}>
-                            <div className="flex-shrink-0">
-                                {pyodideLoading ? (
-                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'md'), "text-blue-500 animate-spin")} />
-                                ) : pyodideError ? (
-                                    <ExclamationTriangleIcon className={cn(iconStyles(isDark, 'md'), "text-red-500")} />
-                                ) : pyodide ? (
-                                    <CheckCircleIcon className={cn(iconStyles(isDark, 'md'), "text-green-500")} />
-                                ) : (
-                                    <div className="h-5 w-5 bg-gray-300 rounded-full" />
-                                )}
-                            </div>
-                            <div className="flex-1">
-                                <p className={textStyles(isDark, { size: 'sm', weight: 'medium' })}>
-                                    Pyodide Runtime
-                                    {pyodideLoading && " (Loading...)"}
-                                    {pyodideError && " (Error)"}
-                                    {pyodide && " (Ready)"}
-                                </p>
-                                {pyodideError && (
-                                    <p className={cn(
-                                        textStyles(isDark, { size: 'xs' }),
-                                        "mt-1",
-                                        isDark ? "text-red-400" : "text-red-600"
-                                    )}>
-                                        {pyodideError.message}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Builder Status */}
-                        <div className={cn(
-                            "flex items-center gap-3 p-3 rounded-md",
-                            isDark ? "bg-[#2d4222]" : "bg-gray-50"
-                        )}>
-                            <div className="flex-shrink-0">
-                                {builderLoading ? (
-                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'md'), "text-blue-500 animate-spin")} />
-                                ) : builderError ? (
-                                    <ExclamationTriangleIcon className={cn(iconStyles(isDark, 'md'), "text-red-500")} />
-                                ) : builder ? (
-                                    <CheckCircleIcon className={cn(iconStyles(isDark, 'md'), "text-green-500")} />
-                                ) : (
-                                    <div className="h-5 w-5 bg-gray-300 rounded-full" />
-                                )}
-                            </div>
-                            <div className="flex-1">
-                                <p className={textStyles(isDark, { size: 'sm', weight: 'medium' })}>
-                                    Container Builder
-                                    {builderLoading && " (Loading...)"}
-                                    {builderError && " (Error)"}
-                                    {builder && " (Ready)"}
-                                </p>
-                                {builderError && (
-                                    <p className={cn(
-                                        textStyles(isDark, { size: 'xs' }),
-                                        "mt-1",
-                                        isDark ? "text-red-400" : "text-red-600"
-                                    )}>
-                                        {builderError}
-                                    </p>
-                                )}
-                            </div>
-                            {pyodide && !builder && !builderLoading && (
-                                <button
-                                    onClick={retryLoadBuilder}
-                                    className={cn(buttonStyles(isDark, 'secondary', 'sm'))}
-                                >
-                                    {builderError ? "Retry" : "Load Builder"}
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                            {disabledReason}
+                        </p>
+                    )}
                 </div>
 
-                {/* Build Options */}
-                {isReady && (
-                    <div className="mb-6">
-                        <h3 className={cn(textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' }), "mb-3")}>
-                            Build Options
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Error Messages */}
+                {(pyodideError || builderError) && (
+                    <div className={cn(
+                        "p-4 border rounded-lg",
+                        isDark ? "bg-red-900/20 border-red-700" : "bg-red-50 border-red-200"
+                    )}>
+                        <div className="flex items-start gap-3">
+                            <ExclamationTriangleIcon className={cn(iconStyles(isDark, 'md'), "text-red-500 flex-shrink-0")} />
                             <div>
-                                <label className={cn(
-                                    textStyles(isDark, { size: 'sm', weight: 'medium' }),
-                                    "block mb-1",
-                                    isDark ? "text-[#d1d5db]" : "text-gray-700"
+                                <p className={cn(
+                                    "font-medium",
+                                    isDark ? "text-red-400" : "text-red-800"
                                 )}>
-                                    Architecture
-                                </label>
-                                <select
-                                    className={cn(inputStyles(isDark), "w-full")}
-                                    value={buildOptions.architecture}
-                                    onChange={(e) =>
-                                        setBuildOptions({
-                                            ...buildOptions,
-                                            architecture: e.target.value,
-                                        })
-                                    }
-                                >
-                                    <option value="x86_64">x86_64</option>
-                                    <option value="aarch64">aarch64</option>
-                                </select>
+                                    Setup Error
+                                </p>
+                                <p className={cn(
+                                    "text-sm mt-1",
+                                    isDark ? "text-red-300" : "text-red-700"
+                                )}>
+                                    {pyodideError?.message || builderError}
+                                </p>
                             </div>
-                            <div>
-                                <label className={cn(
-                                    textStyles(isDark, { size: 'sm', weight: 'medium' }),
-                                    "block mb-1",
-                                    isDark ? "text-[#d1d5db]" : "text-gray-700"
-                                )}>
-                                    Max Parallel Jobs
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="16"
-                                    className={cn(inputStyles(isDark), "w-full")}
-                                    value={buildOptions.maxParallelJobs}
-                                    onChange={(e) =>
-                                        setBuildOptions({
-                                            ...buildOptions,
-                                            maxParallelJobs: parseInt(e.target.value) || 4,
-                                        })
-                                    }
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-4 space-y-2">
-                            <label className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className={cn(
-                                        "mr-2 rounded border-gray-300 focus:ring-2 focus:ring-offset-0",
-                                        isDark
-                                            ? "bg-[#161a0e] border-[#2d4222] text-[#7bb33a] focus:ring-[#7bb33a]/20"
-                                            : "text-green-600 focus:ring-green-500/20"
-                                    )}
-                                    checked={buildOptions.ignoreArchitecture}
-                                    onChange={(e) =>
-                                        setBuildOptions({
-                                            ...buildOptions,
-                                            ignoreArchitecture: e.target.checked,
-                                        })
-                                    }
-                                />
-                                <span className={cn(
-                                    textStyles(isDark, { size: 'sm' }),
-                                    isDark ? "text-[#d1d5db]" : "text-gray-700"
-                                )}>
-                                    Ignore Architecture Constraints
-                                </span>
-                            </label>
                         </div>
                     </div>
                 )}
 
-                {/* Validation Section */}
-                <div className="mb-6">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
-                        <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>Validation</h3>
-                        {!pyodide ? (
-                            <button
-                                onClick={loadPyodide}
-                                disabled={pyodideLoading}
-                                className={cn(
-                                    buttonStyles(isDark, 'primary', 'md'),
-                                    "flex items-center gap-2",
-                                    pyodideLoading && "disabled:opacity-50 disabled:cursor-not-allowed"
-                                )}
-                            >
-                                {pyodideLoading ? (
-                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'sm'), "animate-spin")} />
-                                ) : (
-                                    <PlayIcon className={iconStyles(isDark, 'sm')} />
-                                )}
-                                {pyodideLoading ? "Loading Pyodide..." : "Load Pyodide"}
-                            </button>
-                        ) : (
-                            <button
-                                onClick={validateRecipe}
-                                disabled={!canValidate}
-                                className={cn(
-                                    buttonStyles(isDark, 'primary', 'md'),
-                                    "flex items-center gap-2",
-                                    !canValidate && "disabled:opacity-50 disabled:cursor-not-allowed"
-                                )}
-                            >
-                                {validating ? (
-                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'sm'), "animate-spin")} />
-                                ) : (
-                                    <PlayIcon className={iconStyles(isDark, 'sm')} />
-                                )}
-                                {validating ? "Validating..." : "Validate & Generate"}
-                            </button>
-                        )}
-                    </div>
-
-                    {disabled && disabledReason && (
-                        <div className={cn(
-                            "p-4 border rounded-md",
-                            isDark ? "bg-red-900/20 border-red-700" : "bg-red-50 border-red-200"
-                        )}>
-                            <p className={cn(
-                                textStyles(isDark, { size: 'sm' }),
-                                isDark ? "text-red-400" : "text-red-800"
-                            )}>
-                                {disabledReason}
-                            </p>
-                        </div>
-                    )}
-
-                    {!disabled && !isReady && (
-                        <div className={cn(
-                            "p-4 border rounded-md",
-                            isDark ? "bg-yellow-900/20 border-yellow-700" : "bg-yellow-50 border-yellow-200"
-                        )}>
-                            <p className={cn(
-                                textStyles(isDark, { size: 'sm' }),
-                                isDark ? "text-yellow-400" : "text-yellow-800"
-                            )}>
-                                Please load Pyodide and the builder to validate your recipe.
-                            </p>
-                        </div>
-                    )}
-
-                    {validationResult && (
-                        <div
-                            className={cn(
-                                "p-4 rounded-md border",
-                                validationResult.success
-                                    ? (isDark ? "bg-green-900/20 border-green-700" : "bg-green-50 border-green-200")
-                                    : (isDark ? "bg-red-900/20 border-red-700" : "bg-red-50 border-red-200")
-                            )}
-                        >
+                {/* Validation Results */}
+                {validationResult && (
+                    <div className={cn(
+                        "border rounded-lg overflow-hidden",
+                        validationResult.success
+                            ? (isDark ? "bg-green-900/20 border-green-700" : "bg-green-50 border-green-200")
+                            : (isDark ? "bg-red-900/20 border-red-700" : "bg-red-50 border-red-200")
+                    )}>
+                        {/* Validation Status */}
+                        <div className="p-4">
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
                                     {validationResult.success ? (
@@ -415,60 +408,328 @@ export default function ContainerValidator({
                                         <ExclamationTriangleIcon className={cn(iconStyles(isDark, 'md'), "text-red-500")} />
                                     )}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p
-                                        className={cn(
-                                            textStyles(isDark, { size: 'sm', weight: 'medium' }),
-                                            validationResult.success
-                                                ? (isDark ? "text-green-400" : "text-green-800")
-                                                : (isDark ? "text-red-400" : "text-red-800")
-                                        )}
-                                    >
-                                        {validationResult.success
-                                            ? "Validation Successful!"
-                                            : "Validation Failed"}
-                                    </p>
+                                <div className="flex-1">
+                                    <h3 className={cn(
+                                        "font-medium",
+                                        validationResult.success
+                                            ? (isDark ? "text-green-400" : "text-green-800")
+                                            : (isDark ? "text-red-400" : "text-red-800")
+                                    )}>
+                                        {validationResult.success ? "✓ Recipe Validated Successfully!" : "✗ Validation Failed"}
+                                    </h3>
+                                    
                                     {validationResult.error && (
-                                        /* Display the error message as a code block with newlines */
                                         <pre className={cn(
-                                            "mt-2 text-sm whitespace-pre-wrap break-words overflow-x-auto",
+                                            "mt-2 text-sm whitespace-pre-wrap break-words",
                                             isDark ? "text-red-400" : "text-red-700"
                                         )}>
                                             {validationResult.error}
                                         </pre>
                                     )}
+                                    
                                     {validationResult.success && (
                                         <div className={cn(
-                                            "mt-2 space-y-1",
-                                            textStyles(isDark, { size: 'sm' }),
+                                            "mt-3 space-y-2",
                                             isDark ? "text-green-400" : "text-green-700"
                                         )}>
-                                            <p>✓ Dockerfile generated successfully</p>
-                                            {validationResult.deployBins &&
-                                                validationResult.deployBins.length > 0 && (
-                                                    <p className="break-words">
-                                                        ✓ Deploy binaries:{" "}
-                                                        <span className="font-mono text-xs">
-                                                            {validationResult.deployBins.join(", ")}
-                                                        </span>
-                                                    </p>
-                                                )}
-                                            {validationResult.deployPath &&
-                                                validationResult.deployPath.length > 0 && (
-                                                    <p className="break-words">
-                                                        ✓ Deploy paths:{" "}
-                                                        <span className="font-mono text-xs">
-                                                            {validationResult.deployPath.join(", ")}
-                                                        </span>
-                                                    </p>
-                                                )}
+                                            <p className="text-sm">✓ Dockerfile generated and ready for deployment</p>
+                                            {validationResult.deployBins && validationResult.deployBins.length > 0 && (
+                                                <p className="text-sm">
+                                                    ✓ Deploy binaries: <span className="font-mono text-xs">{validationResult.deployBins.join(", ")}</span>
+                                                </p>
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        {/* Publishing and Dockerfile sections (Success Only) */}
+                        {validationResult.success && (
+                            <div className={cn(
+                                "border-t space-y-6 pt-6",
+                                isDark ? "border-green-700/50" : "border-green-200"
+                            )}>
+                                {/* Ready to Publish Section */}
+                                <div className={cn(
+                                    "rounded-xl border backdrop-blur-md p-6 transition-all duration-300",
+                                    isDark 
+                                        ? "bg-black/20 border-white/10 shadow-lg hover:bg-black/30 hover:shadow-xl" 
+                                        : "bg-white/30 border-white/20 shadow-lg hover:bg-white/40 hover:shadow-xl"
+                                )}>
+                                    <div className="text-center mb-6">
+                                        <div className={cn(
+                                            "inline-flex items-center justify-center w-12 h-12 rounded-full mb-3",
+                                            isDark ? "bg-black/20 backdrop-blur-sm" : "bg-white/30 backdrop-blur-sm"
+                                        )}>
+                                            <CloudArrowUpIcon className={cn(
+                                                "h-6 w-6",
+                                                isDark ? "text-[#91c84a]" : "text-[#4f7b38]"
+                                            )} />
+                                        </div>
+                                        <h3 className={cn(
+                                            "text-lg font-semibold mb-2",
+                                            isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]"
+                                        )}>
+                                            Ready to Publish!
+                                        </h3>
+                                        <p className={cn(
+                                            "text-sm mb-6",
+                                            isDark ? "text-[#91c84a]" : "text-[#4f7b38]"
+                                        )}>
+                                            Your container has been validated successfully. You can now publish it to the NeuroContainers repository.
+                                        </p>
+                                    </div>
+
+                                    {/* Content Grid */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                        {/* Left Column - Container Info & Preview */}
+                                        <div className="space-y-4">
+                                            {/* Container Info */}
+                                            <div className={cn(
+                                                "p-4 rounded-lg border backdrop-blur-sm",
+                                                isDark ? "bg-black/20 border-white/5" : "bg-white/30 border-white/10"
+                                            )}>
+                                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                                    <div>
+                                                        <span className={cn("text-xs font-medium", isDark ? "text-gray-400" : "text-gray-600")}>Container Name</span>
+                                                        <p className={cn("font-semibold", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>{recipe.name}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className={cn("text-xs font-medium", isDark ? "text-gray-400" : "text-gray-600")}>Version</span>
+                                                        <p className={cn("font-semibold", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>{recipe.version || 'latest'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* YAML Preview */}
+                                            <div>
+                                                <button
+                                                    onClick={() => setShowYamlPreview(!showYamlPreview)}
+                                                    className={cn(
+                                                        "w-full flex items-center justify-between p-3 rounded-lg transition-colors border backdrop-blur-sm",
+                                                        isDark 
+                                                            ? "bg-black/20 hover:bg-black/30 border-white/5" 
+                                                            : "bg-white/30 hover:bg-white/40 border-white/10"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <DocumentTextIcon className={cn("h-4 w-4", isDark ? "text-gray-400" : "text-gray-600")} />
+                                                        <span className={cn("text-sm font-medium", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>Preview YAML Recipe</span>
+                                                    </div>
+                                                    {showYamlPreview ? (
+                                                        <ChevronUpIcon className={cn("h-4 w-4", isDark ? "text-gray-400" : "text-gray-600")} />
+                                                    ) : (
+                                                        <ChevronDownIcon className={cn("h-4 w-4", isDark ? "text-gray-400" : "text-gray-600")} />
+                                                    )}
+                                                </button>
+                                                
+                                                {showYamlPreview && (
+                                                    <div className={cn(
+                                                        "mt-2 rounded-lg border backdrop-blur-sm",
+                                                        isDark ? "bg-black/30 border-white/5" : "bg-white/40 border-white/10"
+                                                    )}>
+                                                        <div className="flex items-center justify-between px-4 py-2 border-b border-white/5">
+                                                            <span className={cn("text-xs font-medium", isDark ? "text-gray-400" : "text-gray-600")}>build.yaml</span>
+                                                            <button
+                                                                onClick={copyYamlToClipboard}
+                                                                className={cn(
+                                                                    "flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors",
+                                                                    copiedYaml
+                                                                        ? (isDark ? "bg-[#6ea232] text-white" : "bg-[#4f7b38] text-white")
+                                                                        : (isDark
+                                                                            ? "bg-black/30 text-[#91c84a] hover:bg-black/40"
+                                                                            : "bg-white/30 text-[#4f7b38] hover:bg-white/40")
+                                                                )}
+                                                            >
+                                                                <ClipboardDocumentIcon className="h-3 w-3" />
+                                                                {copiedYaml ? "Copied!" : "Copy"}
+                                                            </button>
+                                                        </div>
+                                                        <pre className={cn(
+                                                            "p-4 overflow-x-auto text-xs max-h-64",
+                                                            isDark ? "text-gray-300" : "text-gray-700"
+                                                        )}>
+                                                            <code>{generateYAMLString(recipe)}</code>
+                                                        </pre>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Right Column - Notifications */}
+                                        <div className="space-y-4">
+                                            {/* GitHub Login Notice */}
+                                            <div className={cn(
+                                                "p-4 rounded-lg border backdrop-blur-sm flex items-start gap-3",
+                                                isDark ? "bg-amber-900/20 border-amber-700/30" : "bg-amber-50/50 border-amber-200/50"
+                                            )}>
+                                                <InformationCircleIcon className={cn(
+                                                    "h-5 w-5 flex-shrink-0 mt-0.5",
+                                                    isDark ? "text-amber-400" : "text-amber-600"
+                                                )} />
+                                                <div className="flex-1">
+                                                    <p className={cn(
+                                                        "text-sm font-medium",
+                                                        isDark ? "text-amber-400" : "text-amber-700"
+                                                    )}>GitHub Authentication Required</p>
+                                                    <p className={cn(
+                                                        "text-xs mt-1",
+                                                        isDark ? "text-amber-400/80" : "text-amber-600"
+                                                    )}>You&apos;ll need to be logged into GitHub to create an issue. The recipe will be compressed and included.</p>
+                                                </div>
+                                            </div>
+
+                                            {containerExists && (
+                                                <div className={cn(
+                                                    "p-4 rounded-lg border backdrop-blur-sm flex items-start gap-3",
+                                                    isDark ? "bg-blue-900/20 border-blue-700/30" : "bg-blue-50/50 border-blue-200/50"
+                                                )}>
+                                                    <PencilIcon className={cn(
+                                                        "h-5 w-5 flex-shrink-0 mt-0.5",
+                                                        isDark ? "text-blue-400" : "text-blue-600"
+                                                    )} />
+                                                    <div className="flex-1">
+                                                        <p className={cn(
+                                                            "text-sm font-medium",
+                                                            isDark ? "text-blue-400" : "text-blue-700"
+                                                        )}>Container Already Exists</p>
+                                                        <p className={cn(
+                                                            "text-xs mt-1",
+                                                            isDark ? "text-blue-400/80" : "text-blue-600"
+                                                        )}>A container named &quot;{recipe.name}&quot; already exists. You can create an update request.</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="space-y-3">
+                                        {containerExists ? (
+                                            <button
+                                                className={cn(
+                                                    "group relative w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 text-lg backdrop-blur-sm border transform hover:scale-[1.02] hover:backdrop-blur-md overflow-hidden",
+                                                    isDark
+                                                        ? "bg-black/40 text-green-300 hover:bg-black/50 border-green-400/30 hover:border-green-300/50 shadow-lg hover:shadow-xl"
+                                                        : "bg-white/40 text-green-700 hover:bg-white/50 border-green-400/30 hover:border-green-300/50 shadow-lg hover:shadow-xl"
+                                                )}
+                                                onClick={() => handleCreateIssue(true)}
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                                <PencilIcon className="h-6 w-6 relative z-10" />
+                                                <span className="relative z-10">Update Existing Container</span>
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className={cn(
+                                                    "group relative w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 text-lg backdrop-blur-sm border transform hover:scale-[1.02] hover:backdrop-blur-md overflow-hidden",
+                                                    isDark
+                                                        ? "bg-black/40 text-green-300 hover:bg-black/50 border-green-400/30 hover:border-green-300/50 shadow-lg hover:shadow-xl"
+                                                        : "bg-white/40 text-green-700 hover:bg-white/50 border-green-400/30 hover:border-green-300/50 shadow-lg hover:shadow-xl"
+                                                )}
+                                                onClick={() => handleCreateIssue(false)}
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                                <PlusIcon className="h-6 w-6 relative z-10" />
+                                                <span className="relative z-10">Publish New Container</span>
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Dockerfile Preview */}
+                                <div className={cn(
+                                    "rounded-lg border backdrop-blur-sm overflow-hidden",
+                                    isDark ? "bg-black/20 border-white/10" : "bg-white/20 border-white/20"
+                                )}>
+                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4">
+                                        <h3 className={cn(
+                                            "text-lg font-medium flex items-center gap-2",
+                                            isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]"
+                                        )}>
+                                            <DocumentTextIcon className={iconStyles(isDark, 'md')} />
+                                            Generated Dockerfile
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2 sm:gap-2">
+                                            <button
+                                                onClick={copyDockerfileToClipboard}
+                                                className={cn(
+                                                    "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                                                    copiedDockerfile
+                                                        ? (isDark ? "bg-[#6ea232] text-white" : "bg-[#4f7b38] text-white")
+                                                        : (isDark
+                                                            ? "bg-black/30 text-[#91c84a] hover:bg-black/40 border border-white/10"
+                                                            : "bg-white/30 text-[#4f7b38] hover:bg-white/40 border border-white/20")
+                                                )}
+                                            >
+                                                <ClipboardDocumentIcon className="h-4 w-4" />
+                                                <span>{copiedDockerfile ? "Copied!" : "Copy"}</span>
+                                            </button>
+                                            <button
+                                                onClick={() => setShowDockerfile(!showDockerfile)}
+                                                className={cn(
+                                                    "px-3 py-2 rounded-lg text-sm font-medium transition-colors border",
+                                                    isDark
+                                                        ? "text-[#91c84a] hover:text-[#c4e382] hover:bg-black/30 border-white/10"
+                                                        : "text-[#4f7b38] hover:text-[#2d4222] hover:bg-white/40 border-white/20"
+                                                )}
+                                            >
+                                                {showDockerfile ? "Hide" : "Show"} Dockerfile
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {showDockerfile && validationResult.dockerfile && (
+                                        <div>
+                                            <div className={cn(
+                                                "px-4 py-2 flex items-center justify-between border-t",
+                                                isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-white/10"
+                                            )}>
+                                                <span className={cn(
+                                                    "text-sm font-medium",
+                                                    isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]"
+                                                )}>Dockerfile</span>
+                                                <span className={cn(
+                                                    "text-xs",
+                                                    isDark ? "text-[#91c84a]" : "text-[#4f7b38]"
+                                                )}>{validationResult.dockerfile.split('\n').length} lines</span>
+                                            </div>
+                                            <pre className={cn(
+                                                "p-3 sm:p-4 overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto",
+                                                "break-words whitespace-pre-wrap text-xs sm:text-sm leading-relaxed",
+                                                isDark ? "text-[#c4e382]" : "text-[#2d4222]"
+                                            )} style={{ fontFamily: 'Monaco, "Courier New", monospace' }}>
+                                                {validationResult.dockerfile}
+                                            </pre>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Additional Information */}
+                                {validationResult.readme && (
+                                    <div className={cn(
+                                        "rounded-lg border backdrop-blur-sm p-4",
+                                        isDark ? "bg-black/20 border-white/10" : "bg-white/20 border-white/20"
+                                    )}>
+                                        <h3 className={cn(
+                                            "text-lg font-medium mb-3",
+                                            isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]"
+                                        )}>Build Information</h3>
+                                        <pre className={cn(
+                                            "text-sm whitespace-pre-wrap break-words overflow-x-auto",
+                                            isDark ? "text-[#c4e382]" : "text-[#2d4222]"
+                                        )}>
+                                            {validationResult.readme}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
