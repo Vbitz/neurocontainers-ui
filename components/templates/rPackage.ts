@@ -156,17 +156,13 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
         // Install system dependencies if any
         if (systemPackages.length > 0) {
             directives.push({
-                install: {
-                    packages: systemPackages
-                }
+                install: systemPackages
             });
         }
 
         // Install R with specified version
         directives.push({
-            install: {
-                packages: [`r-base=${rVersion}*`, 'r-base-dev']
-            }
+            install: [`r-base=${rVersion}*`, 'r-base-dev']
         });
 
         // Install additional CRAN packages
@@ -181,9 +177,7 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
             ].join('\\n');
 
             directives.push({
-                run_command: {
-                    command: rInstallScript
-                }
+                run: [rInstallScript]
             });
         }
 
@@ -201,9 +195,7 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
             ].join('\\n');
 
             directives.push({
-                run_command: {
-                    command: biocInstallScript
-                }
+                run: [biocInstallScript]
             });
         }
 
@@ -219,9 +211,7 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
         ].join('\\n');
 
         directives.push({
-            run_command: {
-                command: mainPackageInstall
-            }
+            run: [mainPackageInstall]
         });
 
         // Add deployment info if scripts are specified
