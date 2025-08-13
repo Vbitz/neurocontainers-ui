@@ -81,7 +81,7 @@ export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
                 kind: "neurodocker",
                 "base-image": "ubuntu:24.04",
                 "pkg-manager": "apt",
-                directives: createDefaultDirectives()
+                directives: [...createDefaultDirectives()]
             },
             categories: Array.isArray(values.categories) ? values.categories : ['utilities']
         };

@@ -180,8 +180,8 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
         // Create copyright info from license selection
         const copyright: CopyrightInfo[] = values.license ? [values.license as CopyrightInfo] : [];
 
-        // Create directives - start with default directives (Deploy and Test)
-        const directives = [...createDefaultDirectives()];
+        // Create directives - will add default directives at the end
+        const directives = [];
 
         // Add miniconda with conda packages first
         const minicondaDirective: {
@@ -259,6 +259,9 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
                 ].join('\n')
             }
         });
+
+        // Add default directives at the end
+        directives.push(...createDefaultDirectives());
 
         const structured_readme = {
             description: String(values.description || ''),
