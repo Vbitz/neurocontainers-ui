@@ -19,7 +19,8 @@ import { cn } from "@/lib/styles";
 import { LicenseSection } from "@/components/ui";
 import PackageTagEditor from "@/components/ui/PackageTagEditor";
 import TagEditor from "@/components/ui/TagEditor";
-import { InlineTemplateDescription } from "@/components/ui/InlineTemplateDescription";
+import { HelpSection } from "@/components/ui/HelpSection";
+import templateSelectionHelpMarkdown from "@/copy/help/ui/template-selection.md";
 import { loadPackageDatabase } from "@/lib/packages";
 
 interface GuidedTourProps {
@@ -118,6 +119,23 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
         resetTour();
         onClose();
     }, [resetTour, onClose]);
+
+    // Handle escape key
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && isOpen) {
+                handleClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, handleClose]);
 
     const validateField = useCallback(
         (
@@ -256,6 +274,14 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
             const error = validationErrors[field.id];
 
             const fieldClass = cn(
+                "w-full px-3 py-2 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2",
+                error
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-green-500",
+                isDark ? "bg-white/5 text-white" : "bg-white text-gray-900"
+            );
+
+            const selectClass = cn(
                 "w-full px-3 py-2 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2",
                 error
                     ? "border-red-500 focus:ring-red-500"
@@ -403,10 +429,14 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                         <select
                             value={typeof value === "string" ? value : ""}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                            className={fieldClass}
+                            className={selectClass}
                         >
                             {field.options?.map((option) => (
-                                <option key={option.value} value={option.value}>
+                                <option 
+                                    key={option.value} 
+                                    value={option.value}
+                                    className={isDark ? "bg-gray-800 text-white" : "bg-white text-gray-900"}
+                                >
                                     {option.label}
                                 </option>
                             ))}
@@ -467,6 +497,8 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
 
             {/* Modal content */}
             <div
+                role="dialog"
+                aria-labelledby="guided-tour-title"
                 className={cn(
                     "relative max-w-5xl w-full max-h-[88vh] overflow-y-auto rounded-xl shadow-2xl border backdrop-blur-sm",
                     isDark 
@@ -487,6 +519,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                             isDark ? "text-[#91c84a]" : "text-[#6aa329]"
                         )} />
                         <h2
+                            id="guided-tour-title"
                             className={cn(
                                 "text-lg font-semibold",
                                 isDark ? "text-white" : "text-gray-900"
@@ -512,14 +545,10 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                 <div className="px-5 py-5 space-y-5">
                     {currentStep === 0 && (
                         <div className="space-y-5">
-                            <h3
-                                className={cn(
-                                    "text-lg font-medium",
-                                    isDark ? "text-white" : "text-gray-900"
-                                )}
-                            >
-                                Choose a Template
-                            </h3>
+                            <HelpSection
+                                markdownContent={templateSelectionHelpMarkdown}
+                                sourceFilePath="copy/help/ui/template-selection.md"
+                            />
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {GUIDED_TOUR_TEMPLATES.map((template) => (
                                     <button
@@ -562,9 +591,10 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                             
                             {/* Show template details inline */}
                             {selectedTemplate.detailedDescription && (
-                                <InlineTemplateDescription
+                                <HelpSection
                                     markdownContent={selectedTemplate.detailedDescription}
                                     className="mb-4"
+                                    sourceFilePath={`copy/templates/${selectedTemplate.id.replace('-', '-')}.md`}
                                 />
                             )}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -577,8 +607,12 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                                             </div>
                                         );
                                     }
-                                    // Name + Version on same row
+                                    // Container Name and Version on same row
                                     if (field.id === "containerName" || field.id === "version") {
+                                        return renderField(field);
+                                    }
+                                    // R Package Name on same row as R Version for R templates
+                                    if (selectedTemplate.id === 'r-package' && (field.id === "rPackageName" || field.id === "rVersion")) {
                                         return renderField(field);
                                     }
                                     // All others full width

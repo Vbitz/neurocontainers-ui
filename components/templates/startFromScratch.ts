@@ -62,7 +62,7 @@ export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
     generateRecipe: (values: Record<string, string | string[] | object | null>): ContainerRecipe => {
         const structured_readme = {
             description: String(values.description || ''),
-            example: `# Example usage\n\n\`\`\`bash\n# Run the containerized tool\ndocker run --rm ${values.containerName}:${values.version}\n\`\`\``,
+            example: `# Example usage\n\n\`\`\`bash\n# Run the containerized tool (assuming you are already inside the container)\n${values.containerName} --help\n\`\`\``,
             documentation: `This container was created from scratch.`,
             citation: `Please cite appropriately when using this container.`
         };

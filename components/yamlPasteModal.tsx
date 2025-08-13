@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
     ExclamationTriangleIcon,
     DocumentTextIcon,
@@ -110,6 +110,23 @@ export default function YamlPasteModal({
         resetValidation();
     };
 
+    // Handle escape key
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && isOpen) {
+                handleClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, handleClose]);
+
     if (!isOpen) return null;
 
     return (
@@ -135,6 +152,8 @@ export default function YamlPasteModal({
             {/* Modal */}
             <div
                 ref={modalRef}
+                role="dialog"
+                aria-labelledby="modal-title"
                 className={cn(
                     "relative max-w-4xl w-full max-h-[88vh] overflow-y-auto rounded-xl shadow-2xl border backdrop-blur-sm p-6 sm:p-8",
                     isDark 
@@ -145,6 +164,7 @@ export default function YamlPasteModal({
                 {/* Header */}
                 <div className="mb-6">
                     <h3
+                        id="modal-title"
                         className={cn(
                             textStyles(isDark, {
                                 size: "2xl",
@@ -154,7 +174,7 @@ export default function YamlPasteModal({
                             "mb-2"
                         )}
                     >
-                        Paste YAML Recipe
+                        Upload YAML Configuration
                     </h3>
                     <p
                         className={cn(
