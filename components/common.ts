@@ -314,6 +314,29 @@ export function migrateLegacyRecipe(
     return ret;
 }
 
+/**
+ * Creates default directives for new containers.
+ * Includes essential directives like Deploy and Test.
+ */
+export function createDefaultDirectives(): Directive[] {
+    return [
+        // Deploy directive - essential for making tools available
+        {
+            deploy: {
+                path: [],
+                bins: []
+            }
+        } as DeployDirective,
+        // Test directive with builtin test for deploy functionality
+        {
+            test: {
+                name: "Simple Deploy Bins/Path Test",
+                builtin: "test_deploy.sh"
+            }
+        } as TestDirective
+    ];
+}
+
 export async function mergeAdditionalFilesIntoRecipe(recipe: ContainerRecipe, fetchFile: (filename: string) => Promise<string>): Promise<ContainerRecipe> {
     // Look for file directives in the recipe. Make sure to handle group directives.
     // For each file directive if they have a filename then download it and replace the filename with the contents.

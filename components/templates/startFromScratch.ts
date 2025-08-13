@@ -1,4 +1,4 @@
-import { ContainerRecipe, Architecture, convertStructuredReadmeToText } from "@/components/common";
+import { ContainerRecipe, Architecture, convertStructuredReadmeToText, createDefaultDirectives } from "@/components/common";
 import type { ContainerTemplate } from './pythonPackage';
 import startFromScratchMarkdown from "@/copy/templates/start-from-scratch.md";
 
@@ -81,7 +81,7 @@ export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
                 kind: "neurodocker",
                 "base-image": "ubuntu:24.04",
                 "pkg-manager": "apt",
-                directives: []
+                directives: [...createDefaultDirectives()]
             },
             categories: Array.isArray(values.categories) ? values.categories : ['utilities']
         };

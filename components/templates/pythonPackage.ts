@@ -1,4 +1,4 @@
-import { ContainerRecipe, Architecture, CopyrightInfo, convertStructuredReadmeToText } from "@/components/common";
+import { ContainerRecipe, Architecture, CopyrightInfo, convertStructuredReadmeToText, createDefaultDirectives } from "@/components/common";
 import pythonPackageMarkdown from "@/copy/templates/python-package.md";
 
 export interface TemplateField {
@@ -180,7 +180,7 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
         // Create copyright info from license selection
         const copyright: CopyrightInfo[] = values.license ? [values.license as CopyrightInfo] : [];
 
-        // Create directives
+        // Create directives - will add default directives at the end
         const directives = [];
 
         // Add miniconda with conda packages first
@@ -259,6 +259,9 @@ export const PYTHON_PACKAGE_TEMPLATE: ContainerTemplate = {
                 ].join('\n')
             }
         });
+
+        // Add default directives at the end
+        directives.push(...createDefaultDirectives());
 
         const structured_readme = {
             description: String(values.description || ''),
