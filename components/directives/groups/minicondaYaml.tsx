@@ -22,8 +22,8 @@ registerGroupEditor("minicondaYaml", {
         component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
     },
     helpContent() {
-        return <HelpSection 
-            markdownContent={minicondaYamlGroupHelpMarkdown} 
+        return <HelpSection
+            markdownContent={minicondaYamlGroupHelpMarkdown}
             sourceFilePath="copy/help/groups/miniconda-yaml-group.md"
         />;
     },
@@ -86,17 +86,20 @@ dependencies:
     ],
     updateDirective({ environment_yaml, environment_name, install_path, activate_env, mamba, cleanup }) {
         const envName = environment_name as string || "myenv";
-        const solver = mamba ? "mamba" : "conda";
-        
+
         const createCommands = [
             "cp {{ get_file(\"environment.yml\") }} /tmp/environment.yml",
-            `${solver} env create -f /tmp/environment.yml`,
+            // The `conda config` command is used to set channel priority to flexible,
+            // The default in Neurodocker is strict, which can cause issues with some packages.
+            'conda config --set channel_priority flexible',
+            // We use the `conda` command since Neurodocker just sets the solver library rather than installing Mamba.
+            `conda env create -f /tmp/environment.yml`,
         ];
-        
+
         if (cleanup) {
             createCommands.push("rm /tmp/environment.yml");
         }
-        
+
         const directives: Directive[] = [
             {
                 file: {
@@ -116,7 +119,7 @@ dependencies:
                 run: createCommands,
             },
         ];
-        
+
         if (activate_env) {
             directives.push({
                 environment: {
@@ -124,14 +127,14 @@ dependencies:
                     PATH: `${install_path}/envs/${envName}/bin:$PATH`,
                 },
             });
-            
+
             directives.push({
                 run: [
                     `echo "conda activate ${envName}" >> ~/.bashrc`,
                 ],
             });
         }
-        
+
         return {
             group: directives,
             custom: "minicondaYaml",
