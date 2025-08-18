@@ -3,6 +3,7 @@ import {
     Architecture,
     CopyrightInfo,
     convertStructuredReadmeToText,
+    Directive,
 } from "@/components/common";
 import rPackageMarkdown from "@/copy/templates/r-package.md";
 import {
@@ -172,7 +173,7 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
             | [] = values.license ? [values.license as CopyrightInfo] : [];
 
         // Create directives
-        const directives: any[] = [];
+        const directives: Directive[] = [];
 
         // Install system dependencies if any
         if (systemPackages.length > 0) {

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
     ExclamationTriangleIcon,
     DocumentTextIcon,
@@ -104,11 +104,11 @@ export default function YamlPasteModal({
         }
     };
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         onClose();
         setYamlContent("");
         resetValidation();
-    };
+    }, [onClose]);
 
     // Handle escape key
     useEffect(() => {
@@ -156,8 +156,8 @@ export default function YamlPasteModal({
                 aria-labelledby="modal-title"
                 className={cn(
                     "relative max-w-4xl w-full max-h-[88vh] overflow-y-auto rounded-xl shadow-2xl border backdrop-blur-sm p-6 sm:p-8",
-                    isDark 
-                        ? "bg-black/40 border-white/20 shadow-black/50" 
+                    isDark
+                        ? "bg-black/40 border-white/20 shadow-black/50"
                         : "bg-white/90 border-gray-200/50 shadow-black/20"
                 )}
             >
