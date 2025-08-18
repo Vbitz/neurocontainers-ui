@@ -1,6 +1,15 @@
-import { ContainerRecipe, Architecture, CopyrightInfo, convertStructuredReadmeToText } from "@/components/common";
+import {
+    ContainerRecipe,
+    Architecture,
+    CopyrightInfo,
+    convertStructuredReadmeToText,
+} from "@/components/common";
 import rPackageMarkdown from "@/copy/templates/r-package.md";
-import { validateGitHubUrl, validateContainerName, validateVersion } from "./pythonPackage";
+import {
+    validateGitHubUrl,
+    validateContainerName,
+    validateVersion,
+} from "./pythonPackage";
 import type { ContainerTemplate } from "./pythonPackage";
 
 // R Package specific validation
@@ -18,163 +27,244 @@ export const validateRPackageName = (name: string): string | null => {
 export const extractRPackageName = (githubUrl: string): string => {
     const repoMatch = githubUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
     if (repoMatch && repoMatch[2]) {
-        return repoMatch[2].replace(/\.git$/, '');
+        return repoMatch[2].replace(/\.git$/, "");
     }
-    return 'MyRPackage';
+    return "MyRPackage";
 };
 
 // R Package Template
 export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
-    id: 'r-package',
-    name: 'R Package from GitHub',
-    description: 'Create a container for an R package hosted on GitHub with CRAN and Bioconductor support',
+    id: "r-package",
+    name: "R Package from GitHub",
+    description:
+        "Create a container for an R package hosted on GitHub with CRAN and Bioconductor support",
     detailedDescription: rPackageMarkdown,
-    icon: '📊',
-    category: 'Programming',
+    icon: "📊",
+    category: "Programming",
     fields: [
         {
-            id: 'githubUrl',
-            label: 'GitHub Repository URL',
-            type: 'url',
+            id: "githubUrl",
+            label: "GitHub Repository URL",
+            type: "url",
             required: true,
-            placeholder: 'https://github.com/user/MyRPackage',
-            description: 'The GitHub repository URL for the R package you want to containerize',
+            placeholder: "https://github.com/user/MyRPackage",
+            description:
+                "The GitHub repository URL for the R package you want to containerize",
             validation: validateGitHubUrl,
         },
         {
-            id: 'containerName',
-            label: 'Container Name',
-            type: 'text',
+            id: "containerName",
+            label: "Container Name",
+            type: "text",
             required: true,
-            placeholder: 'myrpackage',
-            description: 'A unique name for your container (lowercase letters and numbers only)',
+            placeholder: "myrpackage",
+            description:
+                "A unique name for your container (lowercase letters and numbers only)",
             validation: validateContainerName,
         },
         {
-            id: 'rPackageName',
-            label: 'R Package Name',
-            type: 'text',
+            id: "rPackageName",
+            label: "R Package Name",
+            type: "text",
             required: true,
-            placeholder: 'MyRPackage',
-            description: 'The name of the R package (as it appears in DESCRIPTION file)',
+            placeholder: "MyRPackage",
+            description:
+                "The name of the R package (as it appears in DESCRIPTION file)",
             validation: validateRPackageName,
         },
         {
-            id: 'version',
-            label: 'Version',
-            type: 'text',
+            id: "version",
+            label: "Version",
+            type: "text",
             required: true,
-            placeholder: '1.0.0',
-            description: 'Version number for your container',
+            placeholder: "1.0.0",
+            description: "Version number for your container",
             validation: validateVersion,
         },
         {
-            id: 'license',
-            label: 'License',
-            type: 'license',
+            id: "license",
+            label: "License",
+            type: "license",
             required: true,
-            description: 'Choose the license for your container',
+            description: "Choose the license for your container",
         },
         {
-            id: 'description',
-            label: 'Description',
-            type: 'textarea',
+            id: "description",
+            label: "Description",
+            type: "textarea",
             required: true,
-            placeholder: 'Brief description of what this R package does...',
-            description: 'A clear description of what your R package does and its purpose',
+            placeholder:
+                "Brief description of what this R package does and its purpose",
+            description:
+                "A clear description of what your R package does and its purpose",
         },
         {
-            id: 'cranPackages',
-            label: 'Additional CRAN Packages',
-            type: 'string-list',
+            id: "cranPackages",
+            label: "Additional CRAN Packages",
+            type: "string-list",
             required: false,
-            placeholder: 'Add CRAN package name...',
-            description: 'Additional CRAN packages to install (e.g., ggplot2, dplyr, tidyr)',
+            placeholder: "Add CRAN package name...",
+            description:
+                "Additional CRAN packages to install (e.g., ggplot2, dplyr, tidyr)",
         },
         {
-            id: 'biocPackages',
-            label: 'Bioconductor Packages',
-            type: 'string-list',
+            id: "biocPackages",
+            label: "Bioconductor Packages",
+            type: "string-list",
             required: false,
-            placeholder: 'Add Bioconductor package name...',
-            description: 'Bioconductor packages to install (e.g., GenomicRanges, DESeq2)',
+            placeholder: "Add Bioconductor package name...",
+            description:
+                "Bioconductor packages to install (e.g., GenomicRanges, DESeq2)",
         },
         {
-            id: 'systemPackages',
-            label: 'System Dependencies',
-            type: 'packages',
+            id: "systemPackages",
+            label: "System Dependencies",
+            type: "packages",
             required: false,
-            placeholder: 'Add system package name...',
-            description: 'System packages needed for compilation (e.g., libxml2-dev, libcurl4-openssl-dev)',
-            packageType: 'ubuntu',
+            placeholder: "Add system package name...",
+            description:
+                "System packages needed for compilation (e.g., libxml2-dev, libcurl4-openssl-dev)",
+            packageType: "ubuntu",
         },
         {
-            id: 'deployBins',
-            label: 'Deploy Scripts',
-            type: 'string-list',
+            id: "deployBins",
+            label: "Deploy Scripts",
+            type: "string-list",
             required: false,
-            placeholder: 'Add script name...',
-            description: 'R scripts or shell scripts that should be available as commands (e.g., run-analysis.R)',
+            placeholder: "Add script name...",
+            description:
+                "R scripts or shell scripts that should be available as commands (e.g., run-analysis.R)",
         },
         {
-            id: 'categories',
-            label: 'Categories',
-            type: 'categories',
+            id: "categories",
+            label: "Categories",
+            type: "categories",
             required: true,
-            description: 'Select categories that best describe your container',
+            description:
+                "Select categories that best describe your container",
         },
     ],
-    generateRecipe: (values: Record<string, string | string[] | object | null>): ContainerRecipe => {
-        const githubUrl = String(values.githubUrl || '').trim();
-        const rPackageName = String(values.rPackageName || extractRPackageName(githubUrl));
+    generateRecipe: (
+        values: Record<string, string | string[] | object | null>
+    ): ContainerRecipe => {
+        const githubUrl = String(values.githubUrl || "").trim();
+        const rPackageName = String(
+            values.rPackageName || extractRPackageName(githubUrl)
+        );
 
         // Parse packages from arrays
-        const cranPackages = Array.isArray(values.cranPackages) ? values.cranPackages : [];
-        const biocPackages = Array.isArray(values.biocPackages) ? values.biocPackages : [];
-        const systemPackages = Array.isArray(values.systemPackages) ? values.systemPackages : [];
-        const deployBins = Array.isArray(values.deployBins) ? values.deployBins : [];
+        const cranPackages = Array.isArray(values.cranPackages)
+            ? values.cranPackages
+            : [];
+        const biocPackages = Array.isArray(values.biocPackages)
+            ? values.biocPackages
+            : [];
+        const systemPackages = Array.isArray(values.systemPackages)
+            ? values.systemPackages
+            : [];
+        const deployBins = Array.isArray(values.deployBins)
+            ? values.deployBins
+            : [];
 
         // Create copyright info from license selection
-        const copyright: CopyrightInfo[] = values.license ? [values.license as CopyrightInfo] : [];
+        const copyright:
+            | CopyrightInfo[]
+            | [] = values.license ? [values.license as CopyrightInfo] : [];
 
         // Create directives
-        const directives = [];
+        const directives: any[] = [];
 
         // Install system dependencies if any
         if (systemPackages.length > 0) {
             directives.push({
-                install: systemPackages
+                install: systemPackages,
             });
         }
 
-        // Install R with specified version
+        // Install R base
         directives.push({
-            install: [`r-base`, 'r-base-dev']
+            install: ["r-base", "r-base-dev"],
         });
 
-        // Build consolidated R installation script
-        const rInstallCommands = [];
+        // Helper to safely create R string literals within single quotes
+        const toRString = (s: string) =>
+            `'${String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
 
-        // Add CRAN packages installation if any
+        // Normalize "owner/repo" from the GitHub URL for remotes::install_github
+        const ownerRepo = (() => {
+            try {
+                const u = new URL(githubUrl);
+                const parts = u.pathname
+                    .replace(/^\/|\/$/g, "")
+                    .replace(/\.git$/i, "")
+                    .split("/");
+                return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : githubUrl;
+            } catch {
+                return githubUrl
+                    .replace(/^https?:\/\/github\.com\//i, "")
+                    .replace(/\.git$/i, "")
+                    .replace(/\/+$/g, "");
+            }
+        })();
+
+        // Build consolidated R installation scripts
+
+        const rInstallCommands: string[] = [];
+
+        // Add CRAN packages installation if any (install only missing)
         if (cranPackages.length > 0) {
-            const cranScript = `R --slave -e "packages <- c(${cranPackages.map(pkg => `'${pkg}'`).join(', ')}); install.packages(packages, repos='https://cloud.r-project.org/', dependencies=TRUE); cat('Installed CRAN packages:\\n'); cat(paste(packages, collapse=', '), '\\n')"`;
+            const cranPkgsR = cranPackages.map(toRString).join(", ");
+            const cranScript = [
+                'R --slave -e "',
+                "options(repos = c(CRAN = 'https://cloud.r-project.org'));",
+                `pkgs <- c(${cranPkgsR});`,
+                "mis <- setdiff(pkgs, rownames(installed.packages()));",
+                "if (length(mis)) install.packages(mis, dependencies = TRUE);",
+                "cat('Installed CRAN packages:\\n');",
+                "if (length(pkgs)) cat(paste(pkgs, collapse = ', '), '\\n')",
+                '"',
+            ].join(" ");
             rInstallCommands.push(cranScript);
         }
 
-        // Add Bioconductor packages installation if any
+        // Add Bioconductor packages installation if any (install only missing)
         if (biocPackages.length > 0) {
-            const biocScript = `R --slave -e "if (!require('BiocManager', quietly = TRUE)) install.packages('BiocManager', repos='https://cloud.r-project.org/'); packages <- c(${biocPackages.map(pkg => `'${pkg}'`).join(', ')}); BiocManager::install(packages); cat('Installed Bioconductor packages:\\n'); cat(paste(packages, collapse=', '), '\\n')"`;
+            const biocPkgsR = biocPackages.map(toRString).join(", ");
+            const biocScript = [
+                'R --slave -e "',
+                "options(repos = c(CRAN = 'https://cloud.r-project.org'));",
+                "if (!requireNamespace('BiocManager', quietly = TRUE)) ",
+                "  install.packages('BiocManager');",
+                `pkgs <- c(${biocPkgsR});`,
+                "mis <- setdiff(pkgs, rownames(installed.packages()));",
+                "if (length(mis)) ",
+                "  BiocManager::install(mis, ask = FALSE, update = FALSE);",
+                "cat('Installed Bioconductor packages:\\n');",
+                "if (length(pkgs)) cat(paste(pkgs, collapse = ', '), '\\n')",
+                '"',
+            ].join(" ");
             rInstallCommands.push(biocScript);
         }
 
-        // Add main package installation from GitHub
-        const mainPackageScript = `R --slave -e "if (!require('devtools', quietly = TRUE)) install.packages('devtools', repos='https://cloud.r-project.org/'); devtools::install_github('${githubUrl.replace('https://github.com/', '')}', dependencies=TRUE, upgrade='never'); cat('Installed ${rPackageName} from GitHub\\n')"`;
+        // Add main package installation from GitHub using remotes (lighter than devtools)
+        const mainPackageScript = [
+            'R --slave -e "',
+            "options(repos = c(CRAN = 'https://cloud.r-project.org'));",
+            "if (!requireNamespace('remotes', quietly = TRUE)) ",
+            "  install.packages('remotes');",
+            `remotes::install_github('${ownerRepo}', `,
+            "  dependencies = NA, upgrade = 'never', build_vignettes = FALSE",
+            ");",
+            `cat('Installed ${rPackageName} from GitHub (', '${ownerRepo}', `,
+            ")\\n')",
+            '"',
+        ].join(" ");
         rInstallCommands.push(mainPackageScript);
 
         // Add single consolidated run directive if there are any R commands
         if (rInstallCommands.length > 0) {
             directives.push({
-                run: rInstallCommands
+                run: rInstallCommands,
             });
         }
 
@@ -182,10 +272,15 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
         if (deployBins.length > 0) {
             directives.push({
                 deploy: {
-                    bins: deployBins
-                }
+                    bins: deployBins,
+                },
             });
         }
+
+        // Pre-compute key packages for test
+        const keyPackagesR = [...cranPackages, ...biocPackages]
+            .map(toRString)
+            .join(", ");
 
         // Add comprehensive test
         directives.push({
@@ -201,7 +296,7 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
                     `  `,
                     `  # Test main package`,
                     `  tryCatch({`,
-                    `    library(${rPackageName})`,
+                    `    library("${rPackageName}")`,
                     `    cat('Successfully loaded ${rPackageName}\\n')`,
                     `    `,
                     `    # Try to get package info`,
@@ -211,13 +306,14 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
                     `      cat('Package title:', pkg_info[['Title']], '\\n')`,
                     `    }`,
                     `  }, error = function(e) {`,
-                    `    cat('Warning: Could not load ${rPackageName}:', e[['message']], '\\n')`,
+                    `    cat('Warning: Could not load ${rPackageName}:', `,
+                    `        e[['message']], '\\n')`,
                     `    cat('Installed packages:\\n')`,
                     `    print(installed.packages()[,c('Package', 'Version')])`,
                     `  })`,
                     `  `,
                     `  # List key installed packages`,
-                    `  key_packages <- c(${[...cranPackages, ...biocPackages].map(pkg => `"${pkg}"`).join(', ')})`,
+                    `  key_packages <- c(${keyPackagesR})`,
                     `  if (length(key_packages) > 0) {`,
                     `    cat('Checking additional packages:\\n')`,
                     `    for (pkg in key_packages) {`,
@@ -228,20 +324,28 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
                     `      }`,
                     `    }`,
                     `  }`,
-                    `"`
-                ].join('\n')
-            }
+                    `"`,
+                ].join("\n"),
+            },
         });
 
         const structured_readme = {
-            description: String(values.description || ''),
-            example: `# Example usage\n\n\`\`\`bash\n# Run R interactively in the container\ndocker run --rm -it ${values.containerName}:${values.version} R\n\n# Execute an R script\ndocker run --rm -v /path/to/your/script.R:/script.R ${values.containerName}:${values.version} Rscript /script.R\n\n# Test that the package is available\ndocker run --rm ${values.containerName}:${values.version} R --slave -e "library(${rPackageName}); cat('${rPackageName} is available!\\\\n')"\n${deployBins.length > 0 ? `\n# Use deployed scripts\n${deployBins.map(bin => `docker run --rm ${values.containerName}:${values.version} ${bin}`).join('\n')}` : ''}\n\`\`\``,
-            documentation: `This container includes:\n- R\n- The R package ${rPackageName} from ${githubUrl}\n- Additional CRAN packages: ${cranPackages.join(', ') || 'none'}\n- Additional Bioconductor packages: ${biocPackages.join(', ') || 'none'}\n- System dependencies: ${systemPackages.join(', ') || 'none'}\n- Deployed scripts: ${deployBins.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
-            citation: `Please cite the original authors of the ${rPackageName} package when using this container. Repository: ${githubUrl}`
+            description: String(values.description || ""),
+            example: "",
+            documentation: `This container includes:
+- R
+- The R package ${rPackageName} from ${githubUrl}
+- Additional CRAN packages: ${cranPackages.join(", ") || "none"}
+- Additional Bioconductor packages: ${biocPackages.join(", ") || "none"}
+- System dependencies: ${systemPackages.join(", ") || "none"}
+- Deployed scripts: ${deployBins.join(", ") || "none"}
+
+For detailed package documentation, see: ${githubUrl}`,
+            citation: `Please cite the original authors of the ${rPackageName} package when using this container. Repository: ${githubUrl}`,
         };
 
-        const containerName = String(values.containerName || '');
-        const version = String(values.version || '');
+        const containerName = String(values.containerName || "");
+        const version = String(values.version || "");
 
         return {
             name: containerName,
@@ -249,14 +353,20 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
             copyright,
             architectures: ["x86_64"] as Architecture[],
             structured_readme,
-            readme: convertStructuredReadmeToText(structured_readme, containerName, version),
+            readme: convertStructuredReadmeToText(
+                structured_readme,
+                containerName,
+                version
+            ),
             build: {
                 kind: "neurodocker",
                 "base-image": "ubuntu:24.04",
                 "pkg-manager": "apt",
-                directives
+                directives,
             },
-            categories: Array.isArray(values.categories) ? values.categories : ['programming']
+            categories: Array.isArray(values.categories)
+                ? values.categories
+                : ["programming"],
         };
-    }
+    },
 };
