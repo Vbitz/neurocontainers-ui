@@ -6,6 +6,7 @@ import {
 import { Directive } from "@/components/common";
 import DirectiveComponent from "@/components/directives/factory";
 import AddDirectiveButton from "@/components/add";
+import QuickAddRunButton from "@/components/QuickAddRunButton";
 import { iconStyles, textStyles, buttonStyles, cn } from "@/lib/styles";
 import { HelpSection } from "@/components/ui/HelpSection";
 import directivesListHelpMarkdown from "@/copy/help/ui/directives-list.md";
@@ -222,16 +223,28 @@ export default function DirectivesList({
 
             <div className="space-y-2">
                 {directives.length === 0 ? (
-                    <AddDirectiveButton
-                        onAddDirective={handleAddDirective}
-                        variant="empty"
-                        index={0}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <AddDirectiveButton
+                            onAddDirective={handleAddDirective}
+                            variant="empty"
+                            index={0}
+                        />
+                        <QuickAddRunButton
+                            onAddDirective={handleAddDirective}
+                            variant="empty"
+                            index={0}
+                        />
+                    </div>
                 ) : (
                     <>
                         {/* First add button - only shows when there are directives */}
-                        <div className="py-1">
+                        <div className="py-1 flex gap-2">
                             <AddDirectiveButton
+                                onAddDirective={handleAddDirective}
+                                variant="inline"
+                                index={0}
+                            />
+                            <QuickAddRunButton
                                 onAddDirective={handleAddDirective}
                                 variant="inline"
                                 index={0}
@@ -273,8 +286,13 @@ export default function DirectivesList({
                                 </div>
 
                                 {/* Add button after this directive */}
-                                <div className="py-1">
+                                <div className="py-1 flex gap-2">
                                     <AddDirectiveButton
+                                        onAddDirective={handleAddDirective}
+                                        variant="inline"
+                                        index={index + 1}
+                                    />
+                                    <QuickAddRunButton
                                         onAddDirective={handleAddDirective}
                                         variant="inline"
                                         index={index + 1}
