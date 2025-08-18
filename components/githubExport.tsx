@@ -2,6 +2,7 @@ import { ExclamationCircleIcon, PencilIcon, PlusIcon, ChevronDownIcon, ChevronUp
 import { useRef, useState, useEffect } from "react";
 import { ContainerRecipe, NEUROCONTAINERS_REPO } from "./common";
 import { useGitHubFiles } from '@/lib/useGithub';
+import { regenerateRecipe } from "@/lib/regenerateRecipe";
 import * as pako from "pako";
 import { iconStyles, textStyles, cn, cardStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
@@ -39,11 +40,13 @@ export default function GitHubModal({
     };
 
     // GitHub issues have URL length limits, so we need to handle large YAML content
+    // Regenerate the recipe before creating issue
+    const regeneratedRecipe = yamlData ? regenerateRecipe(yamlData) : null;
     const compressedYaml = yamlText ? compressToBase64(yamlText) : '';
-    const issueBodyWithYaml = yamlData ? `### ${containerExists ? 'Update' : 'Add'} Container Request
+    const issueBodyWithYaml = regeneratedRecipe ? `### ${containerExists ? 'Update' : 'Add'} Container Request
 
-**Container Name:** ${yamlData.name}
-**Version:** ${yamlData.version || 'latest'}
+**Container Name:** ${regeneratedRecipe.name}
+**Version:** ${regeneratedRecipe.version || 'latest'}
 
 This is an automated contribution request to ${containerExists ? 'update' : 'add'} the container recipe.
 
@@ -72,15 +75,18 @@ ${compressedYaml}
     const handleCreateIssue = (isUpdate: boolean = false) => {
         if (!yamlData) return;
 
+        // Use regenerated recipe for publishing
+        const regeneratedRecipe = regenerateRecipe(yamlData);
+        
         const action = isUpdate ? 'Update' : 'Add';
-        const issueTitle = `[CONTRIBUTION] ${action} ${yamlData.name} container`;
+        const issueTitle = `[CONTRIBUTION] ${action} ${regeneratedRecipe.name} container`;
 
         let issueBody;
         if (isContentTooLarge) {
             issueBody = `### ${action} Container Request
 
-**Container Name:** ${yamlData.name}
-**Version:** ${yamlData.version || 'latest'}
+**Container Name:** ${regeneratedRecipe.name}
+**Version:** ${regeneratedRecipe.version || 'latest'}
 
 This is an automated contribution request to ${isUpdate ? 'update' : 'add'} the container recipe.
 

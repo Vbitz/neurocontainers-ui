@@ -20,6 +20,7 @@ import { getCards, iconStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 import { ValidationResult } from "@/types/validation";
 import { useGitHubFiles } from '@/lib/useGithub';
+import { regenerateRecipe } from "@/lib/regenerateRecipe";
 import pako from "pako";
 
 export default function ContainerValidator({
@@ -122,7 +123,9 @@ export default function ContainerValidator({
             setValidationResult(null);
             console.log("Starting validation...");
 
-            console.log("Container recipe:", recipe);
+            // Regenerate groups and structured readme before validation
+            const updatedRecipe = regenerateRecipe(recipe);
+            console.log("Container recipe after regeneration:", updatedRecipe);
 
             // Use default build options - no need to expose them to users
             const buildOptions: BuildOptions = {
@@ -131,9 +134,9 @@ export default function ContainerValidator({
                 maxParallelJobs: 4,
             };
             
-            // Generate the container
+            // Generate the container using the regenerated recipe
             const result = await builder.generateFromDescription(
-                recipe,
+                updatedRecipe,
                 "/tmp/build",
                 buildOptions
             );
@@ -235,7 +238,9 @@ export default function ContainerValidator({
     
     // Copy functions
     const copyYamlToClipboard = useCallback(() => {
-        const yamlText = generateYAMLString(recipe);
+        // Regenerate before copying to ensure latest state
+        const updatedRecipe = regenerateRecipe(recipe);
+        const yamlText = generateYAMLString(updatedRecipe);
         navigator.clipboard.writeText(yamlText).then(() => {
             setCopiedYaml(true);
             setTimeout(() => setCopiedYaml(false), 2000);
@@ -255,16 +260,20 @@ export default function ContainerValidator({
     const handleCreateIssue = useCallback((isUpdate: boolean = false) => {
         if (!recipe) return;
 
-        const yamlText = generateYAMLString(recipe);
+        // Regenerate groups and structured readme before publishing
+        const updatedRecipe = regenerateRecipe(recipe);
+        console.log("Publishing recipe after regeneration:", updatedRecipe);
+
+        const yamlText = generateYAMLString(updatedRecipe);
         const compressedYaml = compressToBase64(yamlText);
         
         const action = isUpdate ? 'Update' : 'Add';
-        const issueTitle = `[CONTRIBUTION] ${action} ${recipe.name} container`;
+        const issueTitle = `[CONTRIBUTION] ${action} ${updatedRecipe.name} container`;
         
         const issueBodyWithYaml = `### ${action} Container Request
 
-**Container Name:** ${recipe.name}
-**Version:** ${recipe.version || 'latest'}
+**Container Name:** ${updatedRecipe.name}
+**Version:** ${updatedRecipe.version || 'latest'}
 
 This is an automated contribution request to ${isUpdate ? 'update' : 'add'} the container recipe.
 
@@ -281,8 +290,8 @@ ${compressedYaml}
         if (isContentTooLarge) {
             issueBody = `### ${action} Container Request
 
-**Container Name:** ${recipe.name}
-**Version:** ${recipe.version || 'latest'}
+**Container Name:** ${updatedRecipe.name}
+**Version:** ${updatedRecipe.version || 'latest'}
 
 This is an automated contribution request to ${isUpdate ? 'update' : 'add'} the container recipe.
 
@@ -550,7 +559,7 @@ Please paste the compressed YAML content from your clipboard below:
                                                             "p-4 overflow-x-auto text-xs max-h-64",
                                                             isDark ? "text-gray-300" : "text-gray-700"
                                                         )}>
-                                                            <code>{generateYAMLString(recipe)}</code>
+                                                            <code>{generateYAMLString(regenerateRecipe(recipe))}</code>
                                                         </pre>
                                                     </div>
                                                 )}
