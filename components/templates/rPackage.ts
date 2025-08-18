@@ -69,19 +69,6 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
             validation: validateVersion,
         },
         {
-            id: 'rVersion',
-            label: 'R Version',
-            type: 'select',
-            required: true,
-            description: 'R version to use in the container',
-            options: [
-                { value: '4.4.0', label: 'R 4.4.0 (Latest)' },
-                { value: '4.3.3', label: 'R 4.3.3' },
-                { value: '4.3.0', label: 'R 4.3.0' },
-                { value: '4.2.3', label: 'R 4.2.3' },
-            ],
-        },
-        {
             id: 'license',
             label: 'License',
             type: 'license',
@@ -140,7 +127,6 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
     generateRecipe: (values: Record<string, string | string[] | object | null>): ContainerRecipe => {
         const githubUrl = String(values.githubUrl || '').trim();
         const rPackageName = String(values.rPackageName || extractRPackageName(githubUrl));
-        const rVersion = String(values.rVersion || '4.4.0');
 
         // Parse packages from arrays
         const cranPackages = Array.isArray(values.cranPackages) ? values.cranPackages : [];
@@ -163,7 +149,7 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
 
         // Install R with specified version
         directives.push({
-            install: [`r-base=${rVersion}*`, 'r-base-dev']
+            install: [`r-base`, 'r-base-dev']
         });
 
         // Build consolidated R installation script
@@ -250,7 +236,7 @@ export const R_PACKAGE_TEMPLATE: ContainerTemplate = {
         const structured_readme = {
             description: String(values.description || ''),
             example: `# Example usage\n\n\`\`\`bash\n# Run R interactively in the container\ndocker run --rm -it ${values.containerName}:${values.version} R\n\n# Execute an R script\ndocker run --rm -v /path/to/your/script.R:/script.R ${values.containerName}:${values.version} Rscript /script.R\n\n# Test that the package is available\ndocker run --rm ${values.containerName}:${values.version} R --slave -e "library(${rPackageName}); cat('${rPackageName} is available!\\\\n')"\n${deployBins.length > 0 ? `\n# Use deployed scripts\n${deployBins.map(bin => `docker run --rm ${values.containerName}:${values.version} ${bin}`).join('\n')}` : ''}\n\`\`\``,
-            documentation: `This container includes:\n- R ${rVersion}\n- The R package ${rPackageName} from ${githubUrl}\n- Additional CRAN packages: ${cranPackages.join(', ') || 'none'}\n- Additional Bioconductor packages: ${biocPackages.join(', ') || 'none'}\n- System dependencies: ${systemPackages.join(', ') || 'none'}\n- Deployed scripts: ${deployBins.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
+            documentation: `This container includes:\n- R\n- The R package ${rPackageName} from ${githubUrl}\n- Additional CRAN packages: ${cranPackages.join(', ') || 'none'}\n- Additional Bioconductor packages: ${biocPackages.join(', ') || 'none'}\n- System dependencies: ${systemPackages.join(', ') || 'none'}\n- Deployed scripts: ${deployBins.join(', ') || 'none'}\n\nFor detailed package documentation, see: ${githubUrl}`,
             citation: `Please cite the original authors of the ${rPackageName} package when using this container. Repository: ${githubUrl}`
         };
 
