@@ -5,8 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Directive } from "@/components/common";
 import DirectiveComponent from "@/components/directives/factory";
-import AddDirectiveButton from "@/components/add";
-import QuickAddRunButton from "@/components/QuickAddRunButton";
+import AddDirectiveSection from "@/components/ui/AddDirectiveSection";
 import { iconStyles, textStyles, buttonStyles, cn } from "@/lib/styles";
 import { HelpSection } from "@/components/ui/HelpSection";
 import directivesListHelpMarkdown from "@/copy/help/ui/directives-list.md";
@@ -41,17 +40,22 @@ function DirectiveDeleteModal({
     return (
         <div className={cn(
             "fixed inset-0 flex items-center justify-center z-50 p-4",
-            isDark ? "bg-black/90" : "bg-black/80"
+            "backdrop-blur-sm",
+            isDark ? "bg-black/70" : "bg-black/50"
         )}>
             <div className={cn(
-                "rounded-lg shadow-xl max-w-md w-full",
-                isDark ? "bg-[#161a0e]" : "bg-white"
+                "rounded-2xl shadow-2xl max-w-md w-full border",
+                "backdrop-blur-xl",
+                isDark 
+                    ? "bg-[#161a0e]/95 border-[#2d4222]/50" 
+                    : "bg-white/95 border-gray-200/50"
             )}>
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <div className={cn(
                             "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
-                            isDark ? "bg-red-900/30" : "bg-red-100"
+                            "backdrop-blur-sm",
+                            isDark ? "bg-red-900/40" : "bg-red-100/80"
                         )}>
                             <TrashIcon className={cn(
                                 iconStyles(isDark, 'lg'),
@@ -79,6 +83,19 @@ function DirectiveDeleteModal({
                         >
                             Delete
                         </button>
+                    </div>
+                </div>
+                
+                {/* Footer with shortcuts */}
+                <div className={cn(
+                    "px-6 py-3 border-t text-xs rounded-b-2xl",
+                    "backdrop-blur-sm",
+                    isDark
+                        ? "border-[#2d4222]/50 bg-[#1f2e18]/30 text-[#9ca3af]"
+                        : "border-gray-100/50 bg-[#f8fdf2]/30 text-gray-500"
+                )}>
+                    <div className="text-center">
+                        <span>Press Esc to cancel</span>
                     </div>
                 </div>
             </div>
@@ -223,33 +240,19 @@ export default function DirectivesList({
 
             <div className="space-y-2">
                 {directives.length === 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <AddDirectiveButton
-                            onAddDirective={handleAddDirective}
-                            variant="empty"
-                            index={0}
-                        />
-                        <QuickAddRunButton
-                            onAddDirective={handleAddDirective}
-                            variant="empty"
-                            index={0}
-                        />
-                    </div>
+                    <AddDirectiveSection
+                        onAddDirective={handleAddDirective}
+                        variant="empty"
+                        index={0}
+                    />
                 ) : (
                     <>
-                        {/* First add button - only shows when there are directives */}
-                        <div className="py-1 flex gap-2">
-                            <AddDirectiveButton
-                                onAddDirective={handleAddDirective}
-                                variant="inline"
-                                index={0}
-                            />
-                            <QuickAddRunButton
-                                onAddDirective={handleAddDirective}
-                                variant="inline"
-                                index={0}
-                            />
-                        </div>
+                        {/* First add section - only shows when there are directives */}
+                        <AddDirectiveSection
+                            onAddDirective={handleAddDirective}
+                            variant="inline"
+                            index={0}
+                        />
 
                         {directives.map((directive, index) => (
                             <div key={`directive-${index}`}>
@@ -285,19 +288,12 @@ export default function DirectivesList({
                                     />
                                 </div>
 
-                                {/* Add button after this directive */}
-                                <div className="py-1 flex gap-2">
-                                    <AddDirectiveButton
-                                        onAddDirective={handleAddDirective}
-                                        variant="inline"
-                                        index={index + 1}
-                                    />
-                                    <QuickAddRunButton
-                                        onAddDirective={handleAddDirective}
-                                        variant="inline"
-                                        index={index + 1}
-                                    />
-                                </div>
+                                {/* Add section after this directive */}
+                                <AddDirectiveSection
+                                    onAddDirective={handleAddDirective}
+                                    variant="inline"
+                                    index={index + 1}
+                                />
                             </div>
                         ))}
                     </>

@@ -13,7 +13,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { DirectiveControllers } from "../ui/DirectiveContainer";
 
 // Lazy import to avoid circular dependency
-const AddDirectiveButton = lazy(() => import("@/components/add"));
+const AddDirectiveSection = lazy(() => import("@/components/ui/AddDirectiveSection"));
 
 interface BaseGroupEditorArgument {
     name: string;
@@ -426,7 +426,7 @@ export default function GroupDirectiveComponent({
                 <div className="space-y-2">
                     {group.length === 0 ? (
                         <Suspense fallback={<div>Loading...</div>}>
-                            <AddDirectiveButton
+                            <AddDirectiveSection
                                 onAddDirective={documentationMode ? () => {} : addDirective}
                                 variant="empty"
                                 index={0}
@@ -438,16 +438,14 @@ export default function GroupDirectiveComponent({
                         </Suspense>
                     ) : (
                         <>
-                            {/* First add button - only shows when there are items */}
-                            <div className="py-1">
-                                <Suspense fallback={<div>Loading...</div>}>
-                                    <AddDirectiveButton
-                                        onAddDirective={documentationMode ? () => {} : addDirective}
-                                        variant="inline"
-                                        index={0}
-                                    />
-                                </Suspense>
-                            </div>
+                            {/* First add section - only shows when there are items */}
+                            <Suspense fallback={<div>Loading...</div>}>
+                                <AddDirectiveSection
+                                    onAddDirective={documentationMode ? () => {} : addDirective}
+                                    variant="inline"
+                                    index={0}
+                                />
+                            </Suspense>
 
                             {group.map((directive, index) => (
                                 <div key={index}>
@@ -496,16 +494,14 @@ export default function GroupDirectiveComponent({
                                         </div>
                                     </div>
 
-                                    {/* Add button after this directive */}
-                                    <div className="py-1">
-                                        <Suspense fallback={<div>Loading...</div>}>
-                                            <AddDirectiveButton
-                                                onAddDirective={documentationMode ? () => {} : addDirective}
-                                                variant="inline"
-                                                index={index + 1}
-                                            />
-                                        </Suspense>
-                                    </div>
+                                    {/* Add section after this directive */}
+                                    <Suspense fallback={<div>Loading...</div>}>
+                                        <AddDirectiveSection
+                                            onAddDirective={documentationMode ? () => {} : addDirective}
+                                            variant="inline"
+                                            index={index + 1}
+                                        />
+                                    </Suspense>
                                 </div>
                             ))}
                         </>
@@ -515,23 +511,49 @@ export default function GroupDirectiveComponent({
 
             {/* Delete Confirmation Modal */}
             {deleteConfirmIndex !== null && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div className={cn(
+                    "fixed inset-0 flex items-center justify-center z-50 p-4",
+                    "backdrop-blur-sm",
+                    isDark ? "bg-black/70" : "bg-black/50"
+                )}>
+                    <div className={cn(
+                        "rounded-2xl shadow-2xl max-w-md w-full border",
+                        "backdrop-blur-xl",
+                        isDark 
+                            ? "bg-[#161a0e]/95 border-[#2d4222]/50" 
+                            : "bg-white/95 border-gray-200/50"
+                    )}>
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                                    <TrashIcon className={cn(iconStyles(isDark, 'lg'), "text-red-600")} />
+                                <div className={cn(
+                                    "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
+                                    "backdrop-blur-sm",
+                                    isDark ? "bg-red-900/40" : "bg-red-100/80"
+                                )}>
+                                    <TrashIcon className={cn(
+                                        iconStyles(isDark, 'lg'),
+                                        isDark ? "text-red-400" : "text-red-600"
+                                    )} />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-medium text-gray-900">
+                                    <h3 className={cn(
+                                        "text-lg font-medium",
+                                        isDark ? "text-[#e8f5d0]" : "text-gray-900"
+                                    )}>
                                         Delete Group Item
                                     </h3>
-                                    <p className="text-sm text-gray-500">
+                                    <p className={cn(
+                                        "text-sm",
+                                        isDark ? "text-[#9ca3af]" : "text-gray-500"
+                                    )}>
                                         Item {deleteConfirmIndex + 1} in group
                                     </p>
                                 </div>
                             </div>
-                            <p className="text-gray-700 mb-6">
+                            <p className={cn(
+                                "mb-6",
+                                isDark ? "text-[#9ca3af]" : "text-gray-700"
+                            )}>
                                 Are you sure you want to delete this item from
                                 the group? This action cannot be undone.
                             </p>
@@ -544,7 +566,12 @@ export default function GroupDirectiveComponent({
                                     Cancel
                                 </button>
                                 <button
-                                    className={cn("px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors")}
+                                    className={cn(
+                                        "px-4 py-2 text-sm font-medium text-white rounded-md transition-colors",
+                                        isDark 
+                                            ? "bg-red-600 hover:bg-red-700" 
+                                            : "bg-red-600 hover:bg-red-700"
+                                    )}
                                     onClick={documentationMode ? undefined : () =>
                                         removeDirective(deleteConfirmIndex)
                                     }
@@ -552,6 +579,19 @@ export default function GroupDirectiveComponent({
                                 >
                                     Delete
                                 </button>
+                            </div>
+                        </div>
+                        
+                        {/* Footer with shortcuts */}
+                        <div className={cn(
+                            "px-6 py-3 border-t text-xs rounded-b-2xl",
+                            "backdrop-blur-sm",
+                            isDark
+                                ? "border-[#2d4222]/50 bg-[#1f2e18]/30 text-[#9ca3af]"
+                                : "border-gray-100/50 bg-[#f8fdf2]/30 text-gray-500"
+                        )}>
+                            <div className="text-center">
+                                <span>Press Esc to cancel</span>
                             </div>
                         </div>
                     </div>
