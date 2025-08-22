@@ -1,31 +1,22 @@
 import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
+import type { GroupEditorArgument } from "../group";
 import { HelpSection } from "@/components/ui/HelpSection";
 import minicondaYamlGroupHelpMarkdown from "@/copy/help/groups/miniconda-yaml-group.md";
-import type { Directive } from "@/components/common";
+import { processYamlGroup, YamlGroup } from "@/lib/yamlGroupEditor";
 
-registerGroupEditor("minicondaYaml", {
+// Define the YAML-based Miniconda Environment group
+const minicondaYamlGroupDefinition: YamlGroup = {
     metadata: {
         key: "minicondaYaml",
         label: "Miniconda Environment",
         description: "Install Miniconda and create environment from YAML file",
-        icon: DocumentDuplicateIcon,
-        color: { light: "bg-green-50 border-green-200 hover:bg-green-100", dark: "bg-green-900 border-green-700 hover:bg-green-800" },
-        iconColor: { light: "text-green-600", dark: "text-green-400" },
-        defaultValue: {
-            group: [],
-            custom: "minicondaYaml",
-        },
+        icon: "DocumentDuplicate",
+        color: "green",
+        helpContent: minicondaYamlGroupHelpMarkdown,
+        helpPath: "copy/help/groups/miniconda-yaml-group.md",
         keywords: ["conda", "miniconda", "environment", "yaml", "packages"],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
-    },
-    helpContent() {
-        return <HelpSection
-            markdownContent={minicondaYamlGroupHelpMarkdown}
-            sourceFilePath="copy/help/groups/miniconda-yaml-group.md"
-        />;
     },
     arguments: [
         {
@@ -46,7 +37,6 @@ dependencies:
     - nibabel
     - nilearn`,
             description: "YAML content for the conda environment specification.",
-            multiline: true,
         },
         {
             name: "environment_name",
@@ -84,60 +74,87 @@ dependencies:
             description: "Remove the environment.yml file after environment creation to reduce image size.",
         },
     ],
-    updateDirective({ environment_yaml, environment_name, install_path, activate_env, mamba, cleanup }) {
-        const envName = environment_name as string || "myenv";
-
-        const createCommands = [
-            "cp {{ get_file(\"environment.yml\") }} /tmp/environment.yml",
-            // The `conda config` command is used to set channel priority to flexible,
-            // The default in Neurodocker is strict, which can cause issues with some packages.
-            'conda config --set channel_priority flexible',
-            // We use the `conda` command since Neurodocker just sets the solver library rather than installing Mamba.
-            `conda env create -f /tmp/environment.yml`,
-        ];
-
-        if (cleanup) {
-            createCommands.push("rm /tmp/environment.yml");
-        }
-
-        const directives: Directive[] = [
-            {
-                file: {
-                    name: "environment.yml",
-                    contents: environment_yaml as string,
-                },
+    directives: [
+        {
+            variables: {
+                envName: "{{ local.environment_name }}",
+                envPath: "{{ local.install_path }}/envs/{{ local.environment_name }}",
             },
-            {
-                template: {
-                    name: "miniconda",
-                    version: "latest",
-                    install_path: install_path as string,
-                    mamba: mamba as boolean,
-                },
+        },
+        {
+            file: {
+                name: "environment.yml",
+                contents: "{{ local.environment_yaml }}",
             },
-            {
-                run: createCommands,
+        },
+        {
+            template: {
+                name: "miniconda",
+                version: "latest",
+                install_path: "{{ local.install_path }}",
+                mamba: "{{ local.mamba }}",
             },
-        ];
+        },
+        {
+            run: [
+                "cp {{ get_file(\"environment.yml\") }} /tmp/environment.yml",
+                "conda config --set channel_priority flexible",
+                "conda env create -f /tmp/environment.yml",
+            ],
+        },
+        {
+            run: ["rm /tmp/environment.yml"],
+            condition: "local.cleanup",
+        },
+        {
+            environment: {
+                CONDA_DEFAULT_ENV: "{{ local.envName }}",
+                PATH: "{{ local.envPath }}/bin:$PATH",
+            },
+            condition: "local.activate_env",
+        },
+        {
+            run: ["echo \"conda activate {{ local.envName }}\" >> ~/.bashrc"],
+            condition: "local.activate_env",
+        },
+    ],
+};
 
-        if (activate_env) {
-            directives.push({
-                environment: {
-                    CONDA_DEFAULT_ENV: envName,
-                    PATH: `${install_path}/envs/${envName}/bin:$PATH`,
-                },
-            });
-
-            directives.push({
-                run: [
-                    `echo "conda activate ${envName}" >> ~/.bashrc`,
-                ],
-            });
-        }
-
+// Register the group using the new YAML-based system
+registerGroupEditor("minicondaYaml", {
+    metadata: {
+        key: "minicondaYaml",
+        label: "Miniconda Environment",
+        description: "Install Miniconda and create environment from YAML file",
+        icon: DocumentDuplicateIcon,
+        color: { light: "bg-green-50 border-green-200 hover:bg-green-100", dark: "bg-green-900 border-green-700 hover:bg-green-800" },
+        iconColor: { light: "text-green-600", dark: "text-green-400" },
+        defaultValue: {
+            group: [],
+            custom: "minicondaYaml",
+        },
+        keywords: ["conda", "miniconda", "environment", "yaml", "packages"],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
+    },
+    helpContent() {
+        return <HelpSection
+            markdownContent={minicondaYamlGroupHelpMarkdown}
+            sourceFilePath="copy/help/groups/miniconda-yaml-group.md"
+        />;
+    },
+    arguments: minicondaYamlGroupDefinition.arguments.map(arg => ({
+        ...arg,
+        type: arg.type as "dropdown" | "text" | "array" | "boolean",
+        multiline: arg.name === "environment_yaml" ? true : undefined,
+    })) as GroupEditorArgument[],
+    updateDirective(args: Record<string, unknown>) {
+        // Use the new YAML processor to generate directives
+        const directives = processYamlGroup(minicondaYamlGroupDefinition, args);
+        
         return {
             group: directives,
             custom: "minicondaYaml",
-        }
+        };
     },
 })

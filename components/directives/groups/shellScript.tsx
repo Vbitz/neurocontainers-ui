@@ -1,30 +1,22 @@
 import { FolderIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
+import type { GroupEditorArgument } from "../group";
 import { HelpSection } from "@/components/ui/HelpSection";
 import shellScriptGroupHelpMarkdown from "@/copy/help/groups/shell-script-group.md";
+import { processYamlGroup, YamlGroup } from "@/lib/yamlGroupEditor";
 
-registerGroupEditor("shellScript", {
+// Define the YAML-based Shell Script group
+const shellScriptGroupDefinition: YamlGroup = {
     metadata: {
         key: "shellScript",
         label: "Shell Script",
         description: "Create a shell script",
-        icon: FolderIcon,
-        color: { light: "bg-gray-50 border-gray-200 hover:bg-gray-100", dark: "bg-gray-900 border-gray-700 hover:bg-gray-800" },
-        iconColor: { light: "text-gray-600", dark: "text-gray-400" },
-        defaultValue: {
-            group: [],
-            custom: "shellScript",
-        },
+        icon: "Folder",
+        color: "gray",
+        helpContent: shellScriptGroupHelpMarkdown,
+        helpPath: "copy/help/groups/shell-script-group.md",
         keywords: ["shell", "script", "bash", "sh", "executable"],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
-    },
-    helpContent() {
-        return <HelpSection 
-            markdownContent={shellScriptGroupHelpMarkdown} 
-            sourceFilePath="copy/help/groups/shell-script-group.md"
-        />;
     },
     arguments: [
         {
@@ -47,7 +39,6 @@ registerGroupEditor("shellScript", {
             required: true,
             defaultValue: "#!/bin/bash\n\necho 'Hello, World!'",
             description: "Content of the shell script. This should be a valid shell script.",
-            multiline: true,
         },
         {
             name: "executable",
@@ -71,25 +62,77 @@ registerGroupEditor("shellScript", {
             description: "Register the script as a deploy binary, making it available outside the container.",
         },
     ],
-    updateDirective({ name, path, content, executable, addToPath, makeDeployBin }) {
-        return {
-            group: [
-                {
-                    file: {
-                        name: name as string,
-                        contents: content as string,
-                    },
-                },
-                {
-                    run: [
-                        `cp {{ get_file("${name}") }} ${path}/${name}`,
-                        executable ? `chmod +x ${path}/${name}` : "",
-                    ].filter(Boolean),
-                },
-                ...(addToPath ? [{ environment: { PATH: `$PATH:${path}` } }] : []),
-                ...(makeDeployBin ? [{ deploy: { bins: [name as string], } }] : []),
+    directives: [
+        {
+            variables: {
+                scriptPath: "{{ local.path }}/{{ local.name }}",
+            },
+        },
+        {
+            file: {
+                name: "{{ local.name }}",
+                contents: "{{ local.content }}",
+            },
+        },
+        {
+            run: [
+                "cp {{ get_file(\"{{ local.name }}\") }} {{ local.scriptPath }}",
             ],
+        },
+        {
+            run: ["chmod +x {{ local.scriptPath }}"],
+            condition: "local.executable",
+        },
+        {
+            environment: {
+                PATH: "$PATH:{{ local.path }}",
+            },
+            condition: "local.addToPath",
+        },
+        {
+            deploy: {
+                bins: ["{{ local.name }}"],
+            },
+            condition: "local.makeDeployBin",
+        },
+    ],
+};
+
+// Register the group using the new YAML-based system
+registerGroupEditor("shellScript", {
+    metadata: {
+        key: "shellScript",
+        label: "Shell Script",
+        description: "Create a shell script",
+        icon: FolderIcon,
+        color: { light: "bg-gray-50 border-gray-200 hover:bg-gray-100", dark: "bg-gray-900 border-gray-700 hover:bg-gray-800" },
+        iconColor: { light: "text-gray-600", dark: "text-gray-400" },
+        defaultValue: {
+            group: [],
             custom: "shellScript",
-        }
+        },
+        keywords: ["shell", "script", "bash", "sh", "executable"],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
+    },
+    helpContent() {
+        return <HelpSection 
+            markdownContent={shellScriptGroupHelpMarkdown} 
+            sourceFilePath="copy/help/groups/shell-script-group.md"
+        />;
+    },
+    arguments: shellScriptGroupDefinition.arguments.map(arg => ({
+        ...arg,
+        type: arg.type as "dropdown" | "text" | "array" | "boolean",
+        multiline: arg.name === "content" ? true : undefined,
+    })) as GroupEditorArgument[],
+    updateDirective(args: Record<string, unknown>) {
+        // Use the new YAML processor to generate directives
+        const directives = processYamlGroup(shellScriptGroupDefinition, args);
+        
+        return {
+            group: directives,
+            custom: "shellScript",
+        };
     },
 })
