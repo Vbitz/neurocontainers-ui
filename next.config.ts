@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
       type: 'asset/source',
     });
 
+    // Add rule to import .yaml files as raw text
+    config.module.rules.push({
+      test: /\.ya?ml$/,
+      type: 'asset/source',
+    });
+
     return config;
   },
 };

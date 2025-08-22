@@ -1,0 +1,78 @@
+metadata:
+  key: java
+  label: Java
+  description: Install Java Development Kit (JDK)
+  icon: CodeBracket
+  color: orange
+  helpContent: |
+    # Java Group
+
+    This group installs the Java Development Kit (JDK) or Java Runtime Environment (JRE) for running Java applications.
+
+    ## Options
+
+    - **Version**: Choose the Java version to install (8, 11, 17, 21, or default system version)
+    - **Type**: Select JDK for development or JRE for runtime only
+    - **Set JAVA_HOME**: Automatically configure JAVA_HOME environment variable
+
+    ## Usage
+
+    The Java group will:
+    1. Install the specified Java version and type
+    2. Optionally set JAVA_HOME environment variable
+    3. Add Java binaries to PATH
+  keywords:
+    - java
+    - jdk
+    - openjdk
+    - jre
+    - javac
+    - jar
+
+arguments:
+  - name: version
+    type: dropdown
+    required: true
+    defaultValue: "17"
+    description: Java version to install
+    options:
+      - default
+      - "8"
+      - "11"
+      - "17"
+      - "21"
+
+  - name: type
+    type: dropdown
+    required: true
+    defaultValue: jdk
+    description: Install JDK (development) or JRE (runtime only)
+    options:
+      - jdk
+      - jre
+
+  - name: setJavaHome
+    type: boolean
+    required: false
+    defaultValue: true
+    description: Set JAVA_HOME environment variable
+
+directives:
+  - variables:
+      javaHome: /usr/lib/jvm/default-java
+      javaPackages:
+        - "default-{{ local.type }}"
+    condition: 'version == "default"'
+
+  - variables:
+      javaHome: "/usr/lib/jvm/java-{{ local.version }}-openjdk-amd64"
+      javaPackages:
+        - "openjdk-{{ local.version }}-{{ local.type }}"
+    condition: 'version != "default"'
+
+  - install: "{{ local.javaPackages }}"
+
+  - environment:
+      JAVA_HOME: "{{ local.javaHome }}"
+      PATH: "{{ local.javaHome }}/bin:$PATH"
+    condition: local.setJavaHome

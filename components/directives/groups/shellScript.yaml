@@ -1,0 +1,94 @@
+metadata:
+  key: shellScript
+  label: Shell Script
+  description: Create a shell script
+  icon: Folder
+  color: gray
+  helpContent: |
+    # Shell Script Group
+
+    This group creates a shell script file with specified content and makes it executable.
+
+    ## Options
+
+    - **Name**: Name of the shell script file
+    - **Path**: Directory where the script will be created (absolute path)
+    - **Content**: The shell script content (should start with shebang like #!/bin/bash)
+    - **Executable**: Make the script executable with chmod +x
+    - **Add to PATH**: Add the script's directory to PATH environment variable
+    - **Make Deploy Bin**: Register as a deploy binary for container access
+
+    ## Usage
+
+    The Shell Script group will:
+    1. Create a file with the specified content
+    2. Copy it to the target location
+    3. Optionally make it executable
+    4. Optionally add to PATH and register as deploy binary
+  keywords:
+    - shell
+    - script
+    - bash
+    - sh
+    - executable
+
+arguments:
+  - name: name
+    type: text
+    required: true
+    defaultValue: myscript
+    description: Name of the shell script file.
+
+  - name: path
+    type: text
+    required: true
+    defaultValue: /usr/local/bin
+    description: Path where the shell script will be created. Must be an absolute path.
+
+  - name: content
+    type: text
+    required: true
+    defaultValue: "#!/bin/bash\n\necho 'Hello, World!'"
+    description: Content of the shell script. This should be a valid shell script.
+
+  - name: executable
+    type: boolean
+    required: false
+    defaultValue: true
+    description: Make the script executable. If true, the script will be given execute permissions.
+
+  - name: addToPath
+    type: boolean
+    required: false
+    defaultValue: true
+    description: Add the script's directory to the PATH environment variable.
+
+  - name: makeDeployBin
+    type: boolean
+    required: false
+    defaultValue: true
+    description: Register the script as a deploy binary, making it available outside the container.
+
+directives:
+  - variables:
+      scriptPath: "{{ local.path }}/{{ local.name }}"
+
+  - file:
+      name: "{{ local.name }}"
+      contents: "{{ local.content }}"
+
+  - run:
+      - 'cp {{ get_file("{{ local.name }}") }} {{ local.scriptPath }}'
+
+  - run:
+      - "chmod +x {{ local.scriptPath }}"
+    condition: local.executable
+
+  - environment:
+      PATH: "$PATH:{{ local.path }}"
+    condition: local.addToPath
+
+  - deploy:
+      bins:
+        - "{{ local.name }}"
+    condition: local.makeDeployBin

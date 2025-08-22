@@ -1,0 +1,82 @@
+metadata:
+  key: pipRequirements
+  label: Pip Requirements
+  description: Install Python packages from requirements.txt file
+  icon: DocumentText
+  color: blue
+  helpContent: |
+    # Pip Requirements Group
+
+    This group installs Python packages from a requirements.txt file using pip.
+
+    ## Options
+
+    - **Requirements**: Content of the requirements.txt file with package specifications
+    - **Pip Options**: Additional options to pass to pip install (e.g., --no-cache-dir)
+    - **Cleanup**: Remove requirements.txt file after installation to reduce image size
+    - **Upgrade Pip**: Upgrade pip to latest version before installing packages
+
+    ## Usage
+
+    The Pip Requirements group will:
+    1. Create a requirements.txt file with the specified content
+    2. Optionally upgrade pip to the latest version
+    3. Install packages using pip install -r requirements.txt
+    4. Optionally clean up the requirements file
+
+    ## Package Format
+
+    Each line in requirements should contain a package specification:
+    - `numpy==1.21.0` (exact version)
+    - `scipy>=1.7.0` (minimum version)
+    - `matplotlib` (latest version)
+  keywords:
+    - pip
+    - python
+    - requirements
+    - packages
+    - install
+
+arguments:
+  - name: requirements
+    type: text
+    required: true
+    defaultValue: "numpy==1.21.0\nscipy>=1.7.0\nmatplotlib"
+    description: Content of the requirements.txt file. Each line should contain a package specification.
+
+  - name: pip_opts
+    type: text
+    required: false
+    defaultValue: "--no-cache-dir"
+    description: Additional options to pass to pip install command.
+
+  - name: cleanup
+    type: boolean
+    required: false
+    defaultValue: true
+    description: Remove the requirements.txt file after installation to reduce image size.
+
+  - name: upgrade_pip
+    type: boolean
+    required: false
+    defaultValue: true
+    description: Upgrade pip to the latest version before installing packages.
+
+directives:
+  - file:
+      name: requirements.txt
+      contents: "{{ local.requirements }}"
+
+  - run:
+      - 'cp {{ get_file("requirements.txt") }} /tmp/requirements.txt'
+
+  - run:
+      - "python -m pip install --upgrade pip"
+    condition: local.upgrade_pip
+
+  - run:
+      - "python -m pip install {{ local.pip_opts }} -r /tmp/requirements.txt"
+
+  - run:
+      - "rm /tmp/requirements.txt"
+    condition: local.cleanup
