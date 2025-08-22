@@ -185,15 +185,6 @@ export function SideNavigation({
                                 <span className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-500")}>Ctrl+S</span>
                             </button>
                         )}
-                        <button
-                            className={actionStyle}
-                            onClick={onOpenGitHub}
-                            disabled={!yamlData || hasMetadataErrors}
-                            title={!yamlData ? "No recipe data available" : hasMetadataErrors ? "Please fix the metadata validation errors in the Basic Information section before publishing" : "Publish recipe to GitHub"}
-                        >
-                            <CloudArrowUpIcon className="h-4 w-4" />
-                            <span>Publish to GitHub</span>
-                        </button>
                         <a
                             href="https://github.com/neurodesk/neurocontainers-ui/issues/new"
                             target="_blank"

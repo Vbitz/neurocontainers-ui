@@ -42,7 +42,6 @@ The application centers around `ContainerRecipe` objects (defined in `components
 **GitHub Integration**
 - `lib/github.ts` - GitHub API service with caching
 - `components/githubRecipes.tsx` - Browse existing recipes from NeuroContainers repo
-- `components/githubExport.tsx` - Export/publish recipes to GitHub
 
 ### State Management
 - Main recipe state managed in `app/page.tsx` with local storage persistence

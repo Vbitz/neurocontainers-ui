@@ -11,7 +11,6 @@ import {
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
-import GitHubModal from "@/components/githubExport";
 import YamlPasteModal from "@/components/yamlPasteModal";
 import GuidedTour from "@/components/GuidedTour";
 import { Logo } from "@/components/ui/Logo";
@@ -44,7 +43,6 @@ export default function Home() {
     // Core state
     const [yamlData, setYamlData] = useState<ContainerRecipe | null>(null);
     const [, setLoading] = useState(true);
-    const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
     const [isYamlPasteModalOpen, setIsYamlPasteModalOpen] = useState(false);
     const [isGuidedTourOpen, setIsGuidedTourOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -367,7 +365,7 @@ export default function Home() {
                 yamlData={yamlData}
                 onContainerLibrary={navigateToLibrary}
                 onExportYAML={() => yamlData && exportYAML(yamlData)}
-                onOpenGitHub={() => setIsGitHubModalOpen(true)}
+                onOpenGitHub={() => {}}
                 saveStatus={saveStatus}
                 isPublished={isPublishedContainer}
                 githubUrl={yamlData ? getGithubUrl(yamlData) : ""}
@@ -383,7 +381,7 @@ export default function Home() {
                     onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
                     yamlData={yamlData}
                     onNewContainer={() => setIsGuidedTourOpen(true)}
-                    onOpenGitHub={() => setIsGitHubModalOpen(true)}
+                    onOpenGitHub={() => {}}
                     saveStatus={saveStatus}
                     filesystemMode={filesystemMode}
                     hasMetadataErrors={hasMetadataErrors}
@@ -607,14 +605,6 @@ export default function Home() {
             </div>
 
             {/* Modals */}
-            {isGitHubModalOpen && yamlData && (
-                <GitHubModal
-                    isOpen={isGitHubModalOpen}
-                    onClose={() => setIsGitHubModalOpen(false)}
-                    yamlData={yamlData}
-                    yamlText=""
-                />
-            )}
             <YamlPasteModal
                 isOpen={isYamlPasteModalOpen}
                 onClose={() => setIsYamlPasteModalOpen(false)}
@@ -630,7 +620,7 @@ export default function Home() {
                 onPublish={(recipe) => {
                     loadContainer(recipe);
                     setIsGuidedTourOpen(false);
-                    setTimeout(() => setIsGitHubModalOpen(true), 100);
+                    // GitHub export is now handled in the validate component
                 }}
             />
         </div>
