@@ -6,7 +6,6 @@ import {
     ArrowDownTrayIcon,
     EyeIcon,
     ComputerDesktopIcon,
-    CloudArrowUpIcon,
     ExclamationTriangleIcon,
     BookOpenIcon,
 } from "@heroicons/react/24/outline";
@@ -43,7 +42,7 @@ export function SideNavigation({
     yamlData,
     onContainerLibrary,
     onExportYAML,
-    onOpenGitHub,
+    onOpenGitHub: _onOpenGitHub, // Not used since GitHub export is now in validate flow
     saveStatus,
     isPublished,
     githubUrl,
@@ -51,8 +50,11 @@ export function SideNavigation({
     filesystemMode,
     isLocalFilesystemConnected,
     onSaveToLocalFilesystem,
-    hasMetadataErrors,
+    hasMetadataErrors: _hasMetadataErrors, // Not used since publish button was removed
 }: SideNavigationProps) {
+    // Mark unused variables explicitly
+    void _onOpenGitHub;
+    void _hasMetadataErrors;
     const { isDark } = useTheme();
     const [isDocumentationOpen, setIsDocumentationOpen] = useState(false);
     const actionStyle = cn(
