@@ -1,0 +1,85 @@
+metadata:
+  key: gitClone
+  label: Git Clone
+  description: Clone a git repository with optional revision/tag support
+  icon: DocumentDuplicate
+  color: orange
+  helpContent: |
+    # Git Clone Group
+
+    This group clones a git repository with support for specific revisions, recursive cloning, and cleanup options.
+
+    ## Options
+
+    - **Repository URL**: The URL of the git repository to clone (HTTPS or SSH)
+    - **Destination Path**: Where the repository will be cloned in the container
+    - **Revision**: Specific branch, tag, or commit hash to checkout
+    - **Recursive**: Include git submodules when cloning
+    - **Cleanup Git**: Remove .git directory after cloning to reduce image size
+
+    ## Usage
+
+    The Git Clone group will:
+    1. Clone the specified repository to the destination path
+    2. Optionally checkout a specific revision
+    3. Optionally clone submodules recursively
+    4. Optionally remove the .git directory to reduce image size
+  keywords:
+    - git
+    - clone
+    - repository
+    - version
+    - tag
+    - branch
+    - source
+
+arguments:
+  - name: repository_url
+    type: text
+    required: true
+    defaultValue: "https://github.com/user/repo.git"
+    description: URL of the git repository to clone (HTTPS or SSH).
+
+  - name: destination_path
+    type: text
+    required: false
+    defaultValue: "/opt/repository"
+    description: Path where the repository will be cloned.
+
+  - name: revision
+    type: text
+    required: false
+    defaultValue: ""
+    description: Specific branch, tag, or commit hash to checkout (optional).
+
+  - name: recursive
+    type: boolean
+    required: false
+    defaultValue: false
+    description: Clone recursively to include git submodules.
+
+  - name: cleanup_git
+    type: boolean
+    required: false
+    defaultValue: false
+    description: Remove the .git directory after cloning to reduce image size.
+
+directives:
+  - variables:
+      cloneCommand: git clone
+      commands: []
+
+  - variables:
+      cloneCommand: "git clone --recursive"
+    condition: local.recursive
+
+  - variables:
+      fullCloneCommand: '{{ local.cloneCommand }} "{{ local.repository_url }}" "{{ local.destination_path }}"'
+
+  - run: "{{ local.fullCloneCommand }}"
+
+  - run: 'cd "{{ local.destination_path }}" && git checkout "{{ local.revision }}"'
+    condition: 'local.revision != "" && local.revision != null'
+
+  - run: 'rm -rf "{{ local.destination_path }}/.git"'
+    condition: local.cleanup_git

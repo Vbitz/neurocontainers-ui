@@ -1,0 +1,116 @@
+metadata:
+  key: pipInstall
+  label: Pip Install
+  description: Install Python packages with conda environment support
+  icon: CodeBracket
+  color: blue
+  helpContent: |
+    # Pip Install Group
+
+    This group installs Python packages using pip with support for conda environments and advanced pip options.
+
+    ## Options
+
+    - **Packages**: Python packages to install (one per line, supports version specifications)
+    - **Conda Environment**: Name of conda environment to install packages into
+    - **Pip Options**: Additional options to pass to pip install command
+    - **Upgrade Pip**: Upgrade pip to the latest version before installing packages
+    - **Index URL**: Custom PyPI index URL for private repositories
+    - **Extra Index URL**: Additional PyPI index URL to search for packages
+
+    ## Usage
+
+    The Pip Install group will:
+    1. Optionally upgrade pip to the latest version
+    2. Install specified packages using pip
+    3. Support conda environment activation if specified
+    4. Handle custom PyPI index URLs for private repositories
+  keywords:
+    - pip
+    - python
+    - install
+    - conda
+    - environment
+    - packages
+
+arguments:
+  - name: packages
+    type: text
+    required: true
+    defaultValue: |
+      numpy
+      scipy
+      matplotlib
+    description: Python packages to install. One package per line. Supports version specifications (e.g., numpy==1.21.0).
+    multiline: true
+
+  - name: conda_environment
+    type: text
+    required: false
+    defaultValue: ""
+    description: Name of conda environment to install packages into (optional).
+
+  - name: pip_opts
+    type: text
+    required: false
+    defaultValue: "--no-cache-dir"
+    description: Additional options to pass to pip install command.
+
+  - name: upgrade_pip
+    type: boolean
+    required: false
+    defaultValue: true
+    description: Upgrade pip to the latest version before installing packages.
+
+  - name: index_url
+    type: text
+    required: false
+    defaultValue: ""
+    description: Custom PyPI index URL (e.g., for private repositories).
+    advanced: true
+
+  - name: extra_index_url
+    type: text
+    required: false
+    defaultValue: ""
+    description: Additional PyPI index URL to search for packages.
+    advanced: true
+
+directives:
+  - variables:
+      envPrefix: ""
+      pipCommand: "python -m pip install"
+      packageList: []
+
+  - variables:
+      envPrefix: 'conda run -n "{{ local.conda_environment }}" '
+    condition: 'local.conda_environment != "" && local.conda_environment != null'
+
+  - variables:
+      packageList: '{{ local.packages | splitlines | select("!=", "") | list }}'
+
+  - run: "{{ local.envPrefix }}python -m pip install --upgrade pip"
+    condition: local.upgrade_pip
+
+  - variables:
+      fullPipCommand: "{{ local.envPrefix }}{{ local.pipCommand }}"
+    condition: 'local.packageList | length > 0'
+
+  - variables:
+      fullPipCommand: "{{ local.fullPipCommand }} {{ local.pip_opts }}"
+    condition: 'local.pip_opts != "" && local.pip_opts != null && local.packageList | length > 0'
+
+  - variables:
+      fullPipCommand: '{{ local.fullPipCommand }} --index-url "{{ local.index_url }}"'
+    condition: 'local.index_url != "" && local.index_url != null && local.packageList | length > 0'
+
+  - variables:
+      fullPipCommand: '{{ local.fullPipCommand }} --extra-index-url "{{ local.extra_index_url }}"'
+    condition: 'local.extra_index_url != "" && local.extra_index_url != null && local.packageList | length > 0'
+
+  - variables:
+      fullPipCommand: "{{ local.fullPipCommand }} {{ local.packageList | join(' ') }}"
+    condition: 'local.packageList | length > 0'
+
+  - run: "{{ local.fullPipCommand }}"
+    condition: 'local.packageList | length > 0'
