@@ -6,9 +6,13 @@ import javaYaml from "./java.yaml?raw";
 import shellScriptYaml from "./shellScript.yaml?raw";
 import pipRequirementsYaml from "./pipRequirements.yaml?raw";
 import minicondaYamlYaml from "./minicondaYaml.yaml?raw";
+import gitCloneYaml from "./gitClone.yaml?raw";
+import pipInstallYaml from "./pipInstall.yaml?raw";
 
 // Register each YAML group
 registerYamlGroup(javaYaml);
 registerYamlGroup(shellScriptYaml);
 registerYamlGroup(pipRequirementsYaml);
 registerYamlGroup(minicondaYamlYaml);
+registerYamlGroup(gitCloneYaml);
+registerYamlGroup(pipInstallYaml);
