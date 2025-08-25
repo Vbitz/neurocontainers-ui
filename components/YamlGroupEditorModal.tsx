@@ -5,7 +5,7 @@ import { XMarkIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, Che
 import { cn } from '@/lib/styles';
 import { useTheme } from '@/lib/ThemeContext';
 import { loadStoredYamlGroups, saveStoredYamlGroups, upsertStoredYamlGroup, removeStoredYamlGroup, exportStoredYamlGroups, importStoredYamlGroups, StoredYamlGroup } from '@/lib/yamlGroupEditor/localStorage';
-import { parseYamlGroup } from '@/lib/yamlGroupEditor/loader';
+import { parseYamlGroup, registerYamlGroup } from '@/lib/yamlGroupEditor/loader';
 import processYamlGroup from '@/lib/yamlGroupEditor';
 import { getBuiltinYamlGroups } from '@/lib/yamlGroupEditor/builtin';
 import { dump as dumpYAML } from 'js-yaml';
@@ -21,6 +21,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
   const [builtin, setBuiltin] = useState<{ filename: string; yaml: string }[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [yamlText, setYamlText] = useState('');
+  const [baselineYaml, setBaselineYaml] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [argValues, setArgValues] = useState<Record<string, unknown>>({});
@@ -53,9 +54,12 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
       if (loaded.length > 0) {
         setActiveId(loaded[0].id);
         setYamlText(loaded[0].yaml);
+        setBaselineYaml(loaded[0].yaml);
       } else {
         setActiveId(null);
-        setYamlText(`metadata:\n  key: customGroup\n  label: Custom Group\n  description: ''\n  icon: CodeBracket\n  color: green\n  helpContent: ''\n  keywords: []\n\narguments: []\n\ndirectives:\n  - variables:\n      example: value\n`);
+        const initial = `metadata:\n  key: customGroup\n  label: Custom Group\n  description: ''\n  icon: CodeBracket\n  color: green\n  helpContent: ''\n  keywords: []\n\narguments: []\n\ndirectives:\n  - variables:\n      example: value\n`;
+        setYamlText(initial);
+        setBaselineYaml(initial);
       }
       setError(null);
       setInfo(null);
@@ -117,6 +121,18 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
     mutator(next);
     setYamlText(dumpYAML(next));
     setInfo(null);
+  };
+
+  // Confirm before discarding unsaved changes and load another YAML
+  const maybeDiscardAndLoad = (nextYaml: string, nextActiveId: string | null) => {
+    if (yamlText !== baselineYaml) {
+      const ok = window.confirm('You have unsaved changes. Discard them and continue?');
+      if (!ok) return;
+    }
+    setActiveId(nextActiveId);
+    setYamlText(nextYaml);
+    setBaselineYaml(nextYaml);
+    setShowLibrary(false);
   };
 
   // Render helpers for Visual tab
@@ -448,7 +464,10 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
       setGroups(updated);
       const rec = updated.find(g => g.key === key && g.yaml === yamlText);
       setActiveId(rec?.id ?? null);
-      setInfo('Saved to local storage and enabled. It will auto-register on reload.');
+      // Register immediately so it shows up without reload
+      void registerYamlGroup(yamlText);
+      setInfo('Saved, enabled, and registered immediately.');
+      setBaselineYaml(yamlText);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -468,6 +487,11 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
     const updated = groups.map(g => g.id === id ? { ...g, enabled: !g.enabled, updatedAt: Date.now() } : g);
     saveStoredYamlGroups(updated);
     setGroups(updated);
+    // If enabling, register now so it becomes available immediately
+    const justEnabled = updated.find(g => g.id === id && g.enabled);
+    if (justEnabled) {
+      try { void registerYamlGroup(justEnabled.yaml); } catch { /* noop */ }
+    }
   };
 
   const onExportAll = () => {
@@ -487,7 +511,11 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
         const text = String(reader.result || '');
         const updated = importStoredYamlGroups(text);
         setGroups(updated);
-        setInfo('Imported YAML groups from file.');
+        // Register all enabled groups immediately
+        try {
+          updated.filter(g => g.enabled).forEach(g => { void registerYamlGroup(g.yaml); });
+        } catch { /* noop */ }
+        setInfo('Imported and registered enabled YAML groups.');
         setError(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -498,9 +526,17 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    if (yamlText !== baselineYaml) {
+      const ok = window.confirm('You have unsaved changes. Discard and close?');
+      if (!ok) return;
+    }
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
       <div className={cn(
         'relative w-[98vw] max-w-7xl h-[94vh] rounded-xl overflow-hidden border shadow-xl',
         isDark ? 'bg-[#0f130f]/95 border-[#2d4222]/50' : 'bg-white/95 border-gray-200/60'
@@ -512,7 +548,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
               {showLibrary ? 'Hide Library' : 'Show Library'}
             </button>
           </div>
-          <button onClick={onClose} className={cn('p-2 rounded-lg', isDark ? 'hover:bg-[#1e2a16]' : 'hover:bg-gray-100')}>
+          <button onClick={handleClose} className={cn('p-2 rounded-lg', isDark ? 'hover:bg-[#1e2a16]' : 'hover:bg-gray-100')}>
             <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
@@ -547,7 +583,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
                           </div>
                           <button
                             className={cn('px-2 py-1 rounded-md text-xs', isDark ? 'bg-[#1e2a16] text-[#c4e382]' : 'bg-green-50 text-green-700 hover:bg-green-100')}
-                            onClick={() => { setYamlText(b.yaml); setActiveId(null); setShowLibrary(false); }}
+                            onClick={() => maybeDiscardAndLoad(b.yaml, null)}
                             title="Edit a copy"
                           >
                             Duplicate
@@ -561,7 +597,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
                   <div className={cn('px-2 py-1 text-xs uppercase tracking-wide', isDark ? 'text-gray-400' : 'text-gray-500')}>My Groups</div>
                   <div className="space-y-1">
                     {groups.map(g => (
-                      <div key={g.id} className={cn('flex items-center justify-between px-2 py-2 rounded-md cursor-pointer', activeId === g.id ? (isDark ? 'bg-[#1e2a16]' : 'bg-gray-100') : '')} onClick={() => { setActiveId(g.id); setYamlText(g.yaml); setShowLibrary(false); }}>
+                      <div key={g.id} className={cn('flex items-center justify-between px-2 py-2 rounded-md cursor-pointer', activeId === g.id ? (isDark ? 'bg-[#1e2a16]' : 'bg-gray-100') : '')} onClick={() => maybeDiscardAndLoad(g.yaml, g.id)}>
                         <div className="flex flex-col">
                           <span className="text-sm font-medium">{g.key}</span>
                           <span className={cn('text-xs', isDark ? 'text-gray-400' : 'text-gray-500')}>{new Date(g.updatedAt).toLocaleString()}</span>

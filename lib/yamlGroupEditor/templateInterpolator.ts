@@ -38,19 +38,49 @@ export function interpolateTemplate(
  * Interpolates a single string template
  */
 function interpolateString(template: string, context: TemplateContext): unknown {
-    // If the whole string is a single {{ ... }} expression, return raw evaluated value
-    const fullMatch = template.match(/^\s*\{\{\s*([\s\S]+?)\s*\}\}\s*$/);
-    if (fullMatch) {
-        const expr = fullMatch[1];
-        return evaluate(expr, context);
+    const trimmed = template.trim();
+
+    // Find all placeholder matches
+    const placeholderRegex = /\{\{\s*([\s\S]+?)\s*\}\}/g;
+    const matches = Array.from(trimmed.matchAll(placeholderRegex));
+
+    // If there's exactly one placeholder and it spans the whole trimmed string, evaluate raw
+    if (matches.length === 1 && matches[0].index === 0 && matches[0][0].length === trimmed.length) {
+        const expr = matches[0][1];
+        try {
+            // Only evaluate immediately when the expression references local.*
+            if (!expressionReferencesLocal(expr)) {
+                return template; // keep as-is for later resolution
+            }
+            return evaluate(expr, context);
+        } catch (e) {
+            // Defer unknown function/object expressions by preserving the placeholder
+            const msg = e instanceof Error ? e.message : String(e);
+            if (msg.includes('Unknown function/filter') || msg.includes('Unknown object')) {
+                return template; // keep as-is for later resolution
+            }
+            throw e;
+        }
     }
 
-    // Otherwise, replace all {{ ... }} occurrences with stringified evaluation
-    return template.replace(/\{\{\s*([\s\S]+?)\s*\}\}/g, (_m, expr) => {
-        const val = evaluate(expr, context);
-        if (Array.isArray(val)) return val.join(' ');
-        if (val === null || val === undefined) return '';
-        return String(val);
+    // Otherwise, replace all placeholders with stringified evaluation
+    return template.replace(placeholderRegex, (m, expr) => {
+        try {
+            // Only evaluate immediately when the expression references local.*
+            if (!expressionReferencesLocal(expr)) {
+                return m; // preserve original placeholder for later resolution
+            }
+            const val = evaluate(expr, context);
+            if (Array.isArray(val)) return val.join(' ');
+            if (val === null || val === undefined) return '';
+            return String(val);
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            if (msg.includes('Unknown function/filter') || msg.includes('Unknown object')) {
+                return m; // preserve original placeholder for later resolution
+            }
+            throw e;
+        }
     });
 }
 
@@ -75,7 +105,7 @@ export function createInitialContext(args: Record<string, unknown>): TemplateCon
 }
 
 // Internal: use the expression evaluator from conditionEvaluator
-import { evaluateExpression } from './conditionEvaluator';
+import { evaluateExpression, expressionReferencesLocal } from './conditionEvaluator';
 
 function evaluate(expr: string, context: TemplateContext): unknown {
     // The expression language exposes `local.*` as top-level names in our evaluator,

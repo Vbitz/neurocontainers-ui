@@ -8,6 +8,16 @@ import {
     DocumentTextIcon,
     DocumentDuplicateIcon,
     FolderIcon,
+    BeakerIcon,
+    Cog6ToothIcon,
+    RocketLaunchIcon,
+    WrenchScrewdriverIcon,
+    ArrowDownTrayIcon,
+    CommandLineIcon,
+    CloudArrowDownIcon,
+    PlayIcon,
+    ListBulletIcon,
+    CpuChipIcon,
 } from "@heroicons/react/24/outline";
 import type { ComponentType } from "react";
 
@@ -20,6 +30,16 @@ export const ICON_MAPPING: Record<string, IconComponent> = {
     DocumentText: DocumentTextIcon,
     DocumentDuplicate: DocumentDuplicateIcon,
     Folder: FolderIcon,
+    Beaker: BeakerIcon,
+    Cog: Cog6ToothIcon,
+    Rocket: RocketLaunchIcon,
+    Wrench: WrenchScrewdriverIcon,
+    Download: ArrowDownTrayIcon,
+    CLI: CommandLineIcon,
+    CloudDownload: CloudArrowDownIcon,
+    Play: PlayIcon,
+    List: ListBulletIcon,
+    CPU: CpuChipIcon,
 };
 
 /**

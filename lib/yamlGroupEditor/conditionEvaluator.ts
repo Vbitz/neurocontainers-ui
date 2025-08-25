@@ -220,7 +220,7 @@ function tokenize(input: string): Token[] {
 /**
  * Recursive descent parser for condition expressions
  */
-class ExpressionParser {
+export class ExpressionParser {
     private tokens: Token[];
     private current = 0;
 
@@ -430,7 +430,7 @@ class ExpressionParser {
 /**
  * Evaluates an AST node against the given context and returns the raw value
  */
-function evaluateNodeValue(node: ExpressionNode, context: EvaluationContext): unknown {
+export function evaluateNodeValue(node: ExpressionNode, context: EvaluationContext): unknown {
     switch (node.type) {
         case 'identifier': {
             const identifierNode = node as IdentifierNode;
@@ -663,5 +663,55 @@ export function evaluateExpression(expr: string, context: EvaluationContext): un
         return evaluateNodeValue(ast, context);
     } catch (error) {
         throw new Error(`Error evaluating expression "${expr}": ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+/**
+ * Parse an expression into an AST for analysis
+ */
+export function parseExpression(expr: string): ExpressionNode {
+    const tokens = tokenize(expr.trim());
+    const parser = new ExpressionParser(tokens);
+    return parser.parse();
+}
+
+/**
+ * Check if an AST references `local.*`
+ */
+export function astReferencesLocal(node: ExpressionNode): boolean {
+    switch (node.type) {
+        case 'property': {
+            const p = node as PropertyAccessNode;
+            return p.object === 'local';
+        }
+        case 'identifier':
+        case 'literal':
+        case 'null':
+            return false;
+        case 'unary':
+            return astReferencesLocal((node as UnaryOpNode).operand);
+        case 'binary': {
+            const b = node as BinaryOpNode;
+            return astReferencesLocal(b.left) || astReferencesLocal(b.right);
+        }
+        case 'call': {
+            const c = node as CallNode;
+            return c.args.some(arg => astReferencesLocal(arg));
+        }
+        default:
+            return false;
+    }
+}
+
+/**
+ * Convenience: determine if an expression references `local.*`
+ */
+export function expressionReferencesLocal(expr: string): boolean {
+    try {
+        const ast = parseExpression(expr);
+        return astReferencesLocal(ast);
+    } catch {
+        // If it can't be parsed, don't consider it a local reference
+        return false;
     }
 }

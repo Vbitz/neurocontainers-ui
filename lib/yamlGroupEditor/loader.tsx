@@ -29,6 +29,30 @@ const COLOR_MAPPING = {
         light: "bg-gray-50 border-gray-200 hover:bg-gray-100", 
         dark: "bg-gray-900 border-gray-700 hover:bg-gray-800" 
     },
+    red: {
+        light: "bg-red-50 border-red-200 hover:bg-red-100",
+        dark: "bg-red-900 border-red-700 hover:bg-red-800"
+    },
+    yellow: {
+        light: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
+        dark: "bg-yellow-900 border-yellow-700 hover:bg-yellow-800"
+    },
+    purple: {
+        light: "bg-purple-50 border-purple-200 hover:bg-purple-100",
+        dark: "bg-purple-900 border-purple-700 hover:bg-purple-800"
+    },
+    pink: {
+        light: "bg-pink-50 border-pink-200 hover:bg-pink-100",
+        dark: "bg-pink-900 border-pink-700 hover:bg-pink-800"
+    },
+    indigo: {
+        light: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
+        dark: "bg-indigo-900 border-indigo-700 hover:bg-indigo-800"
+    },
+    teal: {
+        light: "bg-teal-50 border-teal-200 hover:bg-teal-100",
+        dark: "bg-teal-900 border-teal-700 hover:bg-teal-800"
+    },
 };
 
 const ICON_COLOR_MAPPING = {
@@ -36,6 +60,12 @@ const ICON_COLOR_MAPPING = {
     blue: { light: "text-blue-600", dark: "text-blue-400" },
     green: { light: "text-green-600", dark: "text-green-400" },
     gray: { light: "text-gray-600", dark: "text-gray-400" },
+    red: { light: "text-red-600", dark: "text-red-400" },
+    yellow: { light: "text-yellow-600", dark: "text-yellow-400" },
+    purple: { light: "text-purple-600", dark: "text-purple-400" },
+    pink: { light: "text-pink-600", dark: "text-pink-400" },
+    indigo: { light: "text-indigo-600", dark: "text-indigo-400" },
+    teal: { light: "text-teal-600", dark: "text-teal-400" },
 };
 
 /**
