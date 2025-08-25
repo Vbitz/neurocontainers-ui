@@ -25,6 +25,7 @@ import { SideNavigation } from "@/components/SideNavigation";
 import { TopNavigation } from "@/components/TopNavigation";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Footer } from "@/components/Footer";
+import YamlGroupBootstrap from "@/components/YamlGroupBootstrap";
 
 // Extracted utilities and types
 import { sections } from "@/lib/sections";
@@ -339,6 +340,8 @@ export default function Home() {
 
     return (
         <div className="min-h-screen flex overflow-x-hidden relative">
+            {/* Bootstrap any YAML groups saved in localStorage */}
+            <YamlGroupBootstrap />
             {/* Animated Background */}
             <div
                 className="absolute inset-0 -z-10 transition-all duration-[3000ms] ease-out"

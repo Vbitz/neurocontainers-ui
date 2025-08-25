@@ -13,14 +13,21 @@ enum TokenType {
     STRING = 'STRING',
     NUMBER = 'NUMBER',
     BOOLEAN = 'BOOLEAN',
+    NULL = 'NULL',
     DOT = 'DOT',
     EQUALS = 'EQUALS',
     NOT_EQUALS = 'NOT_EQUALS',
+    GREATER = 'GREATER',
+    GREATER_EQUAL = 'GREATER_EQUAL',
+    LESS = 'LESS',
+    LESS_EQUAL = 'LESS_EQUAL',
     AND = 'AND',
     OR = 'OR',
     NOT = 'NOT',
     LPAREN = 'LPAREN',
     RPAREN = 'RPAREN',
+    COMMA = 'COMMA',
+    PIPE = 'PIPE',
     EOF = 'EOF',
     WHITESPACE = 'WHITESPACE'
 }
@@ -38,7 +45,7 @@ interface ASTNode {
 
 interface BinaryOpNode extends ASTNode {
     type: 'binary';
-    operator: '==' | '!=' | '&&' | '||';
+    operator: '==' | '!=' | '&&' | '||' | '>' | '>=' | '<' | '<=';
     left: ASTNode;
     right: ASTNode;
 }
@@ -65,7 +72,17 @@ interface LiteralNode extends ASTNode {
     value: string | number | boolean;
 }
 
-type ExpressionNode = BinaryOpNode | UnaryOpNode | IdentifierNode | PropertyAccessNode | LiteralNode;
+interface NullNode extends ASTNode {
+    type: 'null';
+}
+
+interface CallNode extends ASTNode {
+    type: 'call';
+    callee: IdentifierNode;
+    args: ASTNode[];
+}
+
+type ExpressionNode = BinaryOpNode | UnaryOpNode | IdentifierNode | PropertyAccessNode | LiteralNode | NullNode | CallNode;
 
 /**
  * Tokenizes the input condition string
@@ -121,6 +138,8 @@ function tokenize(input: string): Token[] {
             // Check for boolean literals
             if (value === 'true' || value === 'false') {
                 tokens.push({ type: TokenType.BOOLEAN, value, position: position - value.length });
+            } else if (value === 'null') {
+                tokens.push({ type: TokenType.NULL, value, position: position - value.length });
             } else {
                 tokens.push({ type: TokenType.IDENTIFIER, value, position: position - value.length });
             }
@@ -137,6 +156,16 @@ function tokenize(input: string): Token[] {
             }
             if (twoChar === '!=') {
                 tokens.push({ type: TokenType.NOT_EQUALS, value: '!=', position });
+                position += 2;
+                continue;
+            }
+            if (twoChar === '>=') {
+                tokens.push({ type: TokenType.GREATER_EQUAL, value: '>=', position });
+                position += 2;
+                continue;
+            }
+            if (twoChar === '<=') {
+                tokens.push({ type: TokenType.LESS_EQUAL, value: '<=', position });
                 position += 2;
                 continue;
             }
@@ -157,8 +186,20 @@ function tokenize(input: string): Token[] {
             case '.':
                 tokens.push({ type: TokenType.DOT, value: '.', position });
                 break;
+            case '|':
+                tokens.push({ type: TokenType.PIPE, value: '|', position });
+                break;
+            case ',':
+                tokens.push({ type: TokenType.COMMA, value: ',', position });
+                break;
             case '!':
                 tokens.push({ type: TokenType.NOT, value: '!', position });
+                break;
+            case '>':
+                tokens.push({ type: TokenType.GREATER, value: '>', position });
+                break;
+            case '<':
+                tokens.push({ type: TokenType.LESS, value: '<', position });
                 break;
             case '(':
                 tokens.push({ type: TokenType.LPAREN, value: '(', position });
@@ -209,10 +250,29 @@ class ExpressionParser {
     }
 
     private parseAndExpression(): ExpressionNode {
-        let expr = this.parseEqualityExpression();
+        let expr = this.parseComparisonExpression();
 
         while (this.match(TokenType.AND)) {
             const operator = '&&' as const;
+            const right = this.parseComparisonExpression();
+            expr = { type: 'binary', operator, left: expr, right };
+        }
+
+        return expr;
+    }
+
+    private parseComparisonExpression(): ExpressionNode {
+        let expr = this.parseEqualityExpression();
+
+        while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+            const token = this.previous();
+            const operator = token.type === TokenType.GREATER
+                ? '>' as const
+                : token.type === TokenType.GREATER_EQUAL
+                    ? '>=' as const
+                    : token.type === TokenType.LESS
+                        ? '<' as const
+                        : '<=' as const;
             const right = this.parseEqualityExpression();
             expr = { type: 'binary', operator, left: expr, right };
         }
@@ -221,13 +281,44 @@ class ExpressionParser {
     }
 
     private parseEqualityExpression(): ExpressionNode {
-        let expr = this.parseUnaryExpression();
+        let expr = this.parsePipeExpression();
 
         while (this.match(TokenType.EQUALS, TokenType.NOT_EQUALS)) {
             const token = this.previous();
             const operator = token.type === TokenType.EQUALS ? '==' as const : '!=' as const;
-            const right = this.parseUnaryExpression();
+            const right = this.parsePipeExpression();
             expr = { type: 'binary', operator, left: expr, right };
+        }
+
+        return expr;
+    }
+
+    private parsePipeExpression(): ExpressionNode {
+        let expr = this.parseUnaryExpression();
+
+        while (this.match(TokenType.PIPE)) {
+            // After a pipe, expect identifier (filter name) possibly with arguments
+            if (!this.match(TokenType.IDENTIFIER)) {
+                throw new Error('Expected filter name after pipe');
+            }
+            const callee: IdentifierNode = { type: 'identifier', name: this.previous().value };
+
+            // Optional argument list
+            const args: ExpressionNode[] = [];
+            if (this.match(TokenType.LPAREN)) {
+                // zero or more args separated by comma
+                if (!this.check(TokenType.RPAREN)) {
+                    do {
+                        args.push(this.parseOrExpression());
+                    } while (this.match(TokenType.COMMA));
+                }
+                if (!this.match(TokenType.RPAREN)) {
+                    throw new Error('Expected closing parenthesis for filter arguments');
+                }
+            }
+
+            // Transform expr | filter(a,b) into call(filter, [expr, a, b])
+            expr = { type: 'call', callee, args: [expr, ...args] };
         }
 
         return expr;
@@ -254,6 +345,10 @@ class ExpressionParser {
             return { type: 'literal', value };
         }
 
+        if (this.match(TokenType.NULL)) {
+            return { type: 'null' };
+        }
+
         if (this.match(TokenType.NUMBER)) {
             const value = parseFloat(this.previous().value);
             return { type: 'literal', value };
@@ -270,7 +365,20 @@ class ExpressionParser {
                 const property = this.previous().value;
                 return { type: 'property', object: name, property };
             }
-            
+            // Function call without pipe, e.g., length(x)
+            if (this.match(TokenType.LPAREN)) {
+                const args: ExpressionNode[] = [];
+                if (!this.check(TokenType.RPAREN)) {
+                    do {
+                        args.push(this.parseOrExpression());
+                    } while (this.match(TokenType.COMMA));
+                }
+                if (!this.match(TokenType.RPAREN)) {
+                    throw new Error('Expected closing parenthesis');
+                }
+                return { type: 'call', callee: { type: 'identifier', name }, args };
+            }
+
             return { type: 'identifier', name };
         }
 
@@ -342,6 +450,19 @@ function evaluateNodeValue(node: ExpressionNode, context: EvaluationContext): un
             return literalNode.value;
         }
 
+        case 'null': {
+            return null;
+        }
+
+        case 'call': {
+            const callNode = node as CallNode;
+            const fnName = callNode.callee.name;
+            const fn = builtins[fnName];
+            if (!fn) throw new Error(`Unknown function/filter: ${fnName}`);
+            const args = callNode.args.map(arg => evaluateNodeValue(arg as ExpressionNode, context));
+            return fn(...args);
+        }
+
         default:
             throw new Error(`Cannot evaluate value for node type: ${node.type}`);
     }
@@ -377,6 +498,17 @@ function evaluateNode(node: ExpressionNode, context: EvaluationContext): boolean
                     return leftValue === rightValue;
                 case '!=':
                     return leftValue !== rightValue;
+                case '>':
+                    return (leftValue as number) > (rightValue as number);
+        
+                case '>=':
+                    return (leftValue as number) >= (rightValue as number);
+        
+                case '<':
+                    return (leftValue as number) < (rightValue as number);
+        
+                case '<=':
+                    return (leftValue as number) <= (rightValue as number);
                 default:
                     throw new Error(`Unknown binary operator: ${binaryNode.operator}`);
             }
@@ -413,6 +545,10 @@ function evaluateNode(node: ExpressionNode, context: EvaluationContext): boolean
             }
             // For non-boolean literals in boolean context, convert to boolean
             return Boolean(literalNode.value);
+        }
+
+        case 'null': {
+            return false;
         }
 
         default:
@@ -452,5 +588,80 @@ export function validateConditionSyntax(condition: string): boolean {
         return true;
     } catch {
         return false;
+    }
+}
+
+/**
+ * Built-in functions/filters for expressions and pipelines
+ * Note: first argument may be the piped value
+ */
+export const builtins: Record<string, (...args: unknown[]) => unknown> = {
+    // length(x): number
+    length: (x: unknown) => {
+        if (Array.isArray(x) || typeof x === 'string') return (x as { length: number }).length;
+        if (x && typeof x === 'object') return Object.keys(x as object).length;
+        return 0;
+    },
+    // splitlines(str): string[]
+    splitlines: (x: unknown) => {
+        if (typeof x !== 'string') return [];
+        return x.split(/\r?\n/);
+    },
+    // select(arr, op, value) or select(op, value) when piped
+    select: (...args: unknown[]) => {
+        let arr: unknown;
+        let op: string;
+        let val: unknown;
+        if (Array.isArray(args[0])) {
+            [arr, op, val] = args as [unknown[], string, unknown];
+        } else {
+            // piped form: (valueArray) | select(op, val)
+            [arr, op, val] = [args[0], args[1] as string, args[2]];
+        }
+        const a = Array.isArray(arr) ? arr : [];
+        const cmp = (item: unknown) => {
+            switch (op) {
+                case '==': return item === val;
+                case '!=': return item !== val;
+                case '>': return (item as number) > (val as number);
+                case '>=': return (item as number) >= (val as number);
+                case '<': return (item as number) < (val as number);
+                case '<=': return (item as number) <= (val as number);
+                default: throw new Error(`Unsupported select operator: ${op}`);
+            }
+        };
+        return a.filter(cmp);
+    },
+    // list(x): ensure array
+    list: (x: unknown) => Array.isArray(x) ? x : (x === undefined || x === null ? [] : [x]),
+    // join(arr, sep)
+    join: (...args: unknown[]) => {
+        const arr = Array.isArray(args[0]) ? (args[0] as unknown[]) : [];
+        const sep = typeof args[1] === 'string' ? (args[1] as string) : ' ';
+        return arr.map(v => String(v)).join(sep);
+    },
+    // trim(str)
+    trim: (x: unknown) => typeof x === 'string' ? x.trim() : x,
+    // default(x, val) or piped form: (x) | default(val)
+    default: (...args: unknown[]) => {
+        if (args.length === 2) {
+            const [x, val] = args;
+            return (x === undefined || x === null || x === '') ? val : x;
+        }
+        // When piped, args[0] is x, args[1] is val
+        const [x, val] = args;
+        return (x === undefined || x === null || x === '') ? val : x;
+    },
+};
+
+/** Evaluate a general expression (not just boolean conditions) */
+export function evaluateExpression(expr: string, context: EvaluationContext): unknown {
+    try {
+        const tokens = tokenize(expr.trim());
+        const parser = new ExpressionParser(tokens);
+        const ast = parser.parse();
+        return evaluateNodeValue(ast, context);
+    } catch (error) {
+        throw new Error(`Error evaluating expression "${expr}": ${error instanceof Error ? error.message : String(error)}`);
     }
 }

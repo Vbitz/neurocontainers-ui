@@ -8,6 +8,7 @@ import {
     ComputerDesktopIcon,
     ExclamationTriangleIcon,
     BookOpenIcon,
+    DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { ContainerRecipe } from "@/components/common";
@@ -18,6 +19,7 @@ import { ThemeToggleIcon } from "@/components/ui/ThemeToggle";
 import { useTheme } from "@/lib/ThemeContext";
 import { Logo } from "@/components/ui/Logo";
 import DirectiveDocumentation from "@/components/DirectiveDocumentation";
+import YamlGroupEditorModal from "@/components/YamlGroupEditorModal";
 
 interface SideNavigationProps {
     isOpen: boolean;
@@ -57,6 +59,7 @@ export function SideNavigation({
     void _hasMetadataErrors;
     const { isDark } = useTheme();
     const [isDocumentationOpen, setIsDocumentationOpen] = useState(false);
+    const [isYamlEditorOpen, setIsYamlEditorOpen] = useState(false);
     const actionStyle = cn(
         "w-full flex items-center space-x-3 px-4 py-3 md:px-3 md:py-2",
         "text-base md:text-sm font-medium min-h-[48px] md:min-h-[auto]",
@@ -154,6 +157,13 @@ export function SideNavigation({
                         >
                             <ArrowDownTrayIcon className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0" />
                             <span>Download YAML</span>
+                        </button>
+                        <button
+                            className={actionStyle}
+                            onClick={() => setIsYamlEditorOpen(true)}
+                        >
+                            <DocumentTextIcon className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0" />
+                            <span>Custom Group Editor</span>
                         </button>
                         <button
                             className={actionStyle}
@@ -268,6 +278,10 @@ export function SideNavigation({
             <DirectiveDocumentation
                 isOpen={isDocumentationOpen}
                 onClose={() => setIsDocumentationOpen(false)}
+            />
+            <YamlGroupEditorModal
+                isOpen={isYamlEditorOpen}
+                onClose={() => setIsYamlEditorOpen(false)}
             />
         </>
     );

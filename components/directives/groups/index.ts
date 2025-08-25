@@ -1,18 +1,20 @@
-// Import YAML group loader
+// Auto-discover and register all YAML group files in this directory
+// Note: This relies on Webpack's require.context which is available in Next.js webpack build.
 import { registerYamlGroup } from "@/lib/yamlGroupEditor/loader";
 
-// Import YAML files as raw text
-import javaYaml from "./java.yaml?raw";
-import shellScriptYaml from "./shellScript.yaml?raw";
-import pipRequirementsYaml from "./pipRequirements.yaml?raw";
-import minicondaYamlYaml from "./minicondaYaml.yaml?raw";
-import gitCloneYaml from "./gitClone.yaml?raw";
-import pipInstallYaml from "./pipInstall.yaml?raw";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-var-requires
+const req: any = (require as unknown as { context: (p: string, r: boolean, re: RegExp) => any }).context(
+  './',
+  false,
+  /\.ya?ml$/
+);
 
-// Register each YAML group
-registerYamlGroup(javaYaml);
-registerYamlGroup(shellScriptYaml);
-registerYamlGroup(pipRequirementsYaml);
-registerYamlGroup(minicondaYamlYaml);
-registerYamlGroup(gitCloneYaml);
-registerYamlGroup(pipInstallYaml);
+req.keys().forEach((key: string) => {
+  const content = req(key) as string;
+  try {
+    registerYamlGroup(content);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(`Failed to register YAML group from ${key}:`, err);
+  }
+});

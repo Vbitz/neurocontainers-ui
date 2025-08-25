@@ -37,21 +37,20 @@ export function interpolateTemplate(
 /**
  * Interpolates a single string template
  */
-function interpolateString(template: string, context: TemplateContext): string {
-    // Match {{ local.variableName }} patterns
-    return template.replace(/\{\{\s*local\.([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, (match, variableName) => {
-        const value = context[variableName];
-        
-        if (value === undefined || value === null) {
-            throw new Error(`Template variable 'local.${variableName}' is not defined in context`);
-        }
-        
-        if (Array.isArray(value)) {
-            // For arrays, join with spaces (common for package lists)
-            return value.join(' ');
-        }
-        
-        return String(value);
+function interpolateString(template: string, context: TemplateContext): unknown {
+    // If the whole string is a single {{ ... }} expression, return raw evaluated value
+    const fullMatch = template.match(/^\s*\{\{\s*([\s\S]+?)\s*\}\}\s*$/);
+    if (fullMatch) {
+        const expr = fullMatch[1];
+        return evaluate(expr, context);
+    }
+
+    // Otherwise, replace all {{ ... }} occurrences with stringified evaluation
+    return template.replace(/\{\{\s*([\s\S]+?)\s*\}\}/g, (_m, expr) => {
+        const val = evaluate(expr, context);
+        if (Array.isArray(val)) return val.join(' ');
+        if (val === null || val === undefined) return '';
+        return String(val);
     });
 }
 
@@ -73,4 +72,13 @@ export function mergeContext(
  */
 export function createInitialContext(args: Record<string, unknown>): TemplateContext {
     return { ...args };
+}
+
+// Internal: use the expression evaluator from conditionEvaluator
+import { evaluateExpression } from './conditionEvaluator';
+
+function evaluate(expr: string, context: TemplateContext): unknown {
+    // The expression language exposes `local.*` as top-level names in our evaluator,
+    // so we pass a flattened context for convenience
+    return evaluateExpression(expr, context);
 }

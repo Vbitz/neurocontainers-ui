@@ -110,7 +110,7 @@ export async function registerYamlGroup(yamlContent: string): Promise<void> {
         arguments: yamlGroup.arguments.map(arg => ({
             ...arg,
             type: arg.type as "dropdown" | "text" | "array" | "boolean",
-            multiline: getMultilineFlag(arg.name),
+            multiline: (arg as unknown as { multiline?: boolean }).multiline ?? getMultilineFlag(arg.name),
         })) as GroupEditorArgument[],
         updateDirective(args: Record<string, unknown>) {
             // Use the YAML processor to generate directives
