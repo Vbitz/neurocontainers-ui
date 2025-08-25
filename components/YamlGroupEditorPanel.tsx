@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PlusIcon, TrashIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, CheckCircleIcon, ExclamationCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/styles';
 import { useTheme } from '@/lib/ThemeContext';
-import { loadStoredYamlGroups, saveStoredYamlGroups, upsertStoredYamlGroup, removeStoredYamlGroup, exportStoredYamlGroups, importStoredYamlGroups, StoredYamlGroup } from '@/lib/yamlGroupEditor/localStorage';
+import { loadStoredYamlGroups, saveStoredYamlGroups, upsertStoredYamlGroup, removeStoredYamlGroup, importStoredYamlGroups, StoredYamlGroup } from '@/lib/yamlGroupEditor/localStorage';
 import { parseYamlGroup, registerYamlGroup } from '@/lib/yamlGroupEditor/loader';
 import processYamlGroup from '@/lib/yamlGroupEditor';
 import { getBuiltinYamlGroups } from '@/lib/yamlGroupEditor/builtin';
@@ -109,8 +109,8 @@ export default function YamlGroupEditorPanel() {
     for (const arg of parsed.arguments) {
       if (argValues.hasOwnProperty(arg.name)) {
         next[arg.name] = argValues[arg.name];
-      } else if ((arg as any).defaultValue !== undefined) {
-        next[arg.name] = (arg as any).defaultValue as unknown;
+      } else if ('defaultValue' in arg && arg.defaultValue !== undefined) {
+        next[arg.name] = arg.defaultValue as unknown;
       } else {
         switch (arg.type) {
           case 'boolean': next[arg.name] = false; break;
@@ -132,7 +132,7 @@ export default function YamlGroupEditorPanel() {
     }
   }, [parsed, argValues]);
 
-  const mutateGroup = (mutator: (g: any) => void) => {
+  const mutateGroup = (mutator: (g: Record<string, unknown>) => void) => {
     if (!parsed) return;
     const next = JSON.parse(JSON.stringify(parsed));
     mutator(next);
@@ -142,7 +142,7 @@ export default function YamlGroupEditorPanel() {
 
   const renderMetadataEditor = () => {
     if (!parsed) return null;
-    const m = parsed.metadata as any;
+    const m = parsed.metadata as Record<string, unknown>;
     const inputCls = cn('w-full text-sm rounded-md border px-2 py-1', isDark ? 'bg-[#0b0e0b] border-[#2d4222]/50 text-[#e8f5d0]' : 'border-gray-300');
     const labelCls = cn('text-xs block mb-1', isDark ? 'text-gray-300' : 'text-gray-700');
     const iconOptions = getAvailableIcons();
@@ -240,13 +240,55 @@ export default function YamlGroupEditorPanel() {
     );
   };
 
+  const renderArgumentsEditor = () => {
+    if (!parsed) return null;
+    const args = parsed.arguments || [];
+    const labelCls = cn('text-xs block mb-1', isDark ? 'text-gray-300' : 'text-gray-700');
+    const inputCls = cn('w-full text-sm rounded-md border px-2 py-1', isDark ? 'bg-[#0b0e0b] border-[#2d4222]/50 text-[#e8f5d0]' : 'border-gray-300');
+    
+    return (
+      <div className="space-y-3">
+        <div className={cn('text-sm font-medium', isDark? 'text-gray-200':'text-gray-800')}>Arguments</div>
+        {args.length === 0 ? (
+          <div className={cn('text-xs', isDark ? 'text-gray-400' : 'text-gray-500')}>No arguments defined</div>
+        ) : (
+          <div className="space-y-3">
+            {args.map((arg, idx) => (
+              <div key={idx} className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>name</label>
+                    <input className={inputCls} value={arg.name || ''} onChange={(e) => mutateGroup(g => { (g.arguments as unknown[])[idx] = {...arg, name: e.target.value}; })} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>type</label>
+                    <select className={inputCls} value={arg.type || 'text'} onChange={(e) => mutateGroup(g => { (g.arguments as unknown[])[idx] = {...arg, type: e.target.value}; })}>
+                      <option value="text">text</option>
+                      <option value="boolean">boolean</option>
+                      <option value="array">array</option>
+                      <option value="dropdown">dropdown</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>description</label>
+                  <input className={inputCls} value={arg.description || ''} onChange={(e) => mutateGroup(g => { (g.arguments as unknown[])[idx] = {...arg, description: e.target.value}; })} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderDirectivesEditor = () => {
     if (!parsed) return null;
     const list = parsed.directives as Directive[];
-    const onChangeDirective = (idx: number, dir: Directive) => mutateGroup(g => { g.directives[idx] = dir; });
-    const move = (idx:number, dir:-1|1)=> mutateGroup(g=>{ const a=g.directives; const j=idx+dir; if(j<0||j>=a.length)return; [a[idx],a[j]]=[a[j],a[idx]];});
-    const remove = (idx:number)=> mutateGroup(g=>{ g.directives.splice(idx,1); });
-    const addDirective = (d: Directive, index?: number) => mutateGroup(g=>{ if(index!==undefined){ g.directives.splice(index,0,d);} else { g.directives.push(d);} });
+    const onChangeDirective = (idx: number, dir: Directive) => mutateGroup(g => { (g.directives as Directive[])[idx] = dir; });
+    const move = (idx:number, dir:-1|1)=> mutateGroup(g=>{ const a=g.directives as Directive[]; const j=idx+dir; if(j<0||j>=a.length)return; [a[idx],a[j]]=[a[j],a[idx]];});
+    const remove = (idx:number)=> mutateGroup(g=>{ (g.directives as Directive[]).splice(idx,1); });
+    const addDirective = (d: Directive, index?: number) => mutateGroup(g=>{ const directives = g.directives as Directive[]; if(index!==undefined){ directives.splice(index,0,d);} else { directives.push(d);} });
     return (
       <div className="space-y-3">
         <div className="flex justify-between items-center">
@@ -473,7 +515,7 @@ export default function YamlGroupEditorPanel() {
                         );
                       case 'text':
                       default:
-                        if ((arg as any).multiline) {
+                        if ('multiline' in arg && arg.multiline) {
                           return (
                             <div key={arg.name} className="col-span-2">
                               <label className={labelCls}>{arg.name}</label>

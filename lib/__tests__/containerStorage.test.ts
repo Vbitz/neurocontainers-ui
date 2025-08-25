@@ -1,3 +1,17 @@
+// Mock localStorage at the module level
+const mockStorage: { [key: string]: string } = {};
+const mockLocalStorage = {
+  getItem: (key: string) => mockStorage[key] || null,
+  setItem: (key: string, value: string) => { mockStorage[key] = value; },
+  removeItem: (key: string) => { delete mockStorage[key]; },
+  clear: () => { Object.keys(mockStorage).forEach(key => delete mockStorage[key]); }
+};
+
+// Mock the global localStorage
+Object.defineProperty(globalThis, 'localStorage', {
+  value: mockLocalStorage
+});
+
 import {
   getSavedContainers,
   saveContainer,
@@ -6,28 +20,6 @@ import {
   SaveStatus,
 } from '@/lib/containerStorage';
 import { ContainerRecipe } from '@/components/common';
-
-// Mock localStorage
-const mockLocalStorage = (() => {
-  let store: Record<string, string> = {};
-  
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    }
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: mockLocalStorage
-});
 
 describe('containerStorage', () => {
   beforeEach(() => {
@@ -70,16 +62,12 @@ describe('containerStorage', () => {
       const recipe: ContainerRecipe = {
         name: 'Test Container',
         version: '1.0.0',
-        description: 'Test description',
-        authors: ['Test Author'],
-        tool_name: 'test-tool',
-        tool_url: 'https://example.com',
-        documentation_url: 'https://docs.example.com',
-        categories: ['neuroimaging'],
-        license: 'MIT',
-        neurodocker: {
-          pkg_manager: 'apt',
-          instructions: [],
+        categories: ['functional imaging'],
+        build: {
+          kind: 'neurodocker',
+          'base-image': 'ubuntu:22.04',
+          'pkg-manager': 'apt',
+          directives: [],
         },
         architectures: ['x86_64'],
       };
@@ -100,16 +88,12 @@ describe('containerStorage', () => {
       const recipe: ContainerRecipe = {
         name: 'Original Name',
         version: '1.0.0',
-        description: 'Test description',
-        authors: ['Test Author'],
-        tool_name: 'test-tool',
-        tool_url: 'https://example.com',
-        documentation_url: 'https://docs.example.com',
-        categories: ['neuroimaging'],
-        license: 'MIT',
-        neurodocker: {
-          pkg_manager: 'apt',
-          instructions: [],
+        categories: ['functional imaging'],
+        build: {
+          kind: 'neurodocker',
+          'base-image': 'ubuntu:22.04',
+          'pkg-manager': 'apt',
+          directives: [],
         },
         architectures: ['x86_64'],
       };
@@ -130,16 +114,12 @@ describe('containerStorage', () => {
       const recipe: ContainerRecipe = {
         name: '',
         version: '1.0.0',
-        description: 'Test description',
-        authors: ['Test Author'],
-        tool_name: 'test-tool',
-        tool_url: 'https://example.com',
-        documentation_url: 'https://docs.example.com',
-        categories: ['neuroimaging'],
-        license: 'MIT',
-        neurodocker: {
-          pkg_manager: 'apt',
-          instructions: [],
+        categories: ['functional imaging'],
+        build: {
+          kind: 'neurodocker',
+          'base-image': 'ubuntu:22.04',
+          'pkg-manager': 'apt',
+          directives: [],
         },
         architectures: ['x86_64'],
       };
@@ -156,16 +136,12 @@ describe('containerStorage', () => {
         const recipe: ContainerRecipe = {
           name: `Container ${i}`,
           version: '1.0.0',
-          description: 'Test description',
-          authors: ['Test Author'],
-          tool_name: 'test-tool',
-          tool_url: 'https://example.com',
-          documentation_url: 'https://docs.example.com',
-          categories: ['neuroimaging'],
-          license: 'MIT',
-          neurodocker: {
-            pkg_manager: 'apt',
-            instructions: [],
+          categories: ['functional imaging'],
+          build: {
+            kind: 'neurodocker',
+            'base-image': 'ubuntu:22.04',
+            'pkg-manager': 'apt',
+            directives: [],
           },
           architectures: ['x86_64'],
         };
@@ -184,16 +160,12 @@ describe('containerStorage', () => {
       const recipe: ContainerRecipe = {
         name: 'Test Container',
         version: '1.0.0',
-        description: 'Test description',
-        authors: ['Test Author'],
-        tool_name: 'test-tool',
-        tool_url: 'https://example.com',
-        documentation_url: 'https://docs.example.com',
-        categories: ['neuroimaging'],
-        license: 'MIT',
-        neurodocker: {
-          pkg_manager: 'apt',
-          instructions: [],
+        categories: ['functional imaging'],
+        build: {
+          kind: 'neurodocker',
+          'base-image': 'ubuntu:22.04',
+          'pkg-manager': 'apt',
+          directives: [],
         },
         architectures: ['x86_64'],
       };

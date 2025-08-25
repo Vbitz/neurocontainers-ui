@@ -4,18 +4,6 @@ import {
   searchPackagesSync,
 } from '@/lib/packages';
 
-// Mock the package data
-jest.mock('@/lib/packages/ubuntu_noble_amd64.json', () => [
-  { name: 'curl', description: 'Command line tool for transferring data' },
-  { name: 'git', description: 'Distributed version control system' },
-  { name: 'python3', description: 'Interactive high-level object-oriented language' },
-  { name: 'python3-pip', description: 'Python package installer' },
-  { name: 'nodejs', description: 'JavaScript runtime environment' },
-  { name: 'nginx', description: 'High-performance web server' },
-  { name: 'libcurl4', description: 'Library for transferring data' },
-  { name: 'wget', description: 'Tool for retrieving files using HTTP, HTTPS and FTP' },
-], { virtual: true });
-
 describe('packages', () => {
   describe('searchPackagesSync', () => {
     it('should throw error if database not loaded', () => {

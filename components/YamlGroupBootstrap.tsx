@@ -12,12 +12,10 @@ export default function YamlGroupBootstrap() {
         try {
           void registerYamlGroup(g.yaml);
         } catch (e) {
-          // eslint-disable-next-line no-console
           console.error('Failed to register stored YAML group', g.key, e);
         }
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('Error bootstrapping stored YAML groups', e);
     }
   }, []);

@@ -24,6 +24,17 @@ Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage
 });
 
+// Also set it globally for direct access
+Object.defineProperty(global, 'localStorage', {
+  value: mockLocalStorage,
+  writable: true
+});
+
+// Ensure window is available globally
+if (typeof global.window === 'undefined') {
+  global.window = global;
+}
+
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
