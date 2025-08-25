@@ -689,14 +689,14 @@ export function astReferencesLocal(node: ExpressionNode): boolean {
         case 'null':
             return false;
         case 'unary':
-            return astReferencesLocal((node as UnaryOpNode).operand);
+            return astReferencesLocal((node as UnaryOpNode).operand as ExpressionNode);
         case 'binary': {
             const b = node as BinaryOpNode;
-            return astReferencesLocal(b.left) || astReferencesLocal(b.right);
+            return astReferencesLocal(b.left as ExpressionNode) || astReferencesLocal(b.right as ExpressionNode);
         }
         case 'call': {
             const c = node as CallNode;
-            return c.args.some(arg => astReferencesLocal(arg));
+            return c.args.some(arg => astReferencesLocal(arg as ExpressionNode));
         }
         default:
             return false;

@@ -6,7 +6,7 @@ import { cn } from '@/lib/styles';
 import { useTheme } from '@/lib/ThemeContext';
 import { loadStoredYamlGroups, saveStoredYamlGroups, upsertStoredYamlGroup, removeStoredYamlGroup, exportStoredYamlGroups, importStoredYamlGroups, StoredYamlGroup } from '@/lib/yamlGroupEditor/localStorage';
 import { parseYamlGroup, registerYamlGroup } from '@/lib/yamlGroupEditor/loader';
-import processYamlGroup from '@/lib/yamlGroupEditor';
+import processYamlGroup, { YamlGroupMetadata, YamlArgumentDescription } from '@/lib/yamlGroupEditor';
 import { getBuiltinYamlGroups } from '@/lib/yamlGroupEditor/builtin';
 import { dump as dumpYAML } from 'js-yaml';
 import { getAvailableIcons, getIconByName } from '@/lib/yamlGroupEditor/iconMapping';
@@ -138,7 +138,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
   // Render helpers for Visual tab
   const renderMetadataEditor = () => {
     if (!parsed) return null;
-    const m = parsed.metadata as Record<string, unknown>;
+    const m = parsed.metadata;
     const inputCls = cn('w-full text-sm rounded-md border px-2 py-1', isDark ? 'bg-[#0b0e0b] border-[#2d4222]/50 text-[#e8f5d0]' : 'border-gray-300');
     const labelCls = cn('text-xs block mb-1', isDark ? 'text-gray-300' : 'text-gray-700');
     const iconOptions = getAvailableIcons();
@@ -161,11 +161,11 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>key</label>
-            <input className={inputCls} value={m.key ?? ''} onChange={(e)=> mutateGroup(g=>{ g.metadata.key = e.target.value; })} />
+            <input className={inputCls} value={m.key ?? ''} onChange={(e)=> mutateGroup(g=>{ (g.metadata as YamlGroupMetadata).key = e.target.value; })} />
           </div>
           <div>
             <label className={labelCls}>label</label>
-            <input className={inputCls} value={m.label ?? ''} onChange={(e)=> mutateGroup(g=>{ g.metadata.label = e.target.value; })} />
+            <input className={inputCls} value={m.label ?? ''} onChange={(e)=> mutateGroup(g=>{ (g.metadata as YamlGroupMetadata).label = e.target.value; })} />
           </div>
           {/* Icon picker */}
           <div className="relative">
@@ -191,7 +191,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
                         key={icon}
                         type="button"
                         className={cn('flex items-center gap-2 px-2 py-1.5 rounded hover:bg-black/5', isDark? 'hover:bg-white/5':'hover:bg-black/5')}
-                        onClick={() => { mutateGroup(g=>{ g.metadata.icon = icon; }); setIconPickerOpen(false); }}
+                        onClick={() => { mutateGroup(g=>{ (g.metadata as YamlGroupMetadata).icon = icon; }); setIconPickerOpen(false); }}
                         title={icon}
                       >
                         <Ico className="h-5 w-5"/>
@@ -225,7 +225,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
                       key={c}
                       type="button"
                       className={cn('h-8 rounded-md border', isDark? colorPreview[c].borderDark : colorPreview[c].borderLight, isDark? colorPreview[c].bgDark : colorPreview[c].bgLight)}
-                      onClick={() => { mutateGroup(g=>{ g.metadata.color = c; }); setColorPickerOpen(false); }}
+                      onClick={() => { mutateGroup(g=>{ (g.metadata as YamlGroupMetadata).color = c; }); setColorPickerOpen(false); }}
                       title={c}
                     />
                   ))}
@@ -245,20 +245,20 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
           </div>
           <div className="col-span-2">
             <label className={labelCls}>description</label>
-            <input className={inputCls} value={m.description ?? ''} onChange={(e)=> mutateGroup(g=>{ g.metadata.description = e.target.value; })} />
+            <input className={inputCls} value={m.description ?? ''} onChange={(e)=> mutateGroup(g=>{ (g.metadata as YamlGroupMetadata).description = e.target.value; })} />
           </div>
           <div className="col-span-2">
             <label className={labelCls}>keywords</label>
             <TagEditor
-              tags={(m.keywords ?? []) as string[]}
-              onChange={(tags)=> mutateGroup(g=> { g.metadata.keywords = tags; })}
+              tags={m.keywords ?? []}
+              onChange={(tags)=> mutateGroup(g=> { (g.metadata as YamlGroupMetadata).keywords = tags; })}
               placeholder="Add keyword..."
               emptyMessage="No keywords yet"
             />
           </div>
           <div className="col-span-2">
             <label className={labelCls}>helpContent (Markdown)</label>
-            <textarea rows={6} className={inputCls} value={m.helpContent ?? ''} onChange={(e)=> mutateGroup(g=>{ g.metadata.helpContent = e.target.value; })} />
+            <textarea rows={6} className={inputCls} value={m.helpContent ?? ''} onChange={(e)=> mutateGroup(g=>{ (g.metadata as YamlGroupMetadata).helpContent = e.target.value; })} />
           </div>
         </div>
       </div>
@@ -270,11 +270,11 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
     const inputCls = cn('w-full text-sm rounded-md border px-3 py-2', isDark ? 'bg-[#0b0e0b] border-[#2d4222]/50 text-[#e8f5d0]' : 'border-gray-300');
     const labelCls = cn('text-xs font-medium block mb-1', isDark ? 'text-gray-300' : 'text-gray-700');
     const btnCls = cn('px-2 py-1 rounded-md text-xs', isDark ? 'bg-[#1e2a16] text-[#c4e382]' : 'bg-green-50 text-green-700 hover:bg-green-100');
-    const args = parsed.arguments as Record<string, unknown>[];
+    const args = parsed.arguments;
     const updateArg = (idx: number, patch: Record<string, unknown>) => mutateGroup(g=>{ (g.arguments as Record<string, unknown>[])[idx] = { ...(g.arguments as Record<string, unknown>[])[idx], ...patch }; });
-    const removeArg = (idx: number) => mutateGroup(g=>{ g.arguments.splice(idx,1); });
-    const addArg = () => mutateGroup(g=>{ g.arguments.push({ name: 'newArg', type: 'text', required: false, defaultValue: '', description: '' }); });
-    const moveArg = (idx:number, dir:-1|1)=> mutateGroup(g=>{ const a=g.arguments; const j=idx+dir; if(j<0||j>=a.length)return; [a[idx],a[j]]=[a[j],a[idx]];});
+    const removeArg = (idx: number) => mutateGroup(g=>{ (g.arguments as YamlArgumentDescription[]).splice(idx,1); });
+    const addArg = () => mutateGroup(g=>{ (g.arguments as YamlArgumentDescription[]).push({ name: 'newArg', type: 'text', required: false, defaultValue: '', description: '' }); });
+    const moveArg = (idx:number, dir:-1|1)=> mutateGroup(g=>{ const a=g.arguments as YamlArgumentDescription[]; const j=idx+dir; if(j<0||j>=a.length)return; [a[idx],a[j]]=[a[j],a[idx]];});
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -284,7 +284,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
         <div className="space-y-4">
           {args.map((arg, idx) => (
             <div key={idx} className={cn('p-4 rounded-lg border', isDark? 'border-[#2d4222]/50 bg-[#0b0e0b]/50':'border-gray-200 bg-gray-50/50')}>
-              {/* Row 1: Name, Type, Required */}
+              {/* Row 1: Name, Type, Required, Advanced */}
               <div className="grid grid-cols-12 gap-4 mb-4">
                 <div className="col-span-3">
                   <label className={labelCls}>name</label>
@@ -305,7 +305,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
                     <input 
                       type="checkbox" 
                       className="h-4 w-4"
-                      checked={Boolean(arg.required)} 
+                      checked={Boolean(arg.required ?? false)} 
                       onChange={(e)=>updateArg(idx,{required:e.target.checked})} 
                     />
                   </div>
@@ -316,7 +316,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
                     <input 
                       type="checkbox" 
                       className="h-4 w-4"
-                      checked={Boolean(arg.advanced)} 
+                      checked={Boolean((arg as unknown as Record<string, unknown>).advanced ?? false)} 
                       onChange={(e)=>updateArg(idx,{advanced:e.target.checked})} 
                     />
                   </div>
@@ -328,7 +328,7 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
                       <input 
                         type="checkbox" 
                         className="h-4 w-4"
-                        checked={Boolean((arg as Record<string, unknown>).multiline)} 
+                        checked={Boolean((arg as unknown as Record<string, unknown>).multiline)} 
                         onChange={(e)=>updateArg(idx,{multiline:e.target.checked})} 
                       />
                     </div>
@@ -416,10 +416,10 @@ export default function YamlGroupEditorModal({ isOpen, onClose }: { isOpen: bool
   const renderDirectivesEditor = () => {
     if (!parsed) return null;
     const list = parsed.directives as Directive[];
-    const onChangeDirective = (idx: number, dir: Directive) => mutateGroup(g => { g.directives[idx] = dir; });
-    const move = (idx:number, dir:-1|1)=> mutateGroup(g=>{ const a=g.directives; const j=idx+dir; if(j<0||j>=a.length)return; [a[idx],a[j]]=[a[j],a[idx]];});
-    const remove = (idx:number)=> mutateGroup(g=>{ g.directives.splice(idx,1); });
-    const addDirective = (d: Directive, index?: number) => mutateGroup(g=>{ if(index!==undefined){ g.directives.splice(index,0,d);} else { g.directives.push(d);} });
+    const onChangeDirective = (idx: number, dir: Directive) => mutateGroup(g => { (g.directives as Directive[])[idx] = dir; });
+    const move = (idx:number, dir:-1|1)=> mutateGroup(g=>{ const a=g.directives as Directive[]; const j=idx+dir; if(j<0||j>=a.length)return; [a[idx],a[j]]=[a[j],a[idx]];});
+    const remove = (idx:number)=> mutateGroup(g=>{ (g.directives as Directive[]).splice(idx,1); });
+    const addDirective = (d: Directive, index?: number) => mutateGroup(g=>{ const directives = g.directives as Directive[]; if(index!==undefined){ directives.splice(index,0,d);} else { directives.push(d);} });
     return (
       <div className="space-y-3">
         <div className="flex justify-between items-center">

@@ -142,7 +142,7 @@ export default function YamlGroupEditorPanel() {
 
   const renderMetadataEditor = () => {
     if (!parsed) return null;
-    const m = parsed.metadata as Record<string, unknown>;
+    const m = parsed.metadata as unknown as Record<string, unknown>;
     const inputCls = cn('w-full text-sm rounded-md border px-2 py-1', isDark ? 'bg-[#0b0e0b] border-[#2d4222]/50 text-[#e8f5d0]' : 'border-gray-300');
     const labelCls = cn('text-xs block mb-1', isDark ? 'text-gray-300' : 'text-gray-700');
     const iconOptions = getAvailableIcons();
@@ -159,22 +159,22 @@ export default function YamlGroupEditorPanel() {
       indigo: { bgLight:'bg-indigo-50', bgDark:'bg-indigo-900', textLight:'text-indigo-600', textDark:'text-indigo-400', borderLight:'border-indigo-200', borderDark:'border-indigo-700' },
       teal: { bgLight:'bg-teal-50', bgDark:'bg-teal-900', textLight:'text-teal-600', textDark:'text-teal-400', borderLight:'border-teal-200', borderDark:'border-teal-700' },
     };
-    const Icon = m.icon ? getIconByName(m.icon) : null;
+    const Icon = m.icon ? getIconByName(m.icon as string) : null;
     return (
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>key</label>
-            <input className={inputCls} value={m.key ?? ''} onChange={(e)=> mutateGroup(g=>{ g.metadata.key = e.target.value; })} />
+            <input className={inputCls} value={(m.key as string) ?? ''} onChange={(e)=> mutateGroup(g=>{ (g.metadata as Record<string, unknown>).key = e.target.value; })} />
           </div>
           <div>
             <label className={labelCls}>label</label>
-            <input className={inputCls} value={m.label ?? ''} onChange={(e)=> mutateGroup(g=>{ g.metadata.label = e.target.value; })} />
+            <input className={inputCls} value={(m.label as string) ?? ''} onChange={(e)=> mutateGroup(g=>{ (g.metadata as Record<string, unknown>).label = e.target.value; })} />
           </div>
           <div className="relative">
             <label className={labelCls}>icon</label>
             <button ref={iconButtonRef} type="button" className={cn(inputCls, 'flex items-center justify-between')} onClick={() => { setIconPickerOpen(v => !v); setColorPickerOpen(false); }}>
-              <span className="flex items-center gap-2 truncate">{Icon ? <Icon className="h-5 w-5"/> : null}<span className="truncate">{m.icon ?? 'Select icon'}</span></span>
+              <span className="flex items-center gap-2 truncate">{Icon ? <Icon className="h-5 w-5"/> : null}<span className="truncate">{(m.icon as string) ?? 'Select icon'}</span></span>
               <span className={cn('text-xs', isDark? 'text-gray-400':'text-gray-500')}>▼</span>
             </button>
             {iconPickerOpen && (
@@ -191,7 +191,7 @@ export default function YamlGroupEditorPanel() {
                   {iconOptions.filter(i => i.toLowerCase().includes(iconSearch.toLowerCase())).map((icon) => {
                     const Ico = getIconByName(icon);
                     return (
-                      <button key={icon} type="button" className={cn('flex items-center gap-2 px-2 py-1.5 rounded hover:bg-black/5', isDark? 'hover:bg-white/5':'hover:bg-black/5')} onClick={() => { mutateGroup(g=>{ g.metadata.icon = icon; }); setIconPickerOpen(false); }} title={icon}>
+                      <button key={icon} type="button" className={cn('flex items-center gap-2 px-2 py-1.5 rounded hover:bg-black/5', isDark? 'hover:bg-white/5':'hover:bg-black/5')} onClick={() => { mutateGroup(g=>{ (g.metadata as Record<string, unknown>).icon = icon; }); setIconPickerOpen(false); }} title={icon}>
                         <Ico className="h-5 w-5"/>
                         <span className="truncate text-sm">{icon}</span>
                       </button>
@@ -205,13 +205,13 @@ export default function YamlGroupEditorPanel() {
             <label className={labelCls}>color</label>
             <button ref={colorButtonRef} type="button" className={cn(inputCls, 'flex items-center gap-2')} onClick={() => { setColorPickerOpen(v => !v); setIconPickerOpen(false); }}>
               <span className={cn('h-4 w-4 rounded-full border', isDark ? colorPreview[m.color as keyof typeof colorPreview]?.borderDark : colorPreview[m.color as keyof typeof colorPreview]?.borderLight, isDark ? colorPreview[m.color as keyof typeof colorPreview]?.bgDark : colorPreview[m.color as keyof typeof colorPreview]?.bgLight)} />
-              <span className="text-sm">{m.color ?? 'Select color'}</span>
+              <span className="text-sm">{(m.color as string) ?? 'Select color'}</span>
             </button>
             {colorPickerOpen && (
               <div ref={colorPickerRef} className={cn('absolute z-20 mt-1 w-56 rounded-md border shadow-lg p-2', isDark? 'bg-[#0b0e0b] border-[#2d4222]/50':'bg-white border-gray-200')}>
                 <div className="grid grid-cols-5 gap-2">
                   {colorOptions.map((c) => (
-                    <button key={c} type="button" className={cn('h-8 rounded-md border', isDark? colorPreview[c].borderDark : colorPreview[c].borderLight, isDark? colorPreview[c].bgDark : colorPreview[c].bgLight)} onClick={() => { mutateGroup(g=>{ g.metadata.color = c; }); setColorPickerOpen(false); }} title={c} />
+                    <button key={c} type="button" className={cn('h-8 rounded-md border', isDark? colorPreview[c].borderDark : colorPreview[c].borderLight, isDark? colorPreview[c].bgDark : colorPreview[c].bgLight)} onClick={() => { mutateGroup(g=>{ (g.metadata as Record<string, unknown>).color = c; }); setColorPickerOpen(false); }} title={c} />
                   ))}
                 </div>
               </div>
@@ -225,15 +225,15 @@ export default function YamlGroupEditorPanel() {
           </div>
           <div className="col-span-2">
             <label className={labelCls}>description</label>
-            <input className={inputCls} value={m.description ?? ''} onChange={(e)=> mutateGroup(g=>{ g.metadata.description = e.target.value; })} />
+            <input className={inputCls} value={(m.description as string) ?? ''} onChange={(e)=> mutateGroup(g=>{ (g.metadata as Record<string, unknown>).description = e.target.value; })} />
           </div>
           <div className="col-span-2">
             <label className={labelCls}>keywords</label>
-            <TagEditor tags={(m.keywords ?? []) as string[]} onChange={(tags)=> mutateGroup(g=> { g.metadata.keywords = tags; })} placeholder="Add keyword..." emptyMessage="No keywords yet" />
+            <TagEditor tags={(m.keywords ?? []) as string[]} onChange={(tags)=> mutateGroup(g=> { (g.metadata as Record<string, unknown>).keywords = tags; })} placeholder="Add keyword..." emptyMessage="No keywords yet" />
           </div>
           <div className="col-span-2">
             <label className={labelCls}>helpContent (Markdown)</label>
-            <textarea rows={6} className={inputCls} value={m.helpContent ?? ''} onChange={(e)=> mutateGroup(g=>{ g.metadata.helpContent = e.target.value; })} />
+            <textarea rows={6} className={inputCls} value={(m.helpContent as string) ?? ''} onChange={(e)=> mutateGroup(g=>{ (g.metadata as Record<string, unknown>).helpContent = e.target.value; })} />
           </div>
         </div>
       </div>
