@@ -11,6 +11,13 @@ This is a Next.js web application for building Neurocontainers - containerized n
 - `bun dev` - Start development server
 - `bun run build` - Build for production  
 - `bun lint` - Run ESLint
+- `bunx tsc --noEmit` - Type check only (doesn't interfere with dev server)
+
+## Important Notes
+
+- **NEVER run `bun run build` during development** - it breaks the running dev server in other tabs
+- For verification after code changes, use `bun lint` and `bunx tsc --noEmit` for type checking
+- Only run builds when specifically requested or when preparing for production
 
 ## Architecture Overview
 
