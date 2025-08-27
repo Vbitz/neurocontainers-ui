@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useDeferredValue } from "react";
 import {
     XMarkIcon,
     BookOpenIcon,
@@ -11,16 +11,19 @@ import { cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 interface DirectiveDocumentationProps {
-    isOpen: boolean;
-    onClose: () => void;
+    isOpen?: boolean;
+    onClose?: () => void;
+    variant?: 'modal' | 'inline';
 }
 
 export default function DirectiveDocumentation({
-    isOpen,
+    isOpen = true,
     onClose,
+    variant = 'modal',
 }: DirectiveDocumentationProps) {
     const { isDark } = useTheme();
     const [searchQuery, setSearchQuery] = useState("");
+    const deferredSearch = useDeferredValue(searchQuery);
     const directives = getAllDirectives();
 
     // Categorize directives
@@ -57,7 +60,8 @@ export default function DirectiveDocumentation({
 
     // Filter and organize directives based on search query
     const filteredDirectives = useMemo(() => {
-        if (!searchQuery.trim()) {
+        const q = deferredSearch;
+        if (!q.trim()) {
             // No search query - return all categories in order: Core, Group, Template
             return [
                 ...categorizeDirectives.core,
@@ -68,7 +72,7 @@ export default function DirectiveDocumentation({
 
         // Filter all directives based on search query
         const filtered = directives.filter(directive => {
-            const query = searchQuery.toLowerCase();
+            const query = q.toLowerCase();
             return (
                 directive.label.toLowerCase().includes(query) ||
                 directive.description.toLowerCase().includes(query) ||
@@ -78,44 +82,52 @@ export default function DirectiveDocumentation({
             );
         });
         return filtered.sort((a, b) => a.label.localeCompare(b.label));
-    }, [directives, searchQuery, categorizeDirectives]);
+    }, [directives, deferredSearch, categorizeDirectives]);
 
-    if (!isOpen) return null;
+    // Inline variant is handled by reusing the same markup without overlay (see isModal logic below)
+
+    const isModal = variant === 'modal';
+    if (isModal && !isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-            {/* Enhanced background with better blur integration */}
-            <div
-                className="absolute inset-0 backdrop-blur-md"
-                style={{
-                    background: isDark
-                        ? "radial-gradient(circle at 30% 20%, rgba(123,179,58,0.08), transparent 50%), radial-gradient(circle at 70% 80%, rgba(145,200,74,0.08), transparent 50%), linear-gradient(135deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.50) 100%)"
-                        : "radial-gradient(circle at 30% 20%, rgba(106,163,41,0.12), transparent 50%), radial-gradient(circle at 70% 80%, rgba(79,123,56,0.12), transparent 50%), linear-gradient(135deg, rgba(255,255,255,0.60) 0%, rgba(248,249,251,0.70) 100%)",
-                }}
-            />
-            <div
-                className="absolute inset-0 opacity-10 animate-[movePattern_60s_linear_infinite]"
-                style={{
-                    backgroundImage:
-                        "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60\" height=\"60\" viewBox=\"0 0 60 60\"><circle cx=\"30\" cy=\"30\" r=\"1\" fill=\"%23ffffff\"/></svg>')",
-                    backgroundSize: "60px 60px",
-                }}
-            />
+        <div className={isModal ? "fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4" : "p-0"}>
+            {isModal && (
+                <>
+                    <div
+                        className="absolute inset-0 backdrop-blur-md"
+                        style={{
+                            background: isDark
+                                ? "radial-gradient(circle at 30% 20%, rgba(123,179,58,0.08), transparent 50%), radial-gradient(circle at 70% 80%, rgba(145,200,74,0.08), transparent 50%), linear-gradient(135deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.50) 100%)"
+                                : "radial-gradient(circle at 30% 20%, rgba(106,163,41,0.12), transparent 50%), radial-gradient(circle at 70% 80%, rgba(79,123,56,0.12), transparent 50%), linear-gradient(135deg, rgba(255,255,255,0.60) 0%, rgba(248,249,251,0.70) 100%)",
+                        }}
+                    />
+                    <div
+                        className="absolute inset-0 opacity-10 animate-[movePattern_60s_linear_infinite]"
+                        style={{
+                            backgroundImage:
+                                "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60\" height=\"60\" viewBox=\"0 0 60 60\"><circle cx=\"30\" cy=\"30\" r=\"1\" fill=\"%23ffffff\"/></svg>')",
+                            backgroundSize: "60px 60px",
+                        }}
+                    />
+                </>
+            )}
 
-            {/* Modal */}
             <div
                 className={cn(
-                    "relative w-full max-w-7xl h-full max-h-[95vh] sm:max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border backdrop-blur-sm",
-                    isDark
-                        ? "bg-black/40 border-white/20 shadow-black/50"
-                        : "bg-white/90 border-gray-200/50 shadow-black/20"
+                    isModal
+                      ? cn(
+                          "relative w-full rounded-xl shadow-2xl flex flex-col overflow-hidden border backdrop-blur-sm",
+                          isDark ? "bg-black/40 border-white/20 shadow-black/50" : "bg-white/90 border-gray-200/50 shadow-black/20",
+                          "max-w-7xl h-full max-h-[95vh] sm:max-h-[90vh]"
+                        )
+                      : "relative w-full flex flex-col"
                 )}
             >
                 {/* Header */}
                 <div
                     className={cn(
-                        "flex items-center justify-between px-5 py-3 border-b",
-                        isDark ? "border-white/10" : "border-gray-200/50"
+                        "flex items-center justify-between px-5 py-3",
+                        isModal ? (isDark ? "border-white/10 border-b" : "border-gray-200/50 border-b") : ""
                     )}
                 >
                     <div className="flex items-center space-x-3">
@@ -134,28 +146,28 @@ export default function DirectiveDocumentation({
                             <span className="hidden sm:inline">Directive </span>Documentation
                         </h2>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className={cn(
-                            "p-2 rounded-lg transition-colors",
-                            isDark
-                                ? "hover:bg-white/10 text-gray-300"
-                                : "hover:bg-gray-100 text-gray-500"
-                        )}
-                    >
-                        <XMarkIcon className="h-5 w-5" />
-                    </button>
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className={cn(
+                                "p-2 rounded-lg transition-colors",
+                                isDark
+                                    ? "hover:bg-white/10 text-gray-300"
+                                    : "hover:bg-gray-100 text-gray-500"
+                            )}
+                        >
+                            <XMarkIcon className="h-5 w-5" />
+                        </button>
+                    )}
                 </div>
 
-                {/* Content */}
-                <div className="flex flex-1 overflow-hidden">
+                {/* Content: 25/75 split with sticky left sidebar (account for header height) */}
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Sidebar */}
                     <div
                         className={cn(
-                            "w-80 border-r overflow-y-auto hidden lg:block backdrop-blur-md",
-                            isDark
-                                ? "border-white/10 bg-black/20"
-                                : "border-gray-200/50 bg-white/30"
+                            "hidden lg:block lg:col-span-1 sticky top-[96px] self-start max-h-[calc(100vh-120px)] overflow-y-auto",
+                            isModal ? (isDark ? "border-white/10 bg-black/20 border-r" : "border-gray-200/50 bg-white/30 border-r") : ""
                         )}
                     >
                         <div className="p-4">
@@ -406,14 +418,13 @@ export default function DirectiveDocumentation({
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="lg:col-span-3 min-w-0">
                         {/* Mobile Search */}
                         <div
                             className={cn(
-                                "lg:hidden p-4 border-b sticky top-0 z-10 backdrop-blur-md",
-                                isDark
-                                    ? "bg-black/30 border-white/10"
-                                    : "bg-white/80 border-gray-200/50"
+                                "lg:hidden p-4 border-b sticky z-10 backdrop-blur-md",
+                                isModal ? "top-0" : "top-[96px]",
+                                isDark ? "bg-black/30 border-white/10" : "bg-white/80 border-gray-200/50"
                             )}
                         >
                             <div className="relative">

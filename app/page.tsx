@@ -26,6 +26,7 @@ import { TopNavigation } from "@/components/TopNavigation";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Footer } from "@/components/Footer";
 import YamlGroupBootstrap from "@/components/YamlGroupBootstrap";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 // Extracted utilities and types
 import { sections } from "@/lib/sections";
@@ -37,6 +38,20 @@ import { SavedContainer } from "@/lib/containerStorage";
 
 export default function Home() {
     const { isDark } = useTheme();
+    const [useNewUI, setUseNewUI] = useState<boolean>(false);
+
+    // Persisted toggle for new UI
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('nc-new-ui');
+            if (stored) setUseNewUI(stored === '1');
+        } catch {}
+    }, []);
+    useEffect(() => {
+        try {
+            localStorage.setItem('nc-new-ui', useNewUI ? '1' : '0');
+        } catch {}
+    }, [useNewUI]);
 
     // Mouse tracking state for background animation
     const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
@@ -338,6 +353,25 @@ export default function Home() {
         initializeApp();
     }, [loadContainer, loadContainerByName]);
 
+    // If new UI is enabled, render the tabbed layout and a small toggle in the corner
+    if (useNewUI) {
+        return (
+            <div className="min-h-screen flex flex-col relative">
+                <div className="fixed top-2 right-2 z-50 flex items-center gap-2 text-xs bg-black/40 text-white px-2 py-1 rounded-md backdrop-blur-md">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={useNewUI}
+                            onChange={(e) => setUseNewUI(e.target.checked)}
+                        />
+                        New tabbed UI
+                    </label>
+                </div>
+                <AppLayout />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen flex overflow-x-hidden relative">
             {/* Bootstrap any YAML groups saved in localStorage */}
@@ -380,6 +414,17 @@ export default function Home() {
             />
 
             <div className="flex-1 min-h-screen overflow-x-hidden lg:ml-64 relative z-10">
+                {/* Toggle for new UI */}
+                <div className="fixed top-2 right-2 z-50 flex items-center gap-2 text-xs">
+                    <label className={cn("flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer backdrop-blur-md", isDark ? "bg-black/40 text-white" : "bg-white/70 text-gray-800 border border-gray-200") }>
+                        <input
+                            type="checkbox"
+                            checked={useNewUI}
+                            onChange={(e) => setUseNewUI(e.target.checked)}
+                        />
+                        New tabbed UI
+                    </label>
+                </div>
                 <TopNavigation
                     onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
                     yamlData={yamlData}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useDeferredValue } from "react";
 import { load as loadYAML } from "js-yaml";
 import {
     CloudIcon,
@@ -33,6 +33,7 @@ export function RemoteContainersList({
     const { files, loading, error, refetch, clearCache } = useGitHubFiles("neurodesk", "neurocontainers", "main");
     const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const deferredSearch = useDeferredValue(searchTerm);
 
     const getRecipeName = (path: string) => {
         const parts = path.split('/');
@@ -40,16 +41,16 @@ export function RemoteContainersList({
     };
 
     const filteredFiles = useMemo(() => {
-        if (!searchTerm) return files;
+        if (!deferredSearch) return files;
 
         return files.filter(file => {
             const recipeName = getRecipeName(file.path).toLowerCase();
             const path = file.path.toLowerCase();
-            const search = searchTerm.toLowerCase();
+            const search = deferredSearch.toLowerCase();
 
             return recipeName.includes(search) || path.includes(search);
         });
-    }, [files, searchTerm]);
+    }, [files, deferredSearch]);
 
     const handleLoadRecipe = async (file: {
         path: string;

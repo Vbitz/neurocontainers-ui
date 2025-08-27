@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PlusIcon, TrashIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, CheckCircleIcon, ExclamationCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
-import { cn } from '@/lib/styles';
+import { cn, buttonStyles, textStyles } from '@/lib/styles';
 import { useTheme } from '@/lib/ThemeContext';
-import { loadStoredYamlGroups, saveStoredYamlGroups, upsertStoredYamlGroup, removeStoredYamlGroup, importStoredYamlGroups, StoredYamlGroup } from '@/lib/yamlGroupEditor/localStorage';
+import { loadStoredYamlGroups, saveStoredYamlGroups, upsertStoredYamlGroup, removeStoredYamlGroup, importStoredYamlGroups, exportStoredYamlGroups, StoredYamlGroup } from '@/lib/yamlGroupEditor/localStorage';
 import { parseYamlGroup, registerYamlGroup } from '@/lib/yamlGroupEditor/loader';
 import processYamlGroup from '@/lib/yamlGroupEditor';
 import { getBuiltinYamlGroups } from '@/lib/yamlGroupEditor/builtin';
@@ -31,6 +31,7 @@ export default function YamlGroupEditorPanel() {
   const [iconSearch, setIconSearch] = useState('');
   const libraryRef = useRef<HTMLDivElement | null>(null);
   const [libraryHeight, setLibraryHeight] = useState(0);
+  const [librarySearch, setLibrarySearch] = useState('');
   const [fullScreen, setFullScreen] = useState(false);
   const iconPickerRef = useRef<HTMLDivElement | null>(null);
   const colorPickerRef = useRef<HTMLDivElement | null>(null);
@@ -380,13 +381,35 @@ export default function YamlGroupEditorPanel() {
         {showLibrary && (
           <div ref={libraryRef} className={cn('absolute inset-x-0 top-0 z-10 border-b backdrop-blur-md', isDark? 'bg-black/40 border-[#2d4222]/50':'bg-white/70 border-gray-200/60')}>
             <div className="p-3 flex items-center justify-between">
-              <div className={cn('text-sm font-medium', isDark? 'text-gray-200':'text-gray-800')}>Library</div>
+              <div className="flex-1 flex items-center gap-3">
+                <div className={textStyles(isDark, { size: 'sm', weight: 'medium', color: 'primary' })}>Library</div>
+                <div className="relative max-w-xs w-full">
+                  <input
+                    value={librarySearch}
+                    onChange={(e)=>setLibrarySearch(e.target.value)}
+                    placeholder="Search groups..."
+                    className={cn('w-full text-xs rounded-md border pl-8 pr-2 py-1.5', isDark ? 'bg-[#0b0e0b] border-[#2d4222]/50 text-[#e8f5d0]' : 'border-gray-300')}
+                  />
+                  <svg className={cn('absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5', isDark?'text-gray-400':'text-gray-500')} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
-                <button className={cn('px-3 py-1.5 rounded-md text-sm', isDark ? 'bg-[#1e2a16] text-[#c4e382]' : 'bg-green-50 text-green-700 hover:bg-green-100')} onClick={onNew}><PlusIcon className="h-4 w-4 inline"/> New</button>
-                <button className={cn('p-2 rounded-md', isDark ? 'hover:bg-[#1e2a16]' : 'hover:bg-gray-100')} onClick={onSave} title="Save & Enable">
+                <button className={buttonStyles(isDark, 'primary', 'sm')} onClick={onNew}><PlusIcon className="h-4 w-4 inline"/> New</button>
+                <button className={buttonStyles(isDark, 'secondary', 'sm')} onClick={onSave} title="Save & Enable">
                   <ArrowDownTrayIcon className="h-4 w-4" />
                 </button>
-                <label className={cn('p-2 rounded-md cursor-pointer', isDark ? 'hover:bg-[#1e2a16]' : 'hover:bg-gray-100')} title="Import">
+                <button className={buttonStyles(isDark, 'secondary', 'sm')} onClick={() => {
+                  try {
+                    const json = exportStoredYamlGroups();
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = 'yaml-groups.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                  } catch (e) { console.error('Failed to export groups', e); }
+                }} title="Export all">
+                  <ArrowUpTrayIcon className="h-4 w-4 rotate-180" />
+                </button>
+                <label className={cn(buttonStyles(isDark, 'secondary', 'sm'), 'cursor-pointer')} title="Import">
                   <ArrowUpTrayIcon className="h-4 w-4" />
                   <input type="file" accept="application/json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) {
                     const reader = new FileReader();
@@ -396,14 +419,24 @@ export default function YamlGroupEditorPanel() {
                       setInfo('Imported and registered enabled YAML groups.'); setError(null);} catch (e) { setError(e instanceof Error ? e.message : String(e)); } }; reader.readAsText(f);
                   } e.currentTarget.value=''; }} />
                 </label>
-                <button className={cn('px-2 py-1 rounded-md text-xs', isDark? 'bg-[#1e2a16] text-[#c4e382]':'bg-green-50 text-green-700 hover:bg-green-100')} onClick={()=> setShowLibrary(false)}>Hide</button>
+                <button className={buttonStyles(isDark, 'ghost', 'sm')} onClick={()=> setShowLibrary(false)}>Hide</button>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 p-3 max-h-64 overflow-auto">
               <div>
                 <div className={cn('px-2 py-1 text-xs uppercase tracking-wide', isDark ? 'text-gray-400' : 'text-gray-500')}>Built-in</div>
                 <div className="space-y-1">
-                  {builtin.map(b => {
+                  {builtin
+                    .filter(b => {
+                      if (!librarySearch.trim()) return true;
+                      try { const k = parseYamlGroup(b.yaml).metadata.key.toLowerCase(); return k.includes(librarySearch.toLowerCase()); } catch { return b.filename.toLowerCase().includes(librarySearch.toLowerCase()); }
+                    })
+                    .sort((a,b)=>{
+                      const ka = (()=>{ try { return parseYamlGroup(a.yaml).metadata.key as string; } catch { return a.filename; }})();
+                      const kb = (()=>{ try { return parseYamlGroup(b.yaml).metadata.key as string; } catch { return b.filename; }})();
+                      return ka.localeCompare(kb);
+                    })
+                    .map(b => {
                     let key = '';
                     try { key = parseYamlGroup(b.yaml).metadata.key; } catch { key = b.filename; }
                     return (
@@ -421,7 +454,11 @@ export default function YamlGroupEditorPanel() {
               <div>
                 <div className={cn('px-2 py-1 text-xs uppercase tracking-wide', isDark ? 'text-gray-400' : 'text-gray-500')}>My Groups</div>
                 <div className="space-y-1">
-                  {groups.map(g => (
+                  {groups
+                    .slice()
+                    .sort((a,b)=> b.updatedAt - a.updatedAt)
+                    .filter(g => !librarySearch.trim() || g.key.toLowerCase().includes(librarySearch.toLowerCase()))
+                    .map(g => (
                     <div key={g.id} className={cn('flex items-center justify-between px-2 py-2 rounded-md cursor-pointer', activeId === g.id ? (isDark ? 'bg-[#1e2a16]' : 'bg-gray-100') : '')} onClick={() => { setActiveId(g.id); setYamlText(g.yaml); setShowLibrary(false); }}>
                       <div className="flex flex-col">
                         <span className="text-sm font-medium">{g.key}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useDeferredValue } from "react";
 import {
     ComputerDesktopIcon,
     TrashIcon,
@@ -28,6 +28,7 @@ export function LocalContainersList({
     const [savedContainers, setSavedContainers] = useState<SavedContainer[]>([]);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const deferredSearch = useDeferredValue(searchTerm);
 
     useEffect(() => {
         setSavedContainers(getSavedContainers());
@@ -42,16 +43,16 @@ export function LocalContainersList({
     };
 
     const filteredContainers = useMemo(() => {
-        if (!searchTerm) return savedContainers;
+        if (!deferredSearch) return savedContainers;
 
         return savedContainers.filter(container => {
             const name = container.name.toLowerCase();
             const version = container.version.toLowerCase();
-            const search = searchTerm.toLowerCase();
+            const search = deferredSearch.toLowerCase();
 
             return name.includes(search) || version.includes(search);
         });
-    }, [savedContainers, searchTerm]);
+    }, [savedContainers, deferredSearch]);
 
     const handleDelete = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
