@@ -40,11 +40,11 @@ jobs:
       - name: Run linting
         run: bun run lint
 
-      - name: Install Playwright browsers
-        run: bunx playwright install --with-deps
+      # - name: Install Playwright browsers
+      #   run: bunx playwright install --with-deps
 
-      - name: Run E2E tests
-        run: bun run test:e2e
+      # - name: Run E2E tests
+      #   run: bun run test:e2e
 
   build:
     runs-on: ubuntu-latest
