@@ -246,10 +246,21 @@ export default function YamlGroupEditorPanel() {
     const args = parsed.arguments || [];
     const labelCls = cn('text-xs block mb-1', isDark ? 'text-gray-300' : 'text-gray-700');
     const inputCls = cn('w-full text-sm rounded-md border px-2 py-1', isDark ? 'bg-[#0b0e0b] border-[#2d4222]/50 text-[#e8f5d0]' : 'border-gray-300');
-    
+    const addArg = () => mutateGroup(g => { (g.arguments as Record<string, unknown>[]).push({ name: 'newArg', type: 'text', required: false, description: '' }); });
+    const removeArg = (idx: number) => mutateGroup(g => { (g.arguments as unknown[]).splice(idx, 1); });
+
     return (
       <div className="space-y-3">
-        <div className={cn('text-sm font-medium', isDark? 'text-gray-200':'text-gray-800')}>Arguments</div>
+        <div className="flex items-center justify-between">
+          <div className={cn('text-sm font-medium', isDark? 'text-gray-200':'text-gray-800')}>Arguments</div>
+          <button
+            type="button"
+            className={cn(buttonStyles(isDark, 'secondary', 'sm'), 'flex items-center gap-1')}
+            onClick={addArg}
+          >
+            <PlusIcon className="h-4 w-4" /> Add argument
+          </button>
+        </div>
         {args.length === 0 ? (
           <div className={cn('text-xs', isDark ? 'text-gray-400' : 'text-gray-500')}>No arguments defined</div>
         ) : (
@@ -274,6 +285,15 @@ export default function YamlGroupEditorPanel() {
                 <div>
                   <label className={labelCls}>description</label>
                   <input className={inputCls} value={arg.description || ''} onChange={(e) => mutateGroup(g => { (g.arguments as unknown[])[idx] = {...arg, description: e.target.value}; })} />
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    className={cn(buttonStyles(isDark, 'danger', 'sm'), 'flex items-center gap-1')}
+                    onClick={() => removeArg(idx)}
+                  >
+                    <TrashIcon className="h-4 w-4" /> Remove
+                  </button>
                 </div>
               </div>
             ))}
