@@ -17,19 +17,19 @@ export function WizardTab({ tabId }: { tabId?: string }) {
 
   return (
     <div className={layout.container + " py-4 sm:py-6"}>
-      <GuidedTour
-        isOpen={true}
-        variant="inline"
-        onClose={() => close(tab.id)}
-        onComplete={(recipe) => {
-          open({ type: 'recipe', title: recipe.name || 'Untitled', payload: { recipe } });
-          close(tab.id);
-        }}
-        onPublish={(recipe) => {
-          open({ type: 'recipe', title: recipe.name || 'Untitled', payload: { recipe } });
-          close(tab.id);
-        }}
-      />
+      <div className="max-w-5xl mx-auto">
+        <GuidedTour
+          onClose={() => close(tab.id)}
+          onComplete={(recipe) => {
+            open({ type: 'recipe', title: recipe.name || 'Untitled', payload: { recipe } });
+            close(tab.id);
+          }}
+          onPublish={(recipe) => {
+            open({ type: 'recipe', title: recipe.name || 'Untitled', payload: { recipe } });
+            close(tab.id);
+          }}
+        />
+      </div>
     </div>
   );
 }
