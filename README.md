@@ -34,3 +34,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Local Container Testing Service
+
+A minimal Go-based testing service lives under `go/cmd/tester`. It exposes an HTTP server on port `8080` with a WebSocket endpoint that streams Docker build output and then provides an interactive shell.
+
+Start the service with:
+
+```bash
+cd go
+go run cmd/tester/main.go
+```
+
+With the service running, open `http://localhost:3000/tester` and provide both the backend URL (for example, `http://localhost:8080`) and a URL to the YAML specification. The UI will open a new tab with an xterm.js terminal that streams build output and then drops into an interactive shell.
+
