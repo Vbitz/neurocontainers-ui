@@ -17,7 +17,7 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
   const effectiveId = tabId ?? activeId;
   const tab = useMemo(() => tabs.find(t => t.id === effectiveId), [tabs, effectiveId]);
   const { isDark } = useTheme();
-  const [recipe, setRecipe] = useState<ContainerRecipe | null>(() => (tab?.payload as any)?.recipe ?? null);
+  const [recipe, setRecipe] = useState<ContainerRecipe | null>(() => (tab?.payload as { recipe?: ContainerRecipe } | undefined)?.recipe ?? null);
 
   const { saveStatus, currentContainerId, saveToStorage, setCurrentContainerId, exportYAML } = useContainerStorage();
   const validateRef = useRef<HTMLDivElement | null>(null);
@@ -25,10 +25,10 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
 
   // Sync local state from active tab when switching
   useEffect(() => {
-    const payload: any = tab?.payload || {};
+    const payload = (tab?.payload as { recipe?: ContainerRecipe; containerId?: string } | undefined) || {};
     setRecipe(payload.recipe ?? null);
     if (payload.containerId) {
-      setCurrentContainerId(payload.containerId as string);
+      setCurrentContainerId(payload.containerId);
     } else {
       setCurrentContainerId(null);
     }
@@ -47,14 +47,15 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
     }
     const desiredTitle = recipe?.name?.trim() || "Untitled";
     const currentTitle = tab.title;
-    const currentRecipe = (tab.payload as any)?.recipe;
+    const currentRecipe = (tab.payload as { recipe?: ContainerRecipe } | undefined)?.recipe;
     const shouldUpdateTitle = currentTitle !== desiredTitle;
     const shouldUpdateRecipe = currentRecipe !== recipe;
     if (!shouldUpdateTitle && !shouldUpdateRecipe) return;
     update(tab.id, (draft) => {
       if (shouldUpdateTitle) draft.title = desiredTitle;
       if (shouldUpdateRecipe) {
-        (draft.payload as any) = { ...(draft.payload || {}), recipe };
+        const base = (draft.payload as Record<string, unknown>) || {};
+        draft.payload = { ...base, recipe } as unknown;
       }
     });
   }, [recipe, tab, update]);
@@ -77,9 +78,12 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
   // When storage hook allocates an id, persist only containerId in payload for restore
   useEffect(() => {
     if (!tab) return;
-    const currentId = (tab.payload as any)?.containerId;
+    const currentId = (tab.payload as { containerId?: string } | undefined)?.containerId;
     if (currentContainerId && currentId !== currentContainerId) {
-      update(tab.id, (draft) => { (draft.payload as any) = { ...(draft.payload || {}), containerId: currentContainerId }; });
+      update(tab.id, (draft) => {
+        const base = (draft.payload as Record<string, unknown>) || {};
+        draft.payload = { ...base, containerId: currentContainerId } as unknown;
+      });
     }
   }, [currentContainerId, tab, update]);
 

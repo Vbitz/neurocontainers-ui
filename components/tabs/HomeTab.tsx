@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
-import { cn, buttonStyles, textStyles, cardStyles, getThemeComponents } from "@/lib/styles";
+import { cn, getThemeComponents } from "@/lib/styles";
 import { SparklesIcon, ArrowUpTrayIcon, DocumentPlusIcon } from "@heroicons/react/24/outline";
 import { Footer } from "@/components/Footer";
 import { useTabs } from "@/lib/tabs/TabManager";
@@ -164,6 +164,7 @@ export function HomeTab() {
         <RemoteContainersList
           onLoadRecipe={loadContainer}
           onLoadLocalRecipe={(content, _filename) => {
+            void _filename;
             try {
               const recipe = loadYAML(content) as ContainerRecipe;
               loadContainer(migrateLegacyRecipe(recipe));

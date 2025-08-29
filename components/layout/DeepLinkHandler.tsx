@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useTabs } from "@/lib/tabs/TabManager";
 import { useGitHubFiles } from "@/lib/useGithub";
 import { getSavedContainers } from "@/lib/containerStorage";
@@ -72,4 +72,3 @@ export function DeepLinkHandler() {
 
   return null;
 }
-

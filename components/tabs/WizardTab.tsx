@@ -22,11 +22,11 @@ export function WizardTab({ tabId }: { tabId?: string }) {
         variant="inline"
         onClose={() => close(tab.id)}
         onComplete={(recipe) => {
-          const id = open({ type: 'recipe', title: recipe.name || 'Untitled', payload: { recipe } });
+          open({ type: 'recipe', title: recipe.name || 'Untitled', payload: { recipe } });
           close(tab.id);
         }}
         onPublish={(recipe) => {
-          const id = open({ type: 'recipe', title: recipe.name || 'Untitled', payload: { recipe } });
+          open({ type: 'recipe', title: recipe.name || 'Untitled', payload: { recipe } });
           close(tab.id);
         }}
       />

@@ -1,11 +1,12 @@
 "use client";
 
-import { XMarkIcon, ExclamationTriangleIcon, DocumentTextIcon, BookOpenIcon, HomeIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ExclamationTriangleIcon, DocumentTextIcon, BookOpenIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
 import { useTabs } from "@/lib/tabs/TabManager";
 import { cn, buttonStyles, cardStyles, textStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 import { useMemo, useState } from "react";
 import { saveContainer } from "@/lib/containerStorage";
+import type { ContainerRecipe } from "@/components/common";
 
 export function TabBar() {
   const { tabs, activeId, activate, close, update } = useTabs();
@@ -15,7 +16,7 @@ export function TabBar() {
 
   const iconFor = (type: string) => {
     switch (type) {
-      case "home": return HomeIcon;
+      case "home": return FolderOpenIcon;
       case "docs": return BookOpenIcon;
       case "group-editor": return DocumentTextIcon;
       default: return DocumentTextIcon;
@@ -28,10 +29,11 @@ export function TabBar() {
         {tabs.map(t => {
           const Icon = iconFor(t.type);
           const isActive = t.id === activeId;
+          const label = t.type === 'home' ? 'Library' : t.title;
           return (
             <div key={t.id} className={cn("flex items-center gap-2 px-3 py-2 whitespace-nowrap cursor-pointer border-r", isDark ? "border-[#1f2e18]/60" : "border-[#e6f1d6]", isActive ? (isDark ? "bg-[#10140d]" : "bg-[#f0fdf4]") : "")} onClick={() => activate(t.id)}>
               <Icon className={cn("h-4 w-4", isDark ? "text-[#c4e382]" : "text-green-700")} />
-              <span className={textStyles(isDark, { size: 'sm', color: 'primary' })}>{t.title}</span>
+              <span className={textStyles(isDark, { size: 'sm', color: 'primary' })}>{label}</span>
               {t.dirty ? <span className={cn("h-2 w-2 rounded-full", isDark ? "bg-yellow-400" : "bg-yellow-500")} /> : null}
               <button className={cn("ml-1 p-1 rounded", isDark ? "hover:bg-white/10" : "hover:bg-black/10")} onClick={(e) => { e.stopPropagation(); if (t.dirty) setConfirmCloseId(t.id); else close(t.id); }}>
                 <XMarkIcon className="h-4 w-4" />
@@ -53,10 +55,12 @@ export function TabBar() {
                   <button className={buttonStyles(isDark, 'primary', 'sm')} onClick={() => {
                     try {
                       const t = closingTab;
-                      if (t?.type === 'recipe' && t.payload && (t.payload as any).recipe) {
-                        const payload: any = t.payload;
-                        const id = saveContainer(payload.recipe, payload.containerId);
-                        update(t.id, (draft) => { draft.dirty = false; draft.payload = { ...payload, containerId: id }; });
+                      if (t?.type === 'recipe' && t.payload) {
+                        const payload = t.payload as { recipe?: ContainerRecipe; containerId?: string };
+                        if (payload.recipe) {
+                          const id = saveContainer(payload.recipe, payload.containerId);
+                          update(t.id, (draft) => { draft.dirty = false; draft.payload = { ...payload, containerId: id }; });
+                        }
                         close(t.id);
                         setConfirmCloseId(null);
                       } else {

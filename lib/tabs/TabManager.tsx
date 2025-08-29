@@ -73,7 +73,12 @@ function genId(prefix = "tab"): string {
 }
 
 export function TabProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<TabState>(() => loadFromStorage() ?? { tabs: [], activeId: null });
+  const [state, setState] = useState<TabState>(() => {
+    const stored = loadFromStorage();
+    if (stored) return stored;
+    const id = genId('home');
+    return { tabs: [{ id, type: 'home', title: 'Library' } as Tab], activeId: id };
+  });
   const isRestoredRef = useRef(false);
   const tabParam = useHashParam("tab");
 
@@ -85,20 +90,24 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
   // Sync active tab to hash
   useEffect(() => {
     if (state.activeId) tabParam.set(state.activeId);
-  }, [state.activeId]);
+  }, [state.activeId, tabParam]);
 
   // Restore from hash on mount
   useEffect(() => {
     if (isRestoredRef.current) return;
     isRestoredRef.current = true;
     const fromStorage = loadFromStorage();
-    let next = fromStorage ?? { tabs: [], activeId: null };
     const hashActive = tabParam.get();
-    if (hashActive && next.tabs.some(t => t.id === hashActive)) {
-      next = { ...next, activeId: hashActive };
+    let next: TabState | null = null;
+    if (fromStorage) next = fromStorage;
+    if (hashActive) {
+      const base = next ?? state;
+      if (base.tabs.some(t => t.id === hashActive)) {
+        next = { ...base, activeId: hashActive };
+      }
     }
-    setState(next);
-  }, []);
+    if (next) setState(next);
+  }, [tabParam, state]);
 
   const open = useCallback<TabManager["open"]>((tab) => {
     const id = tab.id ?? genId(tab.type);

@@ -13,11 +13,9 @@ import { RecipeTab } from "@/components/tabs/RecipeTab";
 import { DeepLinkHandler } from "@/components/layout/DeepLinkHandler";
 import { Background } from "@/components/layout/Background";
 import { WizardTab } from "@/components/tabs/WizardTab";
-import { Logo } from "@/components/ui/Logo";
 
 function Content() {
   const { tabs, activeId, open } = useTabs();
-  const active = tabs.find(t => t.id === activeId);
   const { isDark } = useTheme();
   // Preserve scroll positions per tab id
   const scrollMapRef = useRef<Record<string, number>>({});
@@ -40,23 +38,17 @@ function Content() {
     lastActiveRef.current = activeId;
   }, [activeId]);
 
+  // Auto-open Library when no tabs exist
+  useEffect(() => {
+    if (tabs.length === 0) {
+      open({ type: 'home', title: 'Library' });
+    }
+  }, [tabs.length, open]);
+
   // If there are no tabs open, show landing screen with logo and open button
   if (tabs.length === 0) {
-    return (
-      <div className="min-h-[calc(100vh-96px)] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center"><Logo className="h-8 w-auto" /></div>
-          <div>
-            <button
-              className={cn("px-4 py-2 rounded-md text-sm", isDark?"bg-[#1f2e18] text-white":"bg-gray-100 text-gray-800")}
-              onClick={() => open({ type: 'home', title: 'Library' })}
-            >
-              Open Library
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    // A tab will open immediately; render an empty host to avoid flash
+    return <div className="min-h-[calc(100vh-96px)]" />;
   }
 
   return (

@@ -36,8 +36,8 @@ export function Ribbon() {
           }} aria-label="New">
             <PlusIcon className="h-4 w-4"/> <span className="hidden sm:inline">New</span>
           </button>
-          <button className={cn(btnBase, btnSecondary)} onClick={() => open({ type:"home", title:"Home" })} aria-label="Open">
-            <FolderPlusIcon className="h-4 w-4"/> <span className="hidden sm:inline">Open</span>
+          <button className={cn(btnBase, btnSecondary)} onClick={() => open({ type:"home", title:"Library" })} aria-label="Library">
+            <FolderPlusIcon className="h-4 w-4"/> <span className="hidden sm:inline">Library</span>
           </button>
         </div>
         <div className="flex items-center gap-2">
@@ -81,8 +81,9 @@ function RecipeActions() {
   const { isDark } = useTheme();
   const active = tabs.find(t => t.id === activeId);
   if (!active || active.type !== 'recipe') return null;
-  const payload: any = active.payload || {};
-  const hasRecipe = !!payload.recipe;
+  type RecipePayload = { recipe?: unknown; containerId?: string } | undefined;
+  const payload = active.payload as RecipePayload;
+  const hasRecipe = Boolean(payload?.recipe);
   const btnBase = "inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm whitespace-nowrap focus:outline-none focus:ring-1 transition-colors";
   const btnSecondary = isDark
     ? "bg-[#161a0e] text-[#e8f5d0] border border-[#2d4222] hover:bg-[#1f2e18] focus:ring-[#7bb33a]"
