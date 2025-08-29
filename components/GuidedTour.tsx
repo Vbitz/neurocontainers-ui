@@ -24,11 +24,9 @@ import templateSelectionHelpMarkdown from "@/copy/help/ui/template-selection.md"
 import { loadPackageDatabase } from "@/lib/packages";
 
 interface GuidedTourProps {
-    isOpen: boolean;
     onClose: () => void;
     onComplete: (recipe: ContainerRecipe) => void;
     onPublish?: (recipe: ContainerRecipe) => void;
-    variant?: 'modal' | 'inline';
 }
 
 interface FormData {
@@ -47,11 +45,9 @@ interface Package {
 }
 
 const GuidedTour: React.FC<GuidedTourProps> = ({
-    isOpen,
     onClose,
     onComplete,
     onPublish,
-    variant = 'modal',
 }) => {
     const { isDark } = useTheme();
 
@@ -124,19 +120,16 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
     // Handle escape key
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && isOpen) {
+            if (event.key === 'Escape') {
                 handleClose();
             }
         };
 
-        if (isOpen) {
-            document.addEventListener('keydown', handleKeyDown);
-        }
-
+        document.addEventListener('keydown', handleKeyDown);
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isOpen, handleClose]);
+    }, [handleClose]);
 
     const validateField = useCallback(
         (
@@ -473,353 +466,13 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
             isLoadingDatabase,
         ]
     );
-
-    if (variant === 'modal') {
-        if (!isOpen) return null;
-        return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
-                className="absolute inset-0 backdrop-blur-md"
-                style={{
-                    background: isDark
-                        ? "radial-gradient(circle at 30% 20%, rgba(123,179,58,0.08), transparent 50%), radial-gradient(circle at 70% 80%, rgba(145,200,74,0.08), transparent 50%), linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.85) 100%)"
-                        : "radial-gradient(circle at 30% 20%, rgba(106,163,41,0.12), transparent 50%), radial-gradient(circle at 70% 80%, rgba(79,123,56,0.12), transparent 50%), linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(248,249,251,0.90) 100%)",
-                }}
-            />
-            <div
-                className="absolute inset-0 opacity-[0.03] animate-[movePattern_60s_linear_infinite]"
-                style={{
-                    backgroundImage:
-                        "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"80\" height=\"80\" viewBox=\"0 0 80 80\"><circle cx=\"40\" cy=\"40\" r=\"1.5\" fill=\"%23ffffff\"/></svg>')",
-                    backgroundSize: "80px 80px",
-                }}
-            />
-            <div
-                role="dialog"
-                aria-labelledby="guided-tour-title"
-                className={cn(
-                    "relative max-w-5xl w-full max-h-[88vh] overflow-y-auto rounded-xl shadow-2xl border backdrop-blur-sm",
-                    isDark 
-                        ? "bg-black/40 border-white/20 shadow-black/50" 
-                        : "bg-white/90 border-gray-200/50 shadow-black/20"
-                )}
-            >
-                {/* Header */}
-                <div
-                    className={cn(
-                        "px-5 py-3 border-b flex items-center justify-between",
-                        isDark ? "border-white/10" : "border-gray-200/50"
-                    )}
-                >
-                    <div className="flex items-center space-x-3">
-                        <RocketLaunchIcon className={cn(
-                            "h-6 w-6",
-                            isDark ? "text-[#91c84a]" : "text-[#6aa329]"
-                        )} />
-                        <h2
-                            id="guided-tour-title"
-                            className={cn(
-                                "text-lg font-semibold",
-                                isDark ? "text-white" : "text-gray-900"
-                            )}
-                        >
-                            Create New Container
-                        </h2>
-                    </div>
-                    <button
-                        onClick={handleClose}
-                        className={cn(
-                            "p-2 rounded-md transition-colors",
-                            isDark
-                                ? "hover:bg-white/10 text-gray-300"
-                                : "hover:bg-gray-200/50 text-gray-600"
-                        )}
-                    >
-                        <XMarkIcon className="h-5 w-5" />
-                    </button>
-                </div>
-
-                {/* Content */}
-                <div className="px-5 py-5 space-y-5">
-                    {currentStep === 0 && (
-                        <div className="space-y-5">
-                            <HelpSection
-                                markdownContent={templateSelectionHelpMarkdown}
-                                sourceFilePath="copy/help/ui/template-selection.md"
-                            />
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {GUIDED_TOUR_TEMPLATES.map((template) => (
-                                    <button
-                                        key={template.id}
-                                        onClick={() => handleTemplateSelect(template)}
-                                        className={cn(
-                                            "group flex flex-col p-4 rounded-lg shadow-md transition-all hover:scale-[1.02] hover:shadow-lg text-left",
-                                            selectedTemplate?.id === template.id
-                                                ? isDark
-                                                    ? "bg-gradient-to-br from-[#7bb33a]/40 via-[#6aa329]/35 to-[#5a8f23]/30 backdrop-blur-md text-white shadow-lg ring-2 ring-[#91c84a]/50 border border-[#7bb33a]/40"
-                                                    : "bg-gradient-to-br from-[#6aa329]/40 via-[#5a8f23]/35 to-[#4f7b38]/30 backdrop-blur-md text-white shadow-lg ring-2 ring-[#6aa329]/50 border border-[#6aa329]/40"
-                                                : isDark
-                                                    ? "bg-[#1f2e18]/25 backdrop-blur-sm border border-[#2d4222]/40 text-[#c4e382] hover:bg-[#1f2e18]/35 hover:border-[#2d4222]/60 hover:text-[#e8f5d0]"
-                                                    : "bg-white/20 backdrop-blur-sm border border-[#e6f1d6]/40 text-gray-800 hover:bg-white/30 hover:border-[#e6f1d6]/60"
-                                        )}
-                                    >
-                                        <div className="mb-2">{getTemplateIcon(template.id, cn(
-                                            "h-8 w-8 transition-opacity",
-                                            selectedTemplate?.id === template.id ? "opacity-90" : "opacity-60"
-                                        ))}</div>
-                                        <h4 className="font-medium mb-1">{template.name}</h4>
-                                        <p className="text-sm opacity-80">{template.description}</p>
-                                    </button>
-                                ))}
-                            </div>
-                            
-                        </div>
-                    )}
-
-                    {currentStep === 1 && selectedTemplate && (
-                        <div className="space-y-5">
-                            <h3
-                                className={cn(
-                                    "text-lg font-medium",
-                                    isDark ? "text-white" : "text-gray-900"
-                                )}
-                            >
-                                Configure Your Container
-                            </h3>
-                            
-                            {/* Show template details inline */}
-                            {selectedTemplate.detailedDescription && (
-                                <HelpSection
-                                    markdownContent={selectedTemplate.detailedDescription}
-                                    className="mb-4"
-                                    sourceFilePath={`copy/templates/${selectedTemplate.id.replace('-', '-')}.md`}
-                                />
-                            )}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                {selectedTemplate.fields.map((field) => {
-                                    // GitHub URL full width
-                                    if (field.id === "githubUrl") {
-                                        return (
-                                            <div key={field.id} className="col-span-2">
-                                                {renderField(field)}
-                                            </div>
-                                        );
-                                    }
-                                    // Container Name and Version on same row
-                                    if (field.id === "containerName" || field.id === "version") {
-                                        return renderField(field);
-                                    }
-                                    // R Package Name on same row as R Version for R templates
-                                    if (selectedTemplate.id === 'r-package' && (field.id === "rPackageName" || field.id === "rVersion")) {
-                                        return renderField(field);
-                                    }
-                                    // All others full width
-                                    return (
-                                        <div key={field.id} className="col-span-2">
-                                            {renderField(field)}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {currentStep === 2 && selectedTemplate && (
-                        <div className="space-y-6">
-                            <h3
-                                className={cn(
-                                    "text-lg font-medium",
-                                    isDark ? "text-white" : "text-gray-900"
-                                )}
-                            >
-                                Review & Create
-                            </h3>
-                            
-                            {/* Summary */}
-                            <div className={cn(
-                                "p-4 rounded-lg border",
-                                isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"
-                            )}>
-                                <h4 className={cn(
-                                    "font-medium mb-3",
-                                    isDark ? "text-white" : "text-gray-900"
-                                )}>
-                                    Container Summary
-                                </h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                    <div>
-                                        <span className={cn(
-                                            "font-medium",
-                                            isDark ? "text-gray-300" : "text-gray-700"
-                                        )}>Name:</span>{" "}
-                                        <span className={cn(
-                                            isDark ? "text-white" : "text-gray-900"
-                                        )}>{String(formData.containerName || formData.name || 'Unnamed')}</span>
-                                    </div>
-                                    <div>
-                                        <span className={cn(
-                                            "font-medium",
-                                            isDark ? "text-gray-300" : "text-gray-700"
-                                        )}>Version:</span>{" "}
-                                        <span className={cn(
-                                            isDark ? "text-white" : "text-gray-900"
-                                        )}>{String(formData.version || '1.0.0')}</span>
-                                    </div>
-                                    <div>
-                                        <span className={cn(
-                                            "font-medium",
-                                            isDark ? "text-gray-300" : "text-gray-700"
-                                        )}>Template:</span>{" "}
-                                        <span className={cn(
-                                            isDark ? "text-white" : "text-gray-900"
-                                        )}>{selectedTemplate.name}</span>
-                                    </div>
-                                    <div>
-                                        <span className={cn(
-                                            "font-medium",
-                                            isDark ? "text-gray-300" : "text-gray-700"
-                                        )}>Categories:</span>{" "}
-                                        <span className={cn(
-                                            isDark ? "text-white" : "text-gray-900"
-                                        )}>{Array.isArray(formData.categories) && formData.categories.length > 0 
-                                            ? formData.categories.join(', ') 
-                                            : 'Not set'}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Next Steps */}
-                            <div className={cn(
-                                "p-4 rounded-lg border",
-                                isDark ? "bg-blue-900/20 border-blue-700/30" : "bg-blue-50 border-blue-200"
-                            )}>
-                                <h4 className={cn(
-                                    "font-medium mb-3 flex items-center gap-2",
-                                    isDark ? "text-blue-300" : "text-blue-800"
-                                )}>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    What happens next?
-                                </h4>
-                                <div className={cn(
-                                    "space-y-2 text-sm",
-                                    isDark ? "text-blue-200" : "text-blue-700"
-                                )}>
-                                    <div className="flex items-start gap-2">
-                                        <span className="font-medium">1.</span>
-                                        <span>Your container recipe will be created and loaded into the builder</span>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <span className="font-medium">2.</span>
-                                        <span>You can customize build directives, add software packages, and configure deployment settings</span>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <span className="font-medium">3.</span>
-                                        <span>Test your container recipe and generate a Dockerfile</span>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <span className="font-medium">4.</span>
-                                        <span>Publish your container to the NeuroContainers repository when ready</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div
-                    className={cn(
-                        "px-5 py-3 border-t flex justify-between",
-                        isDark ? "border-white/10" : "border-gray-200/50"
-                    )}
-                >
-                    <button
-                        onClick={handleBack}
-                        disabled={currentStep === 0}
-                        className={cn(
-                            "flex items-center space-x-2 px-4 py-2 rounded-md transition-colors",
-                            currentStep === 0
-                                ? "text-gray-400 cursor-not-allowed"
-                                : isDark
-                                    ? "text-gray-300 hover:bg-white/10"
-                                    : "text-gray-700 hover:bg-gray-200/50"
-                        )}
-                    >
-                        <ChevronLeftIcon className="h-4 w-4" />
-                        <span>Back</span>
-                    </button>
-
-                    <div className="flex space-x-3">
-                        <button
-                            onClick={handleClose}
-                            className={cn(
-                                "px-4 py-2 rounded-md transition-colors",
-                                isDark
-                                    ? "text-gray-300 hover:bg-white/10"
-                                    : "text-gray-700 hover:bg-gray-200/50"
-                            )}
-                        >
-                            Cancel
-                        </button>
-
-                        {currentStep < 2 ? (
-                            <button
-                                onClick={handleNext}
-                                disabled={currentStep === 0 ? !selectedTemplate : false}
-                                className={cn(
-                                    "flex items-center space-x-2 px-4 py-2 rounded-md text-white transition-colors",
-                                    (currentStep === 0 ? !selectedTemplate : false)
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : isDark
-                                            ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#8ccf45] hover:to-[#7bb33a]"
-                                            : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] hover:from-[#7bb33a] hover:to-[#6aa329]"
-                                )}
-                            >
-                                <span>Next</span>
-                                <ChevronRightIcon className="h-4 w-4" />
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => handleGenerate(false)}
-                                disabled={isGenerating}
-                                className={cn(
-                                    "flex items-center space-x-2 px-6 py-2 rounded-md text-white transition-colors",
-                                    isGenerating
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : isDark
-                                            ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#8ccf45] hover:to-[#7bb33a]"
-                                            : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] hover:from-[#7bb33a] hover:to-[#6aa329]"
-                                )}
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                                        <span>Creating...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <PlusCircleIcon className="h-4 w-4" />
-                                        <span>Create Container</span>
-                                    </>
-                                )}
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-        );
-    }
-
-    // Inline variant: render as a regular section within the page content
+    // Render as a regular section within the page content
     return (
         <div
             aria-labelledby="guided-tour-title"
             className={cn(
-                "relative w-full rounded-xl border backdrop-blur-sm",
-                isDark ? "bg-black/20 border-white/10" : "bg-white/80 border-gray-200/50"
+                "relative rounded-xl border shadow-lg",
+                isDark ? "bg-black/30 border-white/10" : "bg-white border-gray-200"
             )}
         >
             {/* Header */}
