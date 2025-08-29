@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 
-export default function TerminalPage() {
+function TerminalComponent() {
   const params = useSearchParams();
   const termRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
@@ -48,9 +48,15 @@ export default function TerminalPage() {
     };
   }, [params]);
 
+  return <div ref={termRef} className="w-full h-full" />;
+}
+
+export default function TerminalPage() {
   return (
     <div className="w-full h-screen">
-      <div ref={termRef} className="w-full h-full" />
+      <Suspense fallback={<div className="w-full h-full flex items-center justify-center">Loading terminal...</div>}>
+        <TerminalComponent />
+      </Suspense>
     </div>
   );
 }
